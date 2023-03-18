@@ -7,7 +7,7 @@ public final class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Plugin startup logic.
+        // Plugin startup logic. test
 
 
         Main main = this;

@@ -10,6 +10,7 @@ public final class Main extends JavaPlugin {
         // Plugin startup logic. test
 
         // makes an object of the main class.
+        //test
         Main main = this;
 
     }

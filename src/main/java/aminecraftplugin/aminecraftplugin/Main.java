@@ -9,11 +9,9 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic. test
 
-        //test teslkjtijoefioaiofeiohaiehofahiofi
-        //feoihawioegfaiowhef
-        int a = 5;
-
+        // makes an object of the main class
         Main main = this;
+
     }
 
     @Override

@@ -1,5 +1,6 @@
 package aminecraftplugin.aminecraftplugin.market;
 
+import aminecraftplugin.aminecraftplugin.drill.Resource;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -18,7 +19,7 @@ public class Market implements Listener {
 
     //all market attributes
     Location location;
-    ArrayList<Integer> trades;
+    ArrayList<Trade> trades;
 
     //market constructors
     public Market() {
@@ -30,10 +31,21 @@ public class Market implements Listener {
         trades = new ArrayList<>();
     }
 
-    public Market(Location _location, ArrayList<Integer> _trades) {
+    public Market(Location _location, ArrayList<Integer> _tradeItemKeys) {
         location = _location;
-        trades = _trades;
+        //trades = generateTrades(_tradeItemKeys);
     }
+
+    /*private ArrayList<Trade> generateTrades(ArrayList<Integer> tradeItemKeys) {
+        for(int key : tradeItemKeys) {
+            if (Resource.resources.containsKey(key)) {
+                Resource r = Resource.resources.get(key);
+                //Trade trade = new Trade();
+            }
+
+        }
+
+    }*/
 
     private void openMarketMenu(Market m) {
 

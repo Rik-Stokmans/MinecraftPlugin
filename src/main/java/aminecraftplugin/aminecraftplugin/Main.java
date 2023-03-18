@@ -9,6 +9,8 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic. test
 
+
+        //testvermulst
         // makes an object of the main class
         Main main = this;
 

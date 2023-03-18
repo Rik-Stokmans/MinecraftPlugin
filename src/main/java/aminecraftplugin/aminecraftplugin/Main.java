@@ -12,6 +12,8 @@ public final class Main extends JavaPlugin {
 
         //testvermulst
         // makes an object of the main class
+        // makes an object of the main class.
+        //test
         Main main = this;
 
     }

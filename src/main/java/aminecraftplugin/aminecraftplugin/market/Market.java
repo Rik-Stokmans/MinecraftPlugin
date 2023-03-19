@@ -48,13 +48,7 @@ public class Market implements Listener {
         ArrayList<Trade> trades = new ArrayList<>();
         for(int key : tradeItemKeys) {
             if (Resource.resources.containsKey(key)) {
-
-                Resource r;
-
-
-                metals, energy, gemstones, archeology
-
-
+                Resource r = Resource.resources.get(key);
                 Trade trade = new Trade(r.getItemStack(), r.getName(), r.getValue(), key);
                 trades.add(trade);
             }

@@ -33,23 +33,32 @@ public class Market implements Listener {
 
     public Market(Location _location, ArrayList<Integer> _tradeItemKeys) {
         location = _location;
-        //trades = generateTrades(_tradeItemKeys);
+        trades = generateTrades(_tradeItemKeys);
     }
 
-    /*private ArrayList<Trade> generateTrades(ArrayList<Integer> tradeItemKeys) {
+
+
+    //method to generate all the trade items from a list of keys
+    private ArrayList<Trade> generateTrades(ArrayList<Integer> tradeItemKeys) {
+        ArrayList<Trade> trades = new ArrayList<>();
         for(int key : tradeItemKeys) {
             if (Resource.resources.containsKey(key)) {
                 Resource r = Resource.resources.get(key);
-                //Trade trade = new Trade();
+                Trade trade = new Trade(r.getItemStack(), r.getName(), r.getValue(), key);
+                trades.add(trade);
             }
-
         }
+        return trades;
+    }
 
-    }*/
 
+
+    //gui methods
     private void openMarketMenu(Market m) {
 
     }
+
+
 
     //function that detects if a player clicks on a market block
     @EventHandler
@@ -65,10 +74,14 @@ public class Market implements Listener {
         }
     }
 
-    //function that updates all market prices
+
+
+    //function that slowly shifts the prices to base price
     public void tick() {
 
     }
+
+
 
     //methods to load and save the markets
     public void saveMarketsToFile() {

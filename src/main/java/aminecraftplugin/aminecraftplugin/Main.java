@@ -2,7 +2,6 @@ package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.drill.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,10 +40,19 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+
+        Resource.save();
     }
 
 
+    //save and load files
+
     public static void saveFile(YamlConfiguration file, String s) throws IOException {
         file.save(new File(path,s));
+    }
+
+    public static YamlConfiguration loadFile(String s) throws IOException {
+        YamlConfiguration file = YamlConfiguration.loadConfiguration(new File(path, s));
+        return file;
     }
 }

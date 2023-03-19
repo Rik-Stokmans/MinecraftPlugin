@@ -4,33 +4,56 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static aminecraftplugin.aminecraftplugin.Main.loadFile;
+import static aminecraftplugin.aminecraftplugin.Main.saveFile;
+
 public class Resource {
+
+
+    //todo: make GUI for adding new resources
+
 
 
     public static HashMap<Integer, Resource> resources;
 
 
-    YamlConfiguration resourceFile;
+    public static YamlConfiguration resourceFile;
 
     private ItemStack itemStack;
     private String name;
     private Double value;
 
 
+    public Resource(ItemStack item, String name, Double value){
+        this.itemStack = item;
+        this.name = name;
+        this.value = value;
+    }
+
+
     public static void init(){
-        resources = loadResources();
+        try {
+            resources = loadResources();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public Resource(){
-
+    public static void save(){
+        try {
+            saveResources();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
-    public void saveResources(){
+    public static void saveResources() throws IOException {
 
         for (Map.Entry<Integer, Resource> set : resources.entrySet()) {
 
@@ -41,11 +64,14 @@ public class Resource {
             resourceFile.set(id + ".value", resource.getValue());
 
         }
-        //resourceFile.save(new File(), "");
+        saveFile(resourceFile, "resources.yml");
 
     }
 
-    public static HashMap<Integer, Resource> loadResources(){
+    public static HashMap<Integer, Resource> loadResources() throws IOException{
+
+        resourceFile = loadFile("resources.yml");
+
         return new HashMap<>();
     }
 

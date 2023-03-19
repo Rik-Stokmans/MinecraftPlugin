@@ -13,3 +13,6 @@ commands:
   CreateMarket:
     description: create a market
     usage: /createmarket (name)
+  RemoveMarket:
+    description: removes a market
+    usage: /removemarket

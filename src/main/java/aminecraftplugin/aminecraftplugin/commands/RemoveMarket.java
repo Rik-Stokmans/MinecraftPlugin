@@ -29,10 +29,11 @@ public class RemoveMarket implements CommandExecutor {
                     m.getLocation().getBlock().setType(Material.AIR);
                 }
             }
-            markets.remove(marketToRemove);
-            p.sendMessage(format("&aMarket removed successfully"));
-
-            return true;
+            if (marketToRemove != -1) {
+                markets.remove(marketToRemove);
+                p.sendMessage(format("&aMarket removed successfully"));
+                return true;
+            }
         }
         return false;
     }

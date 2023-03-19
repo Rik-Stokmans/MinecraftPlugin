@@ -18,6 +18,9 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class CreateMarket implements CommandExecutor {
 
+    //todo: niet 2x dezelfde naam
+    //todo: tabcompleter toont alle markets
+
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (commandSender instanceof Player) {

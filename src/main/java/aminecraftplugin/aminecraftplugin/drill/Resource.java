@@ -36,7 +36,7 @@ public class Resource implements Listener {
 
     public static HashMap<resourceCategory, ArrayList<Integer>> categories = new HashMap<>();
 
-    private static HashMap<Player, String> browsingCategory = new HashMap<>();
+    private static HashMap<Player, resourceCategory> browsingCategory = new HashMap<>();
 
 
     private static YamlConfiguration resourceFile;
@@ -110,7 +110,7 @@ public class Resource implements Listener {
         return pages;
     }
 
-    private static ArrayList<Inventory> getAllPages(){
+    private static ArrayList<Inventory> getAllPages(resourceCategory resourceCategory){
 
         ItemStack leftArrow = new ItemStack(Material.ARROW);
         ItemMeta meta = leftArrow.getItemMeta();
@@ -131,33 +131,38 @@ public class Resource implements Listener {
         int totalIndex = 0;
         int currentPage = 1;
         Inventory currentlyEditing = Bukkit.createInventory(null, 54, format("page " + currentPage));
-        for (Map.Entry<Integer, Resource> resourceEntry : resources.entrySet()) {
-            if (totalIndex % 45 == 0 && totalIndex != 0) {
+        for (Map.Entry<resourceCategory, ArrayList<Integer>> categories : categories.entrySet()) {
+            resourceCategory resourceCategory1 = categories.getKey();
+            if (resourceCategory1.equals(resourceCategory)) {
+                for (Integer integer : categories.getValue()) {
+                    Resource resource = resources.get(integer);
+                    if (totalIndex % 45 == 0 && totalIndex != 0) {
 
-                Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
-                addedInventory.setContents(currentlyEditing.getContents().clone());
-                allPages.add(addedInventory);
+                        Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
+                        addedInventory.setContents(currentlyEditing.getContents().clone());
+                        allPages.add(addedInventory);
 
-                currentlyEditing = Bukkit.createInventory(null, 54);
-                currentlyEditing.setItem(45, leftArrow);
-                currentlyEditing.setItem(53, rightArrow);
-                for (int i = 46; i < 53; i++) {
-                    currentlyEditing.setItem(i, grayGlass);
+                        currentlyEditing = Bukkit.createInventory(null, 54);
+                        currentlyEditing.setItem(45, leftArrow);
+                        currentlyEditing.setItem(53, rightArrow);
+                        for (int i = 46; i < 53; i++) {
+                            currentlyEditing.setItem(i, grayGlass);
+                        }
+                    }
+                    ItemStack item = resource.getItemStack().clone();
+                    ItemMeta metaItem = item.getItemMeta();
+                    if (metaItem != null) {
+                        metaItem.setDisplayName(resource.getName());
+                        ArrayList<String> lore = new ArrayList<>();
+                        lore.add("ID: " + integer);
+                        lore.add("value: " + resource.getValue());
+                        metaItem.setLore(lore);
+                        item.setItemMeta(metaItem);
+                    }
+                    currentlyEditing.setItem(totalIndex, item);
+                    totalIndex += 1;
                 }
             }
-            Resource resource = resourceEntry.getValue();
-            ItemStack item = resource.getItemStack().clone();
-            ItemMeta metaItem = item.getItemMeta();
-            if (metaItem != null) {
-                metaItem.setDisplayName(resource.getName());
-                ArrayList<String> lore = new ArrayList<>();
-                lore.add("ID: " + resourceEntry.getKey());
-                lore.add("value: " + resource.getValue());
-                metaItem.setLore(lore);
-                item.setItemMeta(metaItem);
-            }
-            currentlyEditing.setItem(totalIndex, item);
-            totalIndex += 1;
         }
         Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
         addedInventory.setContents(currentlyEditing.getContents().clone());
@@ -178,8 +183,8 @@ public class Resource implements Listener {
         return index;
     }
 
-    private static Inventory getPage(int page){
-        return getAllPages().get(page - 1);
+    private static Inventory getPage(int page, resourceCategory resourceCategory){
+        return getAllPages(resourceCategory).get(page - 1);
     }
 
     @EventHandler
@@ -192,20 +197,20 @@ public class Resource implements Listener {
             Player p = (Player) e.getWhoClicked();
             switch (slot){
                 case(0):
-                    browsingCategory.put(p, "metals");
+                    browsingCategory.put(p, resourceCategory.METALS);
                     break;
                 case(1):
-                    browsingCategory.put(p, "energy");
+                    browsingCategory.put(p, resourceCategory.ENERGY);
                     break;
                 case(2):
-                    browsingCategory.put(p, "gemstones");
+                    browsingCategory.put(p, resourceCategory.GEMSTONES);
                     break;
                 case(3):
-                    browsingCategory.put(p, "archeology");
+                    browsingCategory.put(p, resourceCategory.ARCHEOLOGY);
                     break;
             }
             Inventory inventory = Bukkit.createInventory(null, 54, "page 1");
-            inventory.setContents(getPage(1).getContents());
+            inventory.setContents(getPage(1, browsingCategory.get(p)).getContents());
             p.openInventory(inventory);
         }
         if (name.contains(format("page"))) {
@@ -215,16 +220,17 @@ public class Resource implements Listener {
 
             if (e.getClick().equals(ClickType.LEFT) && !e.getCurrentItem().getType().equals(Material.AIR)) {
                 if (e.getRawSlot() == 45 && currentPage > 1) {
-                    p.openInventory(getPage(currentPage - 1));
+                    p.openInventory(getPage(currentPage - 1, browsingCategory.get(p)));
                 } else if (e.getRawSlot() == 53 && currentPage < getMaxAmountOfPages()) {
-                    p.openInventory(getPage(currentPage + 1));
+                    p.openInventory(getPage(currentPage + 1, browsingCategory.get(p)));
                 } else if (e.getRawSlot() > 53) {
                     net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
                     NBTTagCompound nbt = nmsItem.u();
                     Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"));
-
-                    resources.put(findEmptyID(), resource);
-                    p.openInventory(getPage(currentPage));
+                    int ID = findEmptyID();
+                    resources.put(ID, resource);
+                    categories.get(browsingCategory.get(p)).add(ID);
+                    p.openInventory(getPage(currentPage, browsingCategory.get(p)));
                 }
             }
             if (e.getClick().equals(ClickType.RIGHT) && e.getRawSlot() < 45){
@@ -233,7 +239,8 @@ public class Resource implements Listener {
                 ArrayList<String> lore = (ArrayList<String>) meta.getLore();
                 int ID = Integer.valueOf(lore.get(0).split(" ")[1]);
                 resources.remove(ID);
-                p.openInventory(getPage(currentPage));
+                categories.remove(ID);
+                p.openInventory(getPage(currentPage, browsingCategory.get(p)));
             }
         }
     }

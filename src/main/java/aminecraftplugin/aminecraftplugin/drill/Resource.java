@@ -111,6 +111,11 @@ public class Resource implements Listener {
         metaGemstones.setDisplayName(format("&fGemstones"));
         metaArcheology.setDisplayName(format("&fArcheology"));
 
+        metals.setItemMeta(metaMetals);
+        energy.setItemMeta(metaEnergy);
+        gemstones.setItemMeta(metaGemstones);
+        archeology.setItemMeta(metaArcheology);
+
         inventory.setItem(0, metals);
         inventory.setItem(1, energy);
         inventory.setItem(2, gemstones);

@@ -1,6 +1,7 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
 import aminecraftplugin.aminecraftplugin.market.Market;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
@@ -19,19 +20,22 @@ public class RemoveMarket implements CommandExecutor {
         if (commandSender instanceof Player) {
             Player p = (Player) commandSender;
 
-            Block targetBlock = p.getTargetBlockExact(5);
+            Block targetBlock = p.getTargetBlock(null, 5);
             if (targetBlock == null) return false;
 
+            Location marketLocation = targetBlock.getLocation();
             int marketToRemove = -1;
             for (Market m : markets.values()) {
-                if (m.getLocation().equals(targetBlock)) {
+                if (m.getLocation().equals(targetBlock.getLocation())) {
                     marketToRemove = m.getKey();
-                    m.getLocation().getBlock().setType(Material.AIR);
+                    marketLocation = m.getLocation();
                 }
             }
             if (marketToRemove != -1) {
                 markets.remove(marketToRemove);
-                p.sendMessage(format("&aMarket removed successfully"));
+                p.sendMessage(format(" "));
+                p.sendMessage(format("&8 >> &7Market removed"));
+                p.sendMessage(format(" &8 ( " + marketLocation.getX() + ", " + marketLocation.getY() + ", " + marketLocation.getZ() + " )"));
                 return true;
             }
         }

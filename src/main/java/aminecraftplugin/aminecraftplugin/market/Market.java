@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -154,6 +155,11 @@ public class Market implements Listener {
                 p.sendMessage(format("&cYou can't break a market, remove it with &e/removeMarket"));
             }
         }
+    }
+
+    @EventHandler
+    public void inventoryClick(InventoryClickEvent e) {
+        //if (e.)
     }
 
 

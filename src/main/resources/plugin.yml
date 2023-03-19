@@ -12,4 +12,4 @@ commands:
     usage: /addvalue
   CreateMarket:
     description: create a market
-    usage: /createmarket
+    usage: /createmarket (name)

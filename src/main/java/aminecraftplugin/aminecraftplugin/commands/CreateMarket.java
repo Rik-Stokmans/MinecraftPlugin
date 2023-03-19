@@ -18,38 +18,29 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class CreateMarket implements CommandExecutor {
 
-    public static HashMap<Player, Location> expectingMarketName = new HashMap<>();
 
     @Override
-    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
+    public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (commandSender instanceof Player) {
-            Player player = (Player) commandSender;
-            if (expectingMarketName.containsKey(player)) return false;
+            Player p = (Player) commandSender;
+            String marketName = "";
+            for(String namePart : args) marketName += namePart + " ";
 
-            Block clickedBlock = player.getTargetBlockExact(5);
+            Block clickedBlock = p.getTargetBlockExact(5);
             if (clickedBlock == null) return false;
 
-            player.sendMessage(format("&ePlease give the name of the market:"));
-            expectingMarketName.put(player, clickedBlock.getLocation());
-            return true;
-        }
-        return false;
-    }
-
-    @EventHandler
-    public void onChat(PlayerChatEvent e) {
-        if (expectingMarketName.containsKey(e.getPlayer())) {
             int i = 0;
             while (true) {
                 if (!markets.containsKey(i)) {
-                    markets.put(i, new Market(e.getMessage(), expectingMarketName.get(e.getPlayer())));
-                    e.getPlayer().sendMessage(format("&aMarket created"));
+                    markets.put(i, new Market(marketName, clickedBlock.getLocation()));
+                    p.sendMessage(format("&aMarket created"));
                     break;
                 }
                 else i++;
             }
-            e.setCancelled(true);
+            return true;
         }
+        return false;
     }
 }
 

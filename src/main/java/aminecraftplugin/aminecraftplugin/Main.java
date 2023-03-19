@@ -1,7 +1,9 @@
 package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.commands.addResourceCommand;
+import aminecraftplugin.aminecraftplugin.commands.addValueCommand;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.nullTabCompleter;
+import aminecraftplugin.aminecraftplugin.commands.tabcompleters.numTabCompleter;
 import aminecraftplugin.aminecraftplugin.drill.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,7 +28,7 @@ public final class Main extends JavaPlugin {
 
         ArrayList<Listener> events = new ArrayList<>();
         //list of events
-        events.add(new Market());
+        events.add(new Market()); events.add(new Resource());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);
@@ -38,9 +40,12 @@ public final class Main extends JavaPlugin {
         Main main = this;
 
 
+        //todo: make this better
         //commands
         getServer().getPluginCommand("addresource").setExecutor(new addResourceCommand());
         getServer().getPluginCommand("addresource").setTabCompleter(new nullTabCompleter());
+        getServer().getPluginCommand("addvalue").setExecutor(new addValueCommand());
+        getServer().getPluginCommand("addvalue").setTabCompleter(new numTabCompleter());
     }
 
     @Override

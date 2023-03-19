@@ -129,6 +129,7 @@ public class Market implements Listener {
         if (e.getClickedBlock() == null) return;
         Location clickLocation = e.getClickedBlock().getLocation();
 
+
         for(Market m : markets.values()) {
             if (m.location.equals(clickLocation)) {
                 latestMarketOpen.put(player, m);
@@ -199,13 +200,11 @@ public class Market implements Listener {
 
     //method to make the main menu for all markets
     private static void initialiseMarketCategoryGuiMenu() {
-        Inventory inv = Bukkit.createInventory(null, 27, format("&eCategory Selector"));
+        marketCategoryGuiMenu = Bukkit.createInventory(null, 27, format("&eCategory Selector"));
 
-        inv.setItem(11, metalsCategoryButton);
-        inv.setItem(13, energyCategoryButton);
-        inv.setItem(15, gemstonesCategoryButton);
-
-        marketCategoryGuiMenu = inv;
+        marketCategoryGuiMenu.setItem(11, metalsCategoryButton);
+        marketCategoryGuiMenu.setItem(13, energyCategoryButton);
+        marketCategoryGuiMenu.setItem(15, gemstonesCategoryButton);
     }
 
 

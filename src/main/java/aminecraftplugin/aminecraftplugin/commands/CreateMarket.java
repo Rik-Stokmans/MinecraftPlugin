@@ -38,16 +38,17 @@ public class CreateMarket implements CommandExecutor {
 
     @EventHandler
     public void onChat(PlayerChatEvent e) {
-        if (expectingMarketName.containsKey(e.getPlayer()) && e.getMessage().length() < 30) {
+        if (expectingMarketName.containsKey(e.getPlayer())) {
             int i = 0;
-            boolean foundUniqueKey = false;
-            while (!foundUniqueKey) {
+            while (true) {
                 if (!markets.containsKey(i)) {
                     markets.put(i, new Market(e.getMessage(), expectingMarketName.get(e.getPlayer())));
-                    foundUniqueKey = true;
+                    e.getPlayer().sendMessage(format("&aMarket created"));
+                    break;
                 }
                 else i++;
             }
+            e.setCancelled(true);
         }
     }
 }

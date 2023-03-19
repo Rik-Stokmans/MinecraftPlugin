@@ -29,9 +29,17 @@ public class Resource implements Listener {
 
     //todo: make GUI for adding new resources
 
+    public enum resourceCategories {
+        METALS,
+        ENERGIE,
+        GEMSTONES,
+        ARCHEOLOGY
+    }
 
+    public static HashMap<Integer, Resource> resources = new HashMap<>();
 
-    public static HashMap<String, HashMap<Integer, Resource>> resources;
+    public static HashMap<resourceCategories, ArrayList<Integer>> categories = new HashMap<>();
+
     private static HashMap<Player, String> browsingCategory = new HashMap<>();
 
 

@@ -2,6 +2,7 @@ package aminecraftplugin.aminecraftplugin.market;
 
 import aminecraftplugin.aminecraftplugin.drill.Resource;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,20 +19,24 @@ public class Market implements Listener {
     public static HashMap<Integer, Market> markets = new HashMap<>();
 
     //all market attributes
+    String name;
     Location location;
     ArrayList<Trade> trades;
+    Inventory marketInterface;
 
     //market constructors
     public Market() {
 
     }
 
-    public Market(Location _location) {
+    public Market(String _name, Location _location) {
+        name = _name;
         location = _location;
         trades = new ArrayList<>();
     }
 
-    public Market(Location _location, ArrayList<Integer> _tradeItemKeys) {
+    public Market(String _name, Location _location, ArrayList<Integer> _tradeItemKeys) {
+        name = _name;
         location = _location;
         trades = generateTrades(_tradeItemKeys);
     }
@@ -43,7 +48,13 @@ public class Market implements Listener {
         ArrayList<Trade> trades = new ArrayList<>();
         for(int key : tradeItemKeys) {
             if (Resource.resources.containsKey(key)) {
-                Resource r = Resource.resources.get(key);
+
+                Resource r;
+
+
+                metals, energy, gemstones, archeology
+
+
                 Trade trade = new Trade(r.getItemStack(), r.getName(), r.getValue(), key);
                 trades.add(trade);
             }
@@ -54,7 +65,7 @@ public class Market implements Listener {
 
 
     //gui methods
-    private void openMarketMenu(Market m) {
+    private void openMarketInterface(Market m) {
 
     }
 
@@ -69,7 +80,7 @@ public class Market implements Listener {
 
         for(Market m : markets.values()) {
             if (m.location.equals(clickLocation)) {
-                openMarketMenu(m);
+                openMarketInterface(m);
             }
         }
     }

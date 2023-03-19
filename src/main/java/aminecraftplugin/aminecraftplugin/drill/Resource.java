@@ -1,6 +1,7 @@
 package aminecraftplugin.aminecraftplugin.drill;
 
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
@@ -52,6 +53,10 @@ public class Resource {
         }
     }
 
+
+    public static void openResourceGUI(Player p){
+
+    }
 
     public static void saveResources() throws IOException {
 

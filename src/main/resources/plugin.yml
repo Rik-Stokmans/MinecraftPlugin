@@ -3,3 +3,7 @@ version: '${project.version}'
 main: aminecraftplugin.aminecraftplugin.Main
 api-version: 1.19
 authors: [ Duffie13, Vermulst ]
+commands:
+  addresource:
+    description: add new resource to the game
+    usage: /addresource

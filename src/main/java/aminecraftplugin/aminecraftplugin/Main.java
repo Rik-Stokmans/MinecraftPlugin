@@ -1,5 +1,7 @@
 package aminecraftplugin.aminecraftplugin;
 
+import aminecraftplugin.aminecraftplugin.commands.addResourceCommand;
+import aminecraftplugin.aminecraftplugin.commands.tabcompleters.nullTabCompleter;
 import aminecraftplugin.aminecraftplugin.drill.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -35,6 +37,10 @@ public final class Main extends JavaPlugin {
 
         Main main = this;
 
+
+        //commands
+        getServer().getPluginCommand("addresource").setExecutor(new addResourceCommand());
+        getServer().getPluginCommand("addresource").setTabCompleter(new nullTabCompleter());
     }
 
     @Override

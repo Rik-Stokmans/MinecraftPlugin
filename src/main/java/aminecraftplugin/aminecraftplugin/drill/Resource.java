@@ -86,6 +86,7 @@ public class Resource implements Listener {
     public static void save(){
         try {
             saveResources();
+            saveCategories();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -95,10 +96,25 @@ public class Resource implements Listener {
     public static void openResourceGUI(Player p) {
 
         Inventory inventory = Bukkit.createInventory(null, InventoryType.HOPPER, "choose category");
-        inventory.setItem(0, new ItemStack(Material.IRON_INGOT));
-        inventory.setItem(1, new ItemStack(Material.COAL));
-        inventory.setItem(2,new ItemStack(Material.EMERALD));
-        inventory.setItem(3, new ItemStack(Material.GOLDEN_SHOVEL));
+        ItemStack metals = new ItemStack(Material.IRON_INGOT);
+        ItemStack energy = new ItemStack(Material.COAL);
+        ItemStack gemstones = new ItemStack(Material.EMERALD);
+        ItemStack archeology = new ItemStack(Material.GOLDEN_SHOVEL);
+
+        ItemMeta metaMetals = metals.getItemMeta();
+        ItemMeta metaEnergy = energy.getItemMeta();
+        ItemMeta metaGemstones = gemstones.getItemMeta();
+        ItemMeta metaArcheology = archeology.getItemMeta();
+
+        metaMetals.setDisplayName(format("&fMetals"));
+        metaEnergy.setDisplayName(format("&fEnergy"));
+        metaGemstones.setDisplayName(format("&fGemstones"));
+        metaArcheology.setDisplayName(format("&fArcheology"));
+
+        inventory.setItem(0, metals);
+        inventory.setItem(1, energy);
+        inventory.setItem(2, gemstones);
+        inventory.setItem(3, archeology);
         p.openInventory(inventory);
 
 
@@ -301,6 +317,19 @@ public class Resource implements Listener {
             ArrayList<Integer> intList = (ArrayList<Integer>) categoryFile.getIntegerList("data." + key);
             categories.put(resourceCategory, intList);
         });
+
+        if (!categories.containsKey(resourceCategory.METALS)){
+            categories.put(resourceCategory.METALS, new ArrayList<>());
+        }
+        if (!categories.containsKey(resourceCategory.METALS)){
+            categories.put(resourceCategory.METALS, new ArrayList<>());
+        }
+        if (!categories.containsKey(resourceCategory.METALS)){
+            categories.put(resourceCategory.METALS, new ArrayList<>());
+        }
+        if (!categories.containsKey(resourceCategory.METALS)){
+            categories.put(resourceCategory.METALS, new ArrayList<>());
+        }
 
         return categories;
     }

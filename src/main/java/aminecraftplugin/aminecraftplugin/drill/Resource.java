@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -30,7 +31,8 @@ public class Resource implements Listener {
 
 
 
-    public static HashMap<Integer, Resource> resources;
+    public static HashMap<String, HashMap<Integer, Resource>> resources;
+    private static HashMap<Player, String> browsingCategory = new HashMap<>();
 
 
     public static YamlConfiguration resourceFile;
@@ -70,9 +72,13 @@ public class Resource implements Listener {
 
     public static void openResourceGUI(Player p) {
 
-        Inventory inventory = Bukkit.createInventory(null, 54, "page 1");
-        inventory.setContents(getPage(1).getContents());
+        Inventory inventory = Bukkit.createInventory(null, InventoryType.HOPPER, "choose category");
+        inventory.setItem(0, new ItemStack(Material.IRON_INGOT));
+        inventory.setItem(1, new ItemStack(Material.COAL));
+        inventory.setItem(2,new ItemStack(Material.EMERALD));
+        inventory.setItem(3, new ItemStack(Material.GOLDEN_SHOVEL));
         p.openInventory(inventory);
+
 
     }
 
@@ -103,33 +109,35 @@ public class Resource implements Listener {
         int totalIndex = 0;
         int currentPage = 1;
         Inventory currentlyEditing = Bukkit.createInventory(null, 54, format("page " + currentPage));
-        for (Map.Entry<Integer, Resource> resourceEntry : resources.entrySet()){
-            if (totalIndex % 45 == 0 && totalIndex != 0){
+        for (HashMap<Integer, Resource> resourceEntry : resources.values()){
+            for (Map.Entry<Integer, Resource> resourceEntry1 : resourceEntry.entrySet()) {
+                if (totalIndex % 45 == 0 && totalIndex != 0) {
 
-                Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
-                addedInventory.setContents(currentlyEditing.getContents().clone());
-                allPages.add(addedInventory);
+                    Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
+                    addedInventory.setContents(currentlyEditing.getContents().clone());
+                    allPages.add(addedInventory);
 
-                currentlyEditing = Bukkit.createInventory(null, 54);
-                currentlyEditing.setItem(45, leftArrow);
-                currentlyEditing.setItem(53, rightArrow);
-                for (int i = 46; i < 53; i++){
-                    currentlyEditing.setItem(i, grayGlass);
+                    currentlyEditing = Bukkit.createInventory(null, 54);
+                    currentlyEditing.setItem(45, leftArrow);
+                    currentlyEditing.setItem(53, rightArrow);
+                    for (int i = 46; i < 53; i++) {
+                        currentlyEditing.setItem(i, grayGlass);
+                    }
                 }
+                Resource resource = resourceEntry1.getValue();
+                ItemStack item = resource.getItemStack().clone();
+                ItemMeta metaItem = item.getItemMeta();
+                if (metaItem != null) {
+                    metaItem.setDisplayName(resource.getName());
+                    ArrayList<String> lore = new ArrayList<>();
+                    lore.add("ID: " + resourceEntry1.getKey());
+                    lore.add("value: " + resource.getValue());
+                    metaItem.setLore(lore);
+                    item.setItemMeta(metaItem);
+                }
+                currentlyEditing.setItem(totalIndex, item);
+                totalIndex += 1;
             }
-            Resource resource = resourceEntry.getValue();
-            ItemStack item = resource.getItemStack().clone();
-            ItemMeta metaItem = item.getItemMeta();
-            if (metaItem != null) {
-                metaItem.setDisplayName(resource.getName());
-                ArrayList<String> lore = new ArrayList<>();
-                lore.add("ID: " + resourceEntry.getKey());
-                lore.add("value: " + resource.getValue());
-                metaItem.setLore(lore);
-                item.setItemMeta(metaItem);
-            }
-            currentlyEditing.setItem(totalIndex, item);
-            totalIndex += 1;
         }
         Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
         addedInventory.setContents(currentlyEditing.getContents().clone());
@@ -158,6 +166,28 @@ public class Resource implements Listener {
     private void clickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
+        if (name.contains("choose category")){
+            e.setCancelled(true);
+            int slot = e.getRawSlot();
+            Player p = (Player) e.getWhoClicked();
+            switch (slot){
+                case(0):
+                    browsingCategory.put(p, "metals");
+                    break;
+                case(1):
+                    browsingCategory.put(p, "energy");
+                    break;
+                case(2):
+                    browsingCategory.put(p, "gemstones");
+                    break;
+                case(3):
+                    browsingCategory.put(p, "archeology");
+                    break;
+            }
+            Inventory inventory = Bukkit.createInventory(null, 54, "page 1");
+            inventory.setContents(getPage(1).getContents());
+            p.openInventory(inventory);
+        }
         if (name.contains(format("page"))) {
             e.setCancelled(true);
             int currentPage = Integer.parseInt(name.split(" ")[1]);
@@ -172,7 +202,8 @@ public class Resource implements Listener {
                     net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
                     NBTTagCompound nbt = nmsItem.u();
                     Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"));
-                    resources.put(findEmptyID(), resource);
+
+                    resources.get(browsingCategory.get(p)).put(findEmptyID(), resource);
                     p.openInventory(getPage(currentPage));
                 }
             }
@@ -180,7 +211,7 @@ public class Resource implements Listener {
                 ItemStack clickedItem = e.getCurrentItem();
                 ItemMeta meta = clickedItem.getItemMeta();
                 ArrayList<String> lore = (ArrayList<String>) meta.getLore();
-                int ID = Integer.parseInt(String.valueOf(lore.get(0).split(" ")));
+                int ID = Integer.valueOf(lore.get(0).split(" ")[1]);
                 resources.remove(ID);
                 p.openInventory(getPage(currentPage));
             }
@@ -189,32 +220,39 @@ public class Resource implements Listener {
 
     public static void saveResources() throws IOException {
 
-        for (Map.Entry<Integer, Resource> set : resources.entrySet()) {
+        for (Map.Entry<String ,HashMap<Integer, Resource>> set : resources.entrySet()) {
+            String category = set.getKey();
 
-            int id = set.getKey();
-            Resource resource = set.getValue();
-            resourceFile.set("data." + id + ".itemstack", resource.getItemStack());
-            resourceFile.set("data." + id + ".name", resource.getName());
-            resourceFile.set("data." + id + ".value", resource.getValue());
-
+            for (Map.Entry<Integer, Resource> set2: set.getValue().entrySet()) {
+                int id = set2.getKey();
+                Resource resource = set2.getValue();
+                resourceFile.set("data." + category + "." + id + ".itemstack", resource.getItemStack());
+                resourceFile.set("data." + category + "." + id + ".name", resource.getName());
+                resourceFile.set("data." + category + "." + id + ".value", resource.getValue());
+            }
         }
         saveFile(resourceFile, "resources.yml");
 
     }
 
-    public static HashMap<Integer, Resource> loadResources() throws IOException{
+    public static HashMap<String ,HashMap<Integer, Resource>> loadResources() throws IOException{
 
         resourceFile = loadFile("resources.yml");
         if (resourceFile == null) return new HashMap<>();
         if (resourceFile.getConfigurationSection("data") == null) return new HashMap<>();
 
-        HashMap<Integer, Resource> resourceHashMap = new HashMap<>();
+        HashMap<String, HashMap<Integer, Resource>> resourceHashMap = new HashMap<>();
+
 
         resourceFile.getConfigurationSection("data").getKeys(false).forEach(key -> {
-            ItemStack item = resourceFile.getItemStack("data." + key + ".itemstack");
-            String name = resourceFile.getString("data." + key + ".name");
-            Double value = resourceFile.getDouble("data." + key + ".value");
-            resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value));
+            HashMap<Integer, Resource> resourcesInCategory = new HashMap<>();
+            resourceFile.getConfigurationSection("data." + key).getKeys(false).forEach(key2 ->{
+                ItemStack item = resourceFile.getItemStack("data." + key + "." + key2 +  ".itemstack");
+                String name = resourceFile.getString("data." + key + "." + key2 + ".name");
+                Double value = resourceFile.getDouble("data." + key + "." + key2 + ".value");
+                resourcesInCategory.put(Integer.valueOf(key2), new Resource(item, name, value));
+            });
+            resourceHashMap.put(key, resourcesInCategory);
         });
 
         return resourceHashMap;

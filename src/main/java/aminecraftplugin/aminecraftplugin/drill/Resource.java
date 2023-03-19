@@ -22,6 +22,7 @@ import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
+import static aminecraftplugin.aminecraftplugin.drill.resourceCategory.getCategory;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Resource implements Listener {
@@ -29,25 +30,37 @@ public class Resource implements Listener {
 
     //todo: make GUI for adding new resources
 
-    public enum resourceCategories {
-        METALS,
-        ENERGIE,
-        GEMSTONES,
-        ARCHEOLOGY
-    }
+
 
     public static HashMap<Integer, Resource> resources = new HashMap<>();
 
-    public static HashMap<resourceCategories, ArrayList<Integer>> categories = new HashMap<>();
+    public static HashMap<resourceCategory, ArrayList<Integer>> categories = new HashMap<>();
 
     private static HashMap<Player, String> browsingCategory = new HashMap<>();
 
 
-    public static YamlConfiguration resourceFile;
+    private static YamlConfiguration resourceFile;
+    private static YamlConfiguration categoryFile;
 
     private ItemStack itemStack;
     private String name;
     private Double value;
+
+    public static resourceCategory getCategoryFromResource(Resource resource){
+        if (categories.get(resourceCategory.METALS).contains(resource)){
+            return resourceCategory.METALS;
+        }
+        else if (categories.get(resourceCategory.ENERGY).contains(resource)){
+            return resourceCategory.ENERGY;
+        }
+        else if (categories.get(resourceCategory.GEMSTONES).contains(resource)){
+            return resourceCategory.GEMSTONES;
+        }
+        else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resource)){
+            return resourceCategory.ARCHEOLOGY;
+        }
+        return resourceCategory.NULL;
+    }
 
 
     public Resource(){
@@ -64,6 +77,7 @@ public class Resource implements Listener {
     public static void init(){
         try {
             resources = loadResources();
+            categories = loadCategories();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -117,35 +131,33 @@ public class Resource implements Listener {
         int totalIndex = 0;
         int currentPage = 1;
         Inventory currentlyEditing = Bukkit.createInventory(null, 54, format("page " + currentPage));
-        for (HashMap<Integer, Resource> resourceEntry : resources.values()){
-            for (Map.Entry<Integer, Resource> resourceEntry1 : resourceEntry.entrySet()) {
-                if (totalIndex % 45 == 0 && totalIndex != 0) {
+        for (Map.Entry<Integer, Resource> resourceEntry : resources.entrySet()) {
+            if (totalIndex % 45 == 0 && totalIndex != 0) {
 
-                    Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
-                    addedInventory.setContents(currentlyEditing.getContents().clone());
-                    allPages.add(addedInventory);
+                Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
+                addedInventory.setContents(currentlyEditing.getContents().clone());
+                allPages.add(addedInventory);
 
-                    currentlyEditing = Bukkit.createInventory(null, 54);
-                    currentlyEditing.setItem(45, leftArrow);
-                    currentlyEditing.setItem(53, rightArrow);
-                    for (int i = 46; i < 53; i++) {
-                        currentlyEditing.setItem(i, grayGlass);
-                    }
+                currentlyEditing = Bukkit.createInventory(null, 54);
+                currentlyEditing.setItem(45, leftArrow);
+                currentlyEditing.setItem(53, rightArrow);
+                for (int i = 46; i < 53; i++) {
+                    currentlyEditing.setItem(i, grayGlass);
                 }
-                Resource resource = resourceEntry1.getValue();
-                ItemStack item = resource.getItemStack().clone();
-                ItemMeta metaItem = item.getItemMeta();
-                if (metaItem != null) {
-                    metaItem.setDisplayName(resource.getName());
-                    ArrayList<String> lore = new ArrayList<>();
-                    lore.add("ID: " + resourceEntry1.getKey());
-                    lore.add("value: " + resource.getValue());
-                    metaItem.setLore(lore);
-                    item.setItemMeta(metaItem);
-                }
-                currentlyEditing.setItem(totalIndex, item);
-                totalIndex += 1;
             }
+            Resource resource = resourceEntry.getValue();
+            ItemStack item = resource.getItemStack().clone();
+            ItemMeta metaItem = item.getItemMeta();
+            if (metaItem != null) {
+                metaItem.setDisplayName(resource.getName());
+                ArrayList<String> lore = new ArrayList<>();
+                lore.add("ID: " + resourceEntry.getKey());
+                lore.add("value: " + resource.getValue());
+                metaItem.setLore(lore);
+                item.setItemMeta(metaItem);
+            }
+            currentlyEditing.setItem(totalIndex, item);
+            totalIndex += 1;
         }
         Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
         addedInventory.setContents(currentlyEditing.getContents().clone());
@@ -211,7 +223,7 @@ public class Resource implements Listener {
                     NBTTagCompound nbt = nmsItem.u();
                     Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"));
 
-                    resources.get(browsingCategory.get(p)).put(findEmptyID(), resource);
+                    resources.put(findEmptyID(), resource);
                     p.openInventory(getPage(currentPage));
                 }
             }
@@ -228,44 +240,63 @@ public class Resource implements Listener {
 
     public static void saveResources() throws IOException {
 
-        for (Map.Entry<String ,HashMap<Integer, Resource>> set : resources.entrySet()) {
-            String category = set.getKey();
+        for (Map.Entry<Integer, Resource> set : resources.entrySet()) {
 
-            for (Map.Entry<Integer, Resource> set2: set.getValue().entrySet()) {
-                int id = set2.getKey();
-                Resource resource = set2.getValue();
-                resourceFile.set("data." + category + "." + id + ".itemstack", resource.getItemStack());
-                resourceFile.set("data." + category + "." + id + ".name", resource.getName());
-                resourceFile.set("data." + category + "." + id + ".value", resource.getValue());
-            }
+            int id = set.getKey();
+            Resource resource = set.getValue();
+            resourceFile.set("data." + "." + id + ".itemstack", resource.getItemStack());
+            resourceFile.set("data." + "." + id + ".name", resource.getName());
+            resourceFile.set("data." + "." + id + ".value", resource.getValue());
         }
         saveFile(resourceFile, "resources.yml");
 
     }
 
-    public static HashMap<String ,HashMap<Integer, Resource>> loadResources() throws IOException{
+    public static HashMap<Integer, Resource> loadResources() throws IOException{
 
         resourceFile = loadFile("resources.yml");
         if (resourceFile == null) return new HashMap<>();
         if (resourceFile.getConfigurationSection("data") == null) return new HashMap<>();
 
-        HashMap<String, HashMap<Integer, Resource>> resourceHashMap = new HashMap<>();
+        HashMap<Integer, Resource> resourceHashMap = new HashMap<>();
 
 
         resourceFile.getConfigurationSection("data").getKeys(false).forEach(key -> {
-            HashMap<Integer, Resource> resourcesInCategory = new HashMap<>();
-            resourceFile.getConfigurationSection("data." + key).getKeys(false).forEach(key2 ->{
-                ItemStack item = resourceFile.getItemStack("data." + key + "." + key2 +  ".itemstack");
-                String name = resourceFile.getString("data." + key + "." + key2 + ".name");
-                Double value = resourceFile.getDouble("data." + key + "." + key2 + ".value");
-                resourcesInCategory.put(Integer.valueOf(key2), new Resource(item, name, value));
-            });
-            resourceHashMap.put(key, resourcesInCategory);
+            ItemStack item = resourceFile.getItemStack("data." + key + ".itemstack");
+            String name = resourceFile.getString("data." + key + ".name");
+            Double value = resourceFile.getDouble("data." + key + ".value");
+            resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value));
         });
 
         return resourceHashMap;
     }
 
+    private static void saveCategories() throws IOException {
+        for (Map.Entry<resourceCategory, ArrayList<Integer>> set : categories.entrySet()) {
+
+            resourceCategory resourceCategory = set.getKey();
+            ArrayList<Integer> IDs = set.getValue();
+            categoryFile.set("data. " + resourceCategory.toString(), IDs);
+        }
+        saveFile(categoryFile, "categories.yml");
+    }
+
+    private static HashMap<resourceCategory, ArrayList<Integer>> loadCategories() throws IOException {
+
+        categoryFile = loadFile("categories.yml");
+        if (categoryFile == null) return new HashMap<>();
+        if (categoryFile.getConfigurationSection("data") == null) return new HashMap<>();
+
+        HashMap<resourceCategory, ArrayList<Integer>> categories = new HashMap<>();
+
+        categoryFile.getConfigurationSection("data").getKeys(false).forEach(key -> {
+            resourceCategory resourceCategory = getCategory(key);
+            ArrayList<Integer> intList = (ArrayList<Integer>) categoryFile.getIntegerList("data." + key);
+            categories.put(resourceCategory, intList);
+        });
+
+        return categories;
+    }
 
     public ItemStack getItemStack() {
         return itemStack;

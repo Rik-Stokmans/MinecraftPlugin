@@ -250,6 +250,9 @@ public class Resource implements Listener {
                     Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"));
                     int ID = findEmptyID();
                     resources.put(ID, resource);
+                    if (categories.get(browsingCategory.get(p)) == null){
+                        categories.put(browsingCategory.get(p), new ArrayList<>());
+                    }
                     categories.get(browsingCategory.get(p)).add(ID);
                     p.openInventory(getPage(currentPage, browsingCategory.get(p)));
                 }
@@ -304,7 +307,7 @@ public class Resource implements Listener {
 
             resourceCategory resourceCategory = set.getKey();
             ArrayList<Integer> IDs = set.getValue();
-            categoryFile.set("data. " + resourceCategory.toString(), IDs);
+            categoryFile.set("data." + resourceCategory.toString(), IDs);
         }
         saveFile(categoryFile, "categories.yml");
     }
@@ -326,14 +329,14 @@ public class Resource implements Listener {
         if (!categories.containsKey(resourceCategory.METALS)){
             categories.put(resourceCategory.METALS, new ArrayList<>());
         }
-        if (!categories.containsKey(resourceCategory.METALS)){
-            categories.put(resourceCategory.METALS, new ArrayList<>());
+        if (!categories.containsKey(resourceCategory.ENERGY)){
+            categories.put(resourceCategory.ENERGY, new ArrayList<>());
         }
-        if (!categories.containsKey(resourceCategory.METALS)){
-            categories.put(resourceCategory.METALS, new ArrayList<>());
+        if (!categories.containsKey(resourceCategory.GEMSTONES)){
+            categories.put(resourceCategory.GEMSTONES, new ArrayList<>());
         }
-        if (!categories.containsKey(resourceCategory.METALS)){
-            categories.put(resourceCategory.METALS, new ArrayList<>());
+        if (!categories.containsKey(resourceCategory.ARCHEOLOGY)){
+            categories.put(resourceCategory.ARCHEOLOGY, new ArrayList<>());
         }
 
         return categories;

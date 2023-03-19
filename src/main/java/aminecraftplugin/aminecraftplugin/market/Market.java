@@ -199,7 +199,7 @@ public class Market implements Listener {
 
     //method to make the main menu for all markets
     private static void initialiseMarketCategoryGuiMenu() {
-        Inventory inv = Bukkit.createInventory(null, 26, format("&eCategory Selector"));
+        Inventory inv = Bukkit.createInventory(null, 27, format("&eCategory Selector"));
 
         inv.setItem(11, metalsCategoryButton);
         inv.setItem(13, energyCategoryButton);

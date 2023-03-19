@@ -10,3 +10,6 @@ commands:
   addvalue:
     description: add value to item in hand
     usage: /addvalue
+  CreateMarket:
+    description: create a market
+    usage: /createmarket

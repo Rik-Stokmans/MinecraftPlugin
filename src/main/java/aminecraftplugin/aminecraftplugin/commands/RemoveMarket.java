@@ -1,59 +1,42 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
 import aminecraftplugin.aminecraftplugin.market.Market;
-import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
 
 import static aminecraftplugin.aminecraftplugin.market.Market.markets;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
-public class CreateMarket implements CommandExecutor {
+public class RemoveMarket implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
         if (commandSender instanceof Player) {
             Player p = (Player) commandSender;
-            String marketName = "";
-            for(String namePart : args) marketName += namePart + " ";
 
             Block targetBlock = p.getTargetBlockExact(5);
             if (targetBlock == null) return false;
 
-            int i = 0;
-            while (true) {
-                if (!markets.containsKey(i)) {
-                    markets.put(i, new Market(marketName, targetBlock.getLocation(), i));
-                    p.sendMessage(format("&aMarket created"));
-                    break;
+            int marketToRemove = -1;
+            for (Market m : markets.values()) {
+                if (m.getLocation().equals(targetBlock)) {
+                    marketToRemove = m.getKey();
+                    m.getLocation().getBlock().setType(Material.AIR);
                 }
-                else i++;
             }
+            markets.remove(marketToRemove);
+            p.sendMessage(format("&aMarket removed successfully"));
+
             return true;
         }
         return false;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -47,6 +48,7 @@ public class Market implements Listener {
     Inventory metalsGuiMenu;
     Inventory energyGuiMenu;
     Inventory gemstonesGuiMenu;
+    int key;
 
     //market init
     public static void init() {
@@ -61,17 +63,19 @@ public class Market implements Listener {
 
     }
 
-    public Market(String _name, Location _location) {
+    public Market(String _name, Location _location, int _key) {
         name = _name;
         location = _location;
         trades = new ArrayList<>();
+        key = _key;
         generateMarketMenus();
     }
 
-    public Market(String _name, Location _location, ArrayList<Integer> _tradeItemKeys) {
+    public Market(String _name, Location _location, ArrayList<Integer> _tradeItemKeys, int _key) {
         name = _name;
         location = _location;
         trades = generateTrades(_tradeItemKeys);
+        key = _key;
     }
 
 
@@ -130,10 +134,24 @@ public class Market implements Listener {
         Location clickLocation = e.getClickedBlock().getLocation();
 
 
-        for(Market m : markets.values()) {
+        for (Market m : markets.values()) {
             if (m.location.equals(clickLocation)) {
                 latestMarketOpen.put(player, m);
                 openMarket(player);
+            }
+        }
+    }
+
+    @EventHandler
+    public void marketDestroy(BlockBreakEvent e) {
+        Player p = e.getPlayer();
+
+        Location breakLocation = e.getBlock().getLocation();
+
+        for (Market m : markets.values()) {
+            if (m.location.equals(breakLocation)) {
+                e.setCancelled(true);
+                p.sendMessage(format("&cYou can't break a market, remove it with &e/removeMarket"));
             }
         }
     }
@@ -222,4 +240,127 @@ public class Market implements Listener {
         return item;
     }
 
+
+
+    //getters and setters
+    public static ItemStack getBackButton() {
+        return backButton;
+    }
+    public static void setBackButton(ItemStack backButton) {
+        Market.backButton = backButton;
+    }
+    public static ItemStack getPreviousPageButton() {
+        return previousPageButton;
+    }
+    public static void setPreviousPageButton(ItemStack previousPageButton) {
+        Market.previousPageButton = previousPageButton;
+    }
+    public static ItemStack getNextPageButton() {
+        return nextPageButton;
+    }
+    public static void setNextPageButton(ItemStack nextPageButton) {
+        Market.nextPageButton = nextPageButton;
+    }
+    public static ItemStack getAddItemButton() {
+        return addItemButton;
+    }
+    public static void setAddItemButton(ItemStack addItemButton) {
+        Market.addItemButton = addItemButton;
+    }
+    public static ItemStack getRemoveItemButton() {
+        return removeItemButton;
+    }
+    public static void setRemoveItemButton(ItemStack removeItemButton) {
+        Market.removeItemButton = removeItemButton;
+    }
+    public static ItemStack getDarkDivider() {
+        return darkDivider;
+    }
+    public static void setDarkDivider(ItemStack darkDivider) {
+        Market.darkDivider = darkDivider;
+    }
+    public static ItemStack getLightDivider() {
+        return lightDivider;
+    }
+    public static void setLightDivider(ItemStack lightDivider) {
+        Market.lightDivider = lightDivider;
+    }
+    public static ItemStack getMetalsCategoryButton() {
+        return metalsCategoryButton;
+    }
+    public static void setMetalsCategoryButton(ItemStack metalsCategoryButton) {
+        Market.metalsCategoryButton = metalsCategoryButton;
+    }
+    public static ItemStack getEnergyCategoryButton() {
+        return energyCategoryButton;
+    }
+    public static void setEnergyCategoryButton(ItemStack energyCategoryButton) {
+        Market.energyCategoryButton = energyCategoryButton;
+    }
+    public static ItemStack getGemstonesCategoryButton() {
+        return gemstonesCategoryButton;
+    }
+    public static void setGemstonesCategoryButton(ItemStack gemstonesCategoryButton) {
+        Market.gemstonesCategoryButton = gemstonesCategoryButton;
+    }
+    public static Inventory getMarketCategoryGuiMenu() {
+        return marketCategoryGuiMenu;
+    }
+    public static void setMarketCategoryGuiMenu(Inventory marketCategoryGuiMenu) {
+        Market.marketCategoryGuiMenu = marketCategoryGuiMenu;
+    }
+    public static HashMap<Player, Market> getLatestMarketOpen() {
+        return latestMarketOpen;
+    }
+    public static void setLatestMarketOpen(HashMap<Player, Market> latestMarketOpen) {
+        Market.latestMarketOpen = latestMarketOpen;
+    }
+    public static HashMap<Integer, Market> getMarkets() {
+        return markets;
+    }
+    public static void setMarkets(HashMap<Integer, Market> markets) {
+        Market.markets = markets;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public Location getLocation() {
+        return location;
+    }
+    public void setLocation(Location location) {
+        this.location = location;
+    }
+    public ArrayList<Trade> getTrades() {
+        return trades;
+    }
+    public void setTrades(ArrayList<Trade> trades) {
+        this.trades = trades;
+    }
+    public Inventory getMetalsGuiMenu() {
+        return metalsGuiMenu;
+    }
+    public void setMetalsGuiMenu(Inventory metalsGuiMenu) {
+        this.metalsGuiMenu = metalsGuiMenu;
+    }
+    public Inventory getEnergyGuiMenu() {
+        return energyGuiMenu;
+    }
+    public void setEnergyGuiMenu(Inventory energyGuiMenu) {
+        this.energyGuiMenu = energyGuiMenu;
+    }
+    public Inventory getGemstonesGuiMenu() {
+        return gemstonesGuiMenu;
+    }
+    public void setGemstonesGuiMenu(Inventory gemstonesGuiMenu) {
+        this.gemstonesGuiMenu = gemstonesGuiMenu;
+    }
+    public int getKey() {
+        return key;
+    }
+    public void setKey(int key) {
+        this.key = key;
+    }
 }

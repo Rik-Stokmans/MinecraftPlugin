@@ -1,5 +1,6 @@
 package aminecraftplugin.aminecraftplugin;
 
+import aminecraftplugin.aminecraftplugin.commands.CreateMarket;
 import aminecraftplugin.aminecraftplugin.commands.addResourceCommand;
 import aminecraftplugin.aminecraftplugin.commands.addValueCommand;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.nullTabCompleter;
@@ -49,6 +50,9 @@ public final class Main extends JavaPlugin {
         getServer().getPluginCommand("addresource").setTabCompleter(new nullTabCompleter());
         getServer().getPluginCommand("addvalue").setExecutor(new addValueCommand());
         getServer().getPluginCommand("addvalue").setTabCompleter(new numTabCompleter());
+        getServer().getPluginCommand("createmarket").setExecutor(new CreateMarket());
+        getServer().getPluginCommand("createmarket").setTabCompleter(new nullTabCompleter());
+
     }
 
     @Override

@@ -10,6 +10,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -159,7 +160,33 @@ public class Market implements Listener {
 
     @EventHandler
     public void inventoryClick(InventoryClickEvent e) {
-        //if (e.)
+        Player p = (Player) e.getWhoClicked();
+        String invName = e.getView().getTitle();
+        if (invName.equals(format("&eCategory Selector"))) {
+            e.setCancelled(true);
+            if (!e.isLeftClick()) return;
+            if (e.getCurrentItem().isSimilar(metalsCategoryButton)) {
+                    p.openInventory(latestMarketOpen.get(p).metalsGuiMenu);
+            }
+            else if (e.getCurrentItem().isSimilar(energyCategoryButton)) {
+                p.openInventory(latestMarketOpen.get(p).energyGuiMenu);
+            }
+            else if (e.getCurrentItem().isSimilar(gemstonesCategoryButton)) {
+                p.openInventory(latestMarketOpen.get(p).gemstonesGuiMenu);
+            }
+        }
+        else if (invName.equals(format("&eMetals"))) {
+            e.setCancelled(true);
+            if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+        }
+        else if (invName.equals(format("&eEnergy"))) {
+            e.setCancelled(true);
+            if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+        }
+        else if (invName.equals(format("&eGemstones"))) {
+            e.setCancelled(true);
+            if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+        }
     }
 
 

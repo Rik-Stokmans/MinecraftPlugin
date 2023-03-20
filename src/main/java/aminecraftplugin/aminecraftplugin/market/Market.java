@@ -1,6 +1,7 @@
 package aminecraftplugin.aminecraftplugin.market;
 
 import aminecraftplugin.aminecraftplugin.drill.Resource;
+import aminecraftplugin.aminecraftplugin.drill.resourceCategory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+import static aminecraftplugin.aminecraftplugin.drill.Resource.getCategoryFromResourceKey;
 import static aminecraftplugin.aminecraftplugin.drill.Resource.getKeyFromItemstack;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
@@ -35,10 +37,21 @@ public class Market implements Listener {
     public static ItemStack metalsCategoryButton;
     public static ItemStack energyCategoryButton;
     public static ItemStack gemstonesCategoryButton;
+    public static ItemStack sellAllButton;
+    public static ItemStack changeOrderAmountButton;
+    public static ItemStack resetOrderSizeButton;
+    public static ItemStack orderAddHundered;
+    public static ItemStack orderAddTen;
+    public static ItemStack orderAddOne;
+    public static ItemStack orderRemoveHundered;
+    public static ItemStack orderRemoveTen;
+    public static ItemStack orderRemoveOne;
 
     public static Inventory marketCategoryGuiMenu;
+    public static Inventory marketOrderSizeMenu;
 
     public static HashMap<Player, Market> latestMarketOpen = new HashMap<>();
+    public static HashMap<Player, Integer> playerOrderSize = new HashMap<>();
 
     //Hashmap loaded from file containing all markets
     public static HashMap<Integer, Market> markets = new HashMap<>();
@@ -70,6 +83,10 @@ public class Market implements Listener {
         location = _location;
         trades = new ArrayList<>();
         key = _key;
+        //temp
+        trades.add(new Trade(1));
+        trades.add(new Trade(2));
+        trades.add(new Trade(3));
         generateMarketMenus();
     }
 
@@ -106,6 +123,9 @@ public class Market implements Listener {
         energyGuiMenu = Bukkit.createInventory(null, 54, format("&eEnergy"));
         gemstonesGuiMenu = Bukkit.createInventory(null, 54, format("&eGemstones"));
 
+        //trade items
+        updateTrades();
+
         //separator
         for(int i = 36; i <= 44; i++) {
             metalsGuiMenu.setItem(i, darkDivider);
@@ -114,21 +134,54 @@ public class Market implements Listener {
         }
 
         //back button
-        metalsGuiMenu.setItem(49, backButton);
-        energyGuiMenu.setItem(49, backButton);
-        gemstonesGuiMenu.setItem(49, backButton);
+        metalsGuiMenu.setItem(45, backButton);
+        energyGuiMenu.setItem(45, backButton);
+        gemstonesGuiMenu.setItem(45, backButton);
 
-        /*for (Trade t : trades) {
-            if ()
-        }*/
+        //sell all button
+        metalsGuiMenu.setItem(49, sellAllButton);
+        energyGuiMenu.setItem(49, sellAllButton);
+        gemstonesGuiMenu.setItem(49, sellAllButton);
 
+        //order size editor
+        metalsGuiMenu.setItem(53, changeOrderAmountButton);
+        energyGuiMenu.setItem(53, changeOrderAmountButton);
+        gemstonesGuiMenu.setItem(53, changeOrderAmountButton);
     }
+
+    private void updateTrades() {
+        int metalsSlot = 0;
+        int energySlot = 0;
+        int gemstonesSlot = 0;
+        for (Trade t : trades) {
+            //metals
+            if (getCategoryFromResourceKey(t.getItemKey()).equals(resourceCategory.METALS)) {
+                ItemStack tradeItem = t.generateTradeItem();
+                metalsGuiMenu.setItem(metalsSlot, tradeItem);
+                metalsSlot++;
+            }
+            //energy
+            else if (getCategoryFromResourceKey(t.getItemKey()).equals(resourceCategory.ENERGY)) {
+                ItemStack tradeItem = t.generateTradeItem();
+                energyGuiMenu.setItem(energySlot, tradeItem);
+                energySlot++;
+            }
+            //gemstones
+            else if (getCategoryFromResourceKey(t.getItemKey()).equals(resourceCategory.GEMSTONES)) {
+                ItemStack tradeItem = t.generateTradeItem();
+                gemstonesGuiMenu.setItem(gemstonesSlot, tradeItem);
+                gemstonesSlot++;
+            }
+        }
+    }
+
 
 
 
     //gui methods
     private void openMarket(Player p) {
         p.openInventory(marketCategoryGuiMenu);
+        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 1);
     }
 
 
@@ -170,6 +223,11 @@ public class Market implements Listener {
         Player p = (Player) e.getWhoClicked();
         String invName = e.getView().getTitle();
         //makes items protected
+        if (clickedItem.isSimilar(changeOrderAmountButton)) {
+            openOrderSizeEditorGui(p);
+            e.setCancelled(true);
+            return;
+        }
         boolean buySellOrder = false;
         if (invName.equals(format("&eCategory Selector"))) {
             e.setCancelled(true);
@@ -186,7 +244,7 @@ public class Market implements Listener {
         }
         else if (invName.equals(format("&eMetals"))) {
             e.setCancelled(true);
-            if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+            if (clickedItem.isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
         }
@@ -202,7 +260,24 @@ public class Market implements Listener {
 
             if (e.getSlot() <= 35) buySellOrder = true;
         }
+        else if (invName.equals(format("&eChange Order Size"))) {
+            e.setCancelled(true);
+            int orderSize = playerOrderSize.get(p);
+            if (clickedItem.isSimilar(backButton)) {
+                p.openInventory(marketCategoryGuiMenu);
+                return;
+            }
+            if (clickedItem.isSimilar(orderAddHundered) && orderSize <= 9900) orderSize += 100;
+            else if (clickedItem.isSimilar(orderAddTen) && orderSize <= 9990) orderSize += 10;
+            else if (clickedItem.isSimilar(orderAddOne) && orderSize <= 9999) orderSize += 1;
+            else if (clickedItem.isSimilar(orderRemoveOne) && orderSize > 1) orderSize -= 1;
+            else if (clickedItem.isSimilar(orderRemoveTen) && orderSize > 10) orderSize -= 10;
+            else if (clickedItem.isSimilar(orderRemoveHundered) && orderSize > 100) orderSize -= 100;
+            playerOrderSize.put(p, orderSize);
+            p.getOpenInventory().setItem(22, generateOrderInfoItem(orderSize));
+        }
 
+        //todo
         if (buySellOrder) {
             //buy
             if (e.getClick().isLeftClick()) {
@@ -272,9 +347,71 @@ public class Market implements Listener {
         ArrayList<String> gemstonesCategoryButtonLore = new ArrayList<>();
         gemstonesCategoryButtonLore.add(format("&7Open the &egemstones &7tab"));
         gemstonesCategoryButton = createGuiItem("&eGemstones", gemstonesCategoryButtonLore, Material.EMERALD);
+        //new
+        ArrayList<String> sellAllButtonLore = new ArrayList<>();
+        sellAllButtonLore.add(format("&7Sell all items of this category"));
+        sellAllButton = createGuiItem("&6Sellall", sellAllButtonLore, Material.GOLD_INGOT);
+
+        ArrayList<String> changeOrderSizeLore = new ArrayList<>();
+        changeOrderSizeLore.add(format("&7Change your &eorder &7size"));
+        changeOrderAmountButton = createGuiItem("&eOrder Size", changeOrderSizeLore, Material.COMPARATOR);
+
+        ArrayList<String> resetOrderSizeLore = new ArrayList<>();
+        resetOrderSizeLore.add(format("&7Reset your &eorder &7size"));
+        resetOrderSizeButton = createGuiItem("&eReset order size", resetOrderSizeLore, Material.BLACK_CONCRETE);
+
+        ArrayList<String> orderAddHunderedLore = new ArrayList<>();
+        orderAddHunderedLore.add(format("&7Add &e100Kg &7to your order size"));
+        orderAddHundered = createGuiItem("&eAdd 100Kg", orderAddHunderedLore, Material.GREEN_GLAZED_TERRACOTTA);
+
+        ArrayList<String> orderAddTenLore = new ArrayList<>();
+        orderAddTenLore.add(format("&7Add &e10Kg &7to your order size"));
+        orderAddTen = createGuiItem("&eAdd 10Kg", orderAddTenLore, Material.GREEN_CONCRETE);
+
+        ArrayList<String> orderAddOneLore = new ArrayList<>();
+        orderAddOneLore.add(format("&7Add &e100Kg &7to your order size"));
+        orderAddOne = createGuiItem("&eAdd 1Kg", orderAddOneLore, Material.GREEN_TERRACOTTA);
+
+        ArrayList<String> orderRemoveHunderedLore = new ArrayList<>();
+        orderRemoveHunderedLore.add(format("&7Remove &e100Kg &7from your order size"));
+        orderRemoveHundered = createGuiItem("&eRemove 100Kg", orderRemoveHunderedLore, Material.RED_GLAZED_TERRACOTTA);
+
+        ArrayList<String> orderRemoveTenLore = new ArrayList<>();
+        orderRemoveTenLore.add(format("&7Remove &e10Kg &7from your order size"));
+        orderRemoveTen = createGuiItem("&eRemove 10Kg", orderRemoveTenLore, Material.RED_CONCRETE);
+
+        ArrayList<String> orderRemoveOneLore = new ArrayList<>();
+        orderRemoveOneLore.add(format("&7Remove &e1Kg &7from your order size"));
+        orderRemoveOne = createGuiItem("&eRemove 1Kg", orderRemoveOneLore, Material.RED_TERRACOTTA);
 
         darkDivider = createGuiItem(" ", new ArrayList<>(), Material.BLACK_STAINED_GLASS_PANE);
         lightDivider = createGuiItem(" ", new ArrayList<>(), Material.GRAY_STAINED_GLASS_PANE);
+    }
+
+
+
+    //method to make the order size editor
+    private void openOrderSizeEditorGui(Player p) {
+        int orderSize = playerOrderSize.get(p);
+        marketOrderSizeMenu = Bukkit.createInventory(null, 27, format("&eChange Order Size"));
+
+        marketOrderSizeMenu.setItem(10, orderAddHundered);
+        marketOrderSizeMenu.setItem(11, orderAddTen);
+        marketOrderSizeMenu.setItem(12, orderAddOne);
+        marketOrderSizeMenu.setItem(13, resetOrderSizeButton);
+        marketOrderSizeMenu.setItem(14, orderRemoveOne);
+        marketOrderSizeMenu.setItem(15, orderRemoveTen);
+        marketOrderSizeMenu.setItem(16, orderRemoveHundered);
+
+        marketOrderSizeMenu.setItem(18, backButton);
+        marketOrderSizeMenu.setItem(22, generateOrderInfoItem(orderSize));
+
+        p.openInventory(marketOrderSizeMenu);
+    }
+    private ItemStack generateOrderInfoItem(int orderSize) {
+        ArrayList<String> orderInfoItemLore = new ArrayList<>();
+        orderInfoItemLore.add(format("&b" + orderSize + "&7Kg"));
+        return createGuiItem("&eOrder Size", orderInfoItemLore, Material.BOOK);
     }
 
 

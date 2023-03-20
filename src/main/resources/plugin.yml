@@ -7,6 +7,8 @@ commands:
   addresource:
     description: add new resource to the game
     usage: /addresource
+    aliases:
+      - resources
   addvalue:
     description: add value to item in hand
     usage: /addvalue

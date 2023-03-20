@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R2.inventory.util.CraftInventoryCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -46,30 +47,6 @@ public class Resource implements Listener {
     private Double value;
     private int key;
 
-    public static resourceCategory getCategoryFromResourceKey(int resourceKey){
-        if (resources.containsKey(resourceKey)) {
-            if (categories.get(resourceCategory.METALS).contains(resourceKey)) {
-                return resourceCategory.METALS;
-            } else if (categories.get(resourceCategory.ENERGY).contains(resourceKey)) {
-                return resourceCategory.ENERGY;
-            } else if (categories.get(resourceCategory.GEMSTONES).contains(resourceKey)) {
-                return resourceCategory.GEMSTONES;
-            } else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resourceKey)) {
-                return resourceCategory.ARCHEOLOGY;
-            }
-        }
-        return resourceCategory.NULL;
-    }
-
-    public static int getKeyFromItemstack(ItemStack item) {
-        int key = -1;
-
-        for (Resource r : resources.values()) {
-            if (r.itemStack.isSimilar(item)) key = r.getKey();
-        }
-
-        return key;
-    }
 
 
     public Resource(){
@@ -110,26 +87,31 @@ public class Resource implements Listener {
         ItemStack energy = new ItemStack(Material.COAL);
         ItemStack gemstones = new ItemStack(Material.EMERALD);
         ItemStack archeology = new ItemStack(Material.GOLDEN_SHOVEL);
+        ItemStack other = new ItemStack(Material.SUNFLOWER);
 
         ItemMeta metaMetals = metals.getItemMeta();
         ItemMeta metaEnergy = energy.getItemMeta();
         ItemMeta metaGemstones = gemstones.getItemMeta();
         ItemMeta metaArcheology = archeology.getItemMeta();
+        ItemMeta metaOther = other.getItemMeta();
 
         metaMetals.setDisplayName(format("&fMetals"));
         metaEnergy.setDisplayName(format("&fEnergy"));
         metaGemstones.setDisplayName(format("&fGemstones"));
         metaArcheology.setDisplayName(format("&fArcheology"));
+        metaOther.setDisplayName(format("&fOther"));
 
         metals.setItemMeta(metaMetals);
         energy.setItemMeta(metaEnergy);
         gemstones.setItemMeta(metaGemstones);
         archeology.setItemMeta(metaArcheology);
+        other.setItemMeta(metaOther);
 
         inventory.setItem(0, metals);
         inventory.setItem(1, energy);
         inventory.setItem(2, gemstones);
         inventory.setItem(3, archeology);
+        inventory.setItem(4, other);
         p.openInventory(inventory);
 
 
@@ -165,7 +147,12 @@ public class Resource implements Listener {
         for (Map.Entry<resourceCategory, ArrayList<Integer>> categories : categories.entrySet()) {
             resourceCategory resourceCategory1 = categories.getKey();
             if (resourceCategory1.equals(resourceCategory)) {
+                ArrayList<Integer> bugged = new ArrayList<>();
                 for (Integer integer : categories.getValue()) {
+                    if (!resources.containsKey(integer)){
+                        bugged.add(integer);
+                        continue;
+                    }
                     Resource resource = resources.get(integer);
                     if (totalIndex % 45 == 0 && totalIndex != 0) {
 
@@ -192,6 +179,9 @@ public class Resource implements Listener {
                     }
                     currentlyEditing.setItem(totalIndex, item);
                     totalIndex += 1;
+                }
+                for (Integer i : bugged){
+                    categories.getValue().remove(i);
                 }
             }
         }
@@ -239,7 +229,11 @@ public class Resource implements Listener {
                 case(3):
                     browsingCategory.put(p, resourceCategory.ARCHEOLOGY);
                     break;
+                case(4):
+                    browsingCategory.put(p, resourceCategory.OTHER);
+                    break;
             }
+
             Inventory inventory = Bukkit.createInventory(null, 54, "page 1");
             inventory.setContents(getPage(1, browsingCategory.get(p)).getContents());
             p.openInventory(inventory);
@@ -248,13 +242,15 @@ public class Resource implements Listener {
             e.setCancelled(true);
             int currentPage = Integer.parseInt(name.split(" ")[1]);
             Player p = (Player) e.getWhoClicked();
+            int slot = e.getRawSlot();
+
 
             if (e.getClick().equals(ClickType.LEFT) && !e.getCurrentItem().getType().equals(Material.AIR)) {
-                if (e.getRawSlot() == 45 && currentPage > 1) {
+                if (slot == 45 && currentPage > 1) {
                     p.openInventory(getPage(currentPage - 1, browsingCategory.get(p)));
-                } else if (e.getRawSlot() == 53 && currentPage < getMaxAmountOfPages()) {
+                } else if (slot == 53 && currentPage < getMaxAmountOfPages()) {
                     p.openInventory(getPage(currentPage + 1, browsingCategory.get(p)));
-                } else if (e.getRawSlot() > 53) {
+                } else if (slot > 53) {
                     net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
                     NBTTagCompound nbt = nmsItem.u();
                     int ID = findEmptyID();
@@ -267,11 +263,11 @@ public class Resource implements Listener {
                     p.openInventory(getPage(currentPage, browsingCategory.get(p)));
                 }
             }
-            if (e.getClick().equals(ClickType.RIGHT) && e.getRawSlot() < 45){
-                ItemStack clickedItem = e.getCurrentItem();
-                ItemMeta meta = clickedItem.getItemMeta();
-                ArrayList<String> lore = (ArrayList<String>) meta.getLore();
-                int ID = Integer.valueOf(lore.get(0).split(" ")[1]);
+
+
+            if (e.getClick().equals(ClickType.RIGHT) && slot < 45){
+                int num = slot + (currentPage - 1) * 45;
+                int ID = categories.get(browsingCategory.get(p)).get(num);
                 resources.remove(ID);
                 categories.remove(ID);
                 p.openInventory(getPage(currentPage, browsingCategory.get(p)));
@@ -285,10 +281,12 @@ public class Resource implements Listener {
 
             int id = set.getKey();
             Resource resource = set.getValue();
-            resourceFile.set("data." + "." + id + ".itemstack", resource.getItemStack());
-            resourceFile.set("data." + "." + id + ".name", resource.getName());
-            resourceFile.set("data." + "." + id + ".value", resource.getValue());
-            resourceFile.set("data." + "." + id + ".id", resource.getKey());
+            if (resource != null && resource.getItemStack() != null) {
+                resourceFile.set("data." + "." + id + ".itemstack", resource.getItemStack());
+                resourceFile.set("data." + "." + id + ".name", resource.getName());
+                resourceFile.set("data." + "." + id + ".value", resource.getValue());
+                resourceFile.set("data." + "." + id + ".id", resource.getKey());
+            }
         }
         saveFile(resourceFile, "resources.yml");
 
@@ -319,6 +317,15 @@ public class Resource implements Listener {
 
             resourceCategory resourceCategory = set.getKey();
             ArrayList<Integer> IDs = set.getValue();
+            ArrayList<Integer> removals = new ArrayList<>();
+            for (Integer i : IDs){
+                if (!resources.containsKey(i)){
+                    removals.add(i);
+                }
+            }
+            for (Integer i : removals){
+                resources.remove(i);
+            }
             categoryFile.set("data." + resourceCategory.toString(), IDs);
         }
         saveFile(categoryFile, "categories.yml");
@@ -338,17 +345,12 @@ public class Resource implements Listener {
             categories.put(resourceCategory, intList);
         });
 
-        if (!categories.containsKey(resourceCategory.METALS)){
-            categories.put(resourceCategory.METALS, new ArrayList<>());
-        }
-        if (!categories.containsKey(resourceCategory.ENERGY)){
-            categories.put(resourceCategory.ENERGY, new ArrayList<>());
-        }
-        if (!categories.containsKey(resourceCategory.GEMSTONES)){
-            categories.put(resourceCategory.GEMSTONES, new ArrayList<>());
-        }
-        if (!categories.containsKey(resourceCategory.ARCHEOLOGY)){
-            categories.put(resourceCategory.ARCHEOLOGY, new ArrayList<>());
+        resourceCategory[] resourceCategories = {resourceCategory.METALS, resourceCategory.ENERGY, resourceCategory.GEMSTONES
+        , resourceCategory.ARCHEOLOGY, resourceCategory.OTHER};
+        for (resourceCategory resourceCategory : resourceCategories){
+            if (!categories.containsKey(resourceCategory)){
+                categories.put(resourceCategory, new ArrayList<>());
+            }
         }
 
         return categories;
@@ -369,4 +371,44 @@ public class Resource implements Listener {
     public int getKey() {
         return key;
     }
+
+
+
+    public static Resource getResourceFromKey(int ID){
+        for (Resource resource : resources.values()){
+            if (resource.getKey() == ID){
+                return resource;
+            }
+        }
+        return null;
+    }
+
+    public static resourceCategory getCategoryFromResourceKey(int resourceKey){
+        if (resources.containsKey(resourceKey)) {
+            if (categories.get(resourceCategory.METALS).contains(resourceKey)) {
+                return resourceCategory.METALS;
+            } else if (categories.get(resourceCategory.ENERGY).contains(resourceKey)) {
+                return resourceCategory.ENERGY;
+            } else if (categories.get(resourceCategory.GEMSTONES).contains(resourceKey)) {
+                return resourceCategory.GEMSTONES;
+            } else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resourceKey)) {
+                return resourceCategory.ARCHEOLOGY;
+            }
+            else if (categories.get(resourceCategory.OTHER).contains(resourceKey)) {
+                return resourceCategory.OTHER;
+            }
+        }
+        return resourceCategory.NULL;
+    }
+
+    public static int getKeyFromItemstack(ItemStack item) {
+        int key = -1;
+
+        for (Resource r : resources.values()) {
+            if (r.itemStack.isSimilar(item)) key = r.getKey();
+        }
+
+        return key;
+    }
+
 }

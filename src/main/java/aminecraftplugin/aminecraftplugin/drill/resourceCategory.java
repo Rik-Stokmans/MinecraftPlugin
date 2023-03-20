@@ -6,6 +6,7 @@ public enum resourceCategory {
         ENERGY,
         GEMSTONES,
         ARCHEOLOGY,
+        OTHER,
         NULL;
 
     public static resourceCategory getCategory(String s){
@@ -18,6 +19,8 @@ public enum resourceCategory {
                 return resourceCategory.GEMSTONES;
             case "ARCHEOLOGY":
                 return resourceCategory.ARCHEOLOGY;
+            case "OTHER":
+                return resourceCategory.OTHER;
         }
         return resourceCategory.NULL;
     }

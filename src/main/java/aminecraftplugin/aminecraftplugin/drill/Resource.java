@@ -1,6 +1,5 @@
 package aminecraftplugin.aminecraftplugin.drill;
 
-import net.kyori.adventure.text.Component;
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;

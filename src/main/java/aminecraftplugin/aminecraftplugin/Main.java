@@ -11,6 +11,7 @@ import aminecraftplugin.aminecraftplugin.market.Market;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +56,14 @@ public final class Main extends JavaPlugin {
         getServer().getPluginCommand("createmarket").setTabCompleter(new nullTabCompleter());
         getServer().getPluginCommand("removemarket").setExecutor(new RemoveMarket());
         getServer().getPluginCommand("removemarket").setTabCompleter(new nullTabCompleter());
+
+        //ticker all
+        BukkitScheduler scheduler = getServer().getScheduler();
+        scheduler.scheduleSyncRepeatingTask(this, () -> {
+            for (Market m : Market.markets.values()) {
+                m.tick();
+            }
+        }, 0L, 20L);
     }
 
     @Override

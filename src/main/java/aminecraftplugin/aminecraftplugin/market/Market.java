@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
@@ -19,7 +18,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.Resource.getCategoryFromResourceKey;
@@ -65,6 +63,7 @@ public class Market implements Listener {
     Inventory metalsGuiMenu;
     Inventory energyGuiMenu;
     Inventory gemstonesGuiMenu;
+    int strength;
     int key;
 
 
@@ -81,11 +80,12 @@ public class Market implements Listener {
 
     }
 
-    public Market(String _name, Location _location, int _key) {
+    public Market(String _name, Location _location, int _key, int _strength) {
         name = _name;
         location = _location;
         trades = new ArrayList<>();
         key = _key;
+        strength = _strength;
         //temp
         trades.add(new Trade(1));
         trades.add(new Trade(2));
@@ -285,6 +285,7 @@ public class Market implements Listener {
             //buy
             if (e.getClick().isLeftClick()) {
                 int key = getKeyFromItemstack(clickedItem);
+
 
             }
             //sell

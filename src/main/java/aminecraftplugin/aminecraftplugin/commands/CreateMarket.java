@@ -34,7 +34,7 @@ public class CreateMarket implements CommandExecutor {
             int i = 0;
             while (true) {
                 if (!markets.containsKey(i)) {
-                    markets.put(i, new Market(marketName, targetBlock.getLocation(), i));
+                    markets.put(i, new Market(marketName, targetBlock.getLocation(), i, 1000));
                     p.sendMessage(format(" "));
                     p.sendMessage(format("&8 >> &7Market created"));
                     p.sendMessage(format(" "));

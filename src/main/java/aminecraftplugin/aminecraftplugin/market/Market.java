@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
@@ -17,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.Resource.getKeyFromItemstack;
@@ -51,6 +53,7 @@ public class Market implements Listener {
     Inventory energyGuiMenu;
     Inventory gemstonesGuiMenu;
     int key;
+
 
     //market init
     public static void init() {

@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_19_R2.inventory.util.CraftInventoryCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -56,6 +57,9 @@ public class Resource implements Listener {
                 return resourceCategory.GEMSTONES;
             } else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resourceKey)) {
                 return resourceCategory.ARCHEOLOGY;
+            }
+            else if (categories.get(resourceCategory.OTHER).contains(resourceKey)) {
+                return resourceCategory.OTHER;
             }
         }
         return resourceCategory.NULL;
@@ -110,26 +114,31 @@ public class Resource implements Listener {
         ItemStack energy = new ItemStack(Material.COAL);
         ItemStack gemstones = new ItemStack(Material.EMERALD);
         ItemStack archeology = new ItemStack(Material.GOLDEN_SHOVEL);
+        ItemStack other = new ItemStack(Material.SUNFLOWER);
 
         ItemMeta metaMetals = metals.getItemMeta();
         ItemMeta metaEnergy = energy.getItemMeta();
         ItemMeta metaGemstones = gemstones.getItemMeta();
         ItemMeta metaArcheology = archeology.getItemMeta();
+        ItemMeta metaOther = other.getItemMeta();
 
         metaMetals.setDisplayName(format("&fMetals"));
         metaEnergy.setDisplayName(format("&fEnergy"));
         metaGemstones.setDisplayName(format("&fGemstones"));
         metaArcheology.setDisplayName(format("&fArcheology"));
+        metaOther.setDisplayName(format("&fOther"));
 
         metals.setItemMeta(metaMetals);
         energy.setItemMeta(metaEnergy);
         gemstones.setItemMeta(metaGemstones);
         archeology.setItemMeta(metaArcheology);
+        other.setItemMeta(metaOther);
 
         inventory.setItem(0, metals);
         inventory.setItem(1, energy);
         inventory.setItem(2, gemstones);
         inventory.setItem(3, archeology);
+        inventory.setItem(4, other);
         p.openInventory(inventory);
 
 
@@ -239,7 +248,11 @@ public class Resource implements Listener {
                 case(3):
                     browsingCategory.put(p, resourceCategory.ARCHEOLOGY);
                     break;
+                case(4):
+                    browsingCategory.put(p, resourceCategory.OTHER);
+                    break;
             }
+
             Inventory inventory = Bukkit.createInventory(null, 54, "page 1");
             inventory.setContents(getPage(1, browsingCategory.get(p)).getContents());
             p.openInventory(inventory);
@@ -285,10 +298,12 @@ public class Resource implements Listener {
 
             int id = set.getKey();
             Resource resource = set.getValue();
-            resourceFile.set("data." + "." + id + ".itemstack", resource.getItemStack());
-            resourceFile.set("data." + "." + id + ".name", resource.getName());
-            resourceFile.set("data." + "." + id + ".value", resource.getValue());
-            resourceFile.set("data." + "." + id + ".id", resource.getKey());
+            if (resource != null && resource.getItemStack() != null) {
+                resourceFile.set("data." + "." + id + ".itemstack", resource.getItemStack());
+                resourceFile.set("data." + "." + id + ".name", resource.getName());
+                resourceFile.set("data." + "." + id + ".value", resource.getValue());
+                resourceFile.set("data." + "." + id + ".id", resource.getKey());
+            }
         }
         saveFile(resourceFile, "resources.yml");
 
@@ -319,6 +334,15 @@ public class Resource implements Listener {
 
             resourceCategory resourceCategory = set.getKey();
             ArrayList<Integer> IDs = set.getValue();
+            ArrayList<Integer> removals = new ArrayList<>();
+            for (Integer i : IDs){
+                if (!resources.containsKey(i)){
+                    removals.add(i);
+                }
+            }
+            for (Integer i : removals){
+                resources.remove(i);
+            }
             categoryFile.set("data." + resourceCategory.toString(), IDs);
         }
         saveFile(categoryFile, "categories.yml");

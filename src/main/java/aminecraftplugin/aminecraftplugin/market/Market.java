@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -18,12 +17,12 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
+import static aminecraftplugin.aminecraftplugin.drill.Resource.getKeyFromItemstack;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Market implements Listener {
-
-    //todo: a gui for every market
 
     //ui/ux
     public static ItemStack backButton;
@@ -74,11 +73,13 @@ public class Market implements Listener {
         generateMarketMenus();
     }
 
+    //when loading from file
     public Market(String _name, Location _location, ArrayList<Integer> _tradeItemKeys, int _key) {
         name = _name;
         location = _location;
         trades = generateTrades(_tradeItemKeys);
         key = _key;
+        generateMarketMenus();
     }
 
 
@@ -88,8 +89,7 @@ public class Market implements Listener {
         ArrayList<Trade> trades = new ArrayList<>();
         for(int key : tradeItemKeys) {
             if (Resource.resources.containsKey(key)) {
-                Resource r = Resource.resources.get(key);
-                Trade trade = new Trade(r.getItemStack(), r.getName(), r.getValue(), key);
+                Trade trade = new Trade(key);
                 trades.add(trade);
             }
         }
@@ -117,6 +117,10 @@ public class Market implements Listener {
         metalsGuiMenu.setItem(49, backButton);
         energyGuiMenu.setItem(49, backButton);
         gemstonesGuiMenu.setItem(49, backButton);
+
+        /*for (Trade t : trades) {
+            if ()
+        }*/
 
     }
 
@@ -160,8 +164,13 @@ public class Market implements Listener {
 
     @EventHandler
     public void inventoryClick(InventoryClickEvent e) {
+        ItemStack clickedItem = e.getCurrentItem();
+        if (clickedItem == null) return;
+
         Player p = (Player) e.getWhoClicked();
         String invName = e.getView().getTitle();
+        //makes items protected
+        boolean buySellOrder = false;
         if (invName.equals(format("&eCategory Selector"))) {
             e.setCancelled(true);
             if (!e.isLeftClick()) return;
@@ -178,14 +187,32 @@ public class Market implements Listener {
         else if (invName.equals(format("&eMetals"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+
+            if (e.getSlot() <= 35) buySellOrder = true;
         }
         else if (invName.equals(format("&eEnergy"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+
+            if (e.getSlot() <= 35) buySellOrder = true;
         }
         else if (invName.equals(format("&eGemstones"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+
+            if (e.getSlot() <= 35) buySellOrder = true;
+        }
+
+        if (buySellOrder) {
+            //buy
+            if (e.getClick().isLeftClick()) {
+                int key = getKeyFromItemstack(clickedItem);
+
+            }
+            //sell
+            else if (e.getClick().isRightClick()) {
+
+            }
         }
     }
 
@@ -193,7 +220,10 @@ public class Market implements Listener {
 
     //function that slowly shifts the prices to base price
     public void tick() {
-
+        Random rand = new Random();
+        for (Trade trade : trades) {
+            if (rand.nextDouble() > 0.1) trade.tick(true);
+        }
     }
 
 

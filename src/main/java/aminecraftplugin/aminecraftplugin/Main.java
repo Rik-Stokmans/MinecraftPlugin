@@ -39,7 +39,7 @@ public final class Main extends JavaPlugin {
         //resource init
         Resource.init();
 
-        //market init
+        //market things
         Market.init();
 
         Main main = this;

@@ -45,21 +45,31 @@ public class Resource implements Listener {
     private ItemStack itemStack;
     private String name;
     private Double value;
+    private int key;
 
-    public static resourceCategory getCategoryFromResource(Resource resource){
-        if (categories.get(resourceCategory.METALS).contains(resource)){
-            return resourceCategory.METALS;
-        }
-        else if (categories.get(resourceCategory.ENERGY).contains(resource)){
-            return resourceCategory.ENERGY;
-        }
-        else if (categories.get(resourceCategory.GEMSTONES).contains(resource)){
-            return resourceCategory.GEMSTONES;
-        }
-        else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resource)){
-            return resourceCategory.ARCHEOLOGY;
+    public static resourceCategory getCategoryFromResourceKey(int resourceKey){
+        if (resources.containsKey(resourceKey)) {
+            if (categories.get(resourceCategory.METALS).contains(resourceKey)) {
+                return resourceCategory.METALS;
+            } else if (categories.get(resourceCategory.ENERGY).contains(resourceKey)) {
+                return resourceCategory.ENERGY;
+            } else if (categories.get(resourceCategory.GEMSTONES).contains(resourceKey)) {
+                return resourceCategory.GEMSTONES;
+            } else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resourceKey)) {
+                return resourceCategory.ARCHEOLOGY;
+            }
         }
         return resourceCategory.NULL;
+    }
+
+    public static int getKeyFromItemstack(ItemStack item) {
+        int key = -1;
+
+        for (Resource r : resources.values()) {
+            if (r.itemStack.isSimilar(item)) key = r.getKey();
+        }
+
+        return key;
     }
 
 
@@ -67,10 +77,11 @@ public class Resource implements Listener {
 
     }
 
-    public Resource(ItemStack item, String name, Double value){
+    public Resource(ItemStack item, String name, Double value, int key){
         this.itemStack = item;
         this.name = name;
         this.value = value;
+        this.key = key;
     }
 
 
@@ -247,8 +258,8 @@ public class Resource implements Listener {
                 } else if (e.getRawSlot() > 53) {
                     net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
                     NBTTagCompound nbt = nmsItem.u();
-                    Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"));
                     int ID = findEmptyID();
+                    Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"), ID);
                     resources.put(ID, resource);
                     if (categories.get(browsingCategory.get(p)) == null){
                         categories.put(browsingCategory.get(p), new ArrayList<>());
@@ -278,6 +289,7 @@ public class Resource implements Listener {
             resourceFile.set("data." + "." + id + ".itemstack", resource.getItemStack());
             resourceFile.set("data." + "." + id + ".name", resource.getName());
             resourceFile.set("data." + "." + id + ".value", resource.getValue());
+            resourceFile.set("data." + "." + id + ".id", resource.getKey());
         }
         saveFile(resourceFile, "resources.yml");
 
@@ -296,7 +308,8 @@ public class Resource implements Listener {
             ItemStack item = resourceFile.getItemStack("data." + key + ".itemstack");
             String name = resourceFile.getString("data." + key + ".name");
             Double value = resourceFile.getDouble("data." + key + ".value");
-            resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value));
+            int ID = resourceFile.getInt("data." + key + ".id");
+            resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID));
         });
 
         return resourceHashMap;
@@ -352,5 +365,9 @@ public class Resource implements Listener {
 
     public Double getValue() {
         return value;
+    }
+
+    public int getKey() {
+        return key;
     }
 }

@@ -15,10 +15,12 @@ public class LootTable {
 
     private HashMap<Resource, Float> table = new HashMap<>();
     private Location location;
+    private String name;
     private int ID;
 
 
-    public LootTable(Location location){
+    public LootTable(String name, Location location){
+        this.name = name;
         this.location = location;
         this.ID = findNewID();
         IDs.put(this.ID, this);

@@ -20,7 +20,7 @@ public class addLootTableCommand implements CommandExecutor {
             }
             Location location = p.getLocation();
 
-            LootTable lootTable = new LootTable(location);
+            LootTable lootTable = new LootTable(name, location);
             lootTable.openLoottableMenu(p);
         }
 

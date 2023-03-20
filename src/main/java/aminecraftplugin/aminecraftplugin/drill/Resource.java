@@ -244,9 +244,15 @@ public class Resource implements Listener {
             Player p = (Player) e.getWhoClicked();
             int slot = e.getRawSlot();
 
-
-            if (e.getClick().equals(ClickType.LEFT) && !e.getCurrentItem().getType().equals(Material.AIR)) {
-                if (slot == 45 && currentPage > 1) {
+            if (e.getCurrentItem() != null &&
+                    e.getClick().equals(ClickType.LEFT)) {
+                if (slot < 45){
+                    int num = slot + (currentPage - 1) * 45;
+                    int ID = categories.get(browsingCategory.get(p)).get(num);
+                    Resource resource = resources.get(ID);
+                    p.getInventory().addItem(resource.getItemStack());
+                }
+                else if (slot == 45 && currentPage > 1) {
                     p.openInventory(getPage(currentPage - 1, browsingCategory.get(p)));
                 } else if (slot == 53 && currentPage < getMaxAmountOfPages()) {
                     p.openInventory(getPage(currentPage + 1, browsingCategory.get(p)));

@@ -27,11 +27,6 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Resource implements Listener {
 
-
-    //todo: make GUI for adding new resources
-
-
-
     public static HashMap<Integer, Resource> resources = new HashMap<>();
 
     public static HashMap<resourceCategory, ArrayList<Integer>> categories = new HashMap<>();
@@ -82,7 +77,7 @@ public class Resource implements Listener {
 
     public static void openResourceGUI(Player p) {
 
-        Inventory inventory = Bukkit.createInventory(null, InventoryType.HOPPER, "choose category");
+        Inventory inventory = Bukkit.createInventory(null, InventoryType.HOPPER, "Choose category");
         ItemStack metals = new ItemStack(Material.IRON_INGOT);
         ItemStack energy = new ItemStack(Material.COAL);
         ItemStack gemstones = new ItemStack(Material.EMERALD);
@@ -127,12 +122,12 @@ public class Resource implements Listener {
 
         ItemStack leftArrow = new ItemStack(Material.ARROW);
         ItemMeta meta = leftArrow.getItemMeta();
-        meta.setDisplayName("Previous Page");
+        meta.setDisplayName("Previous page");
         leftArrow.setItemMeta(meta);
 
         ItemStack rightArrow = new ItemStack(Material.ARROW);
         ItemMeta meta2 = rightArrow.getItemMeta();
-        meta2.setDisplayName("Next Page");
+        meta2.setDisplayName("Next page");
         rightArrow.setItemMeta(meta2);
 
         ItemStack grayGlass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
@@ -143,7 +138,7 @@ public class Resource implements Listener {
         ArrayList<Inventory> allPages = new ArrayList<>();
         int totalIndex = 0;
         int currentPage = 1;
-        Inventory currentlyEditing = Bukkit.createInventory(null, 54, format("page " + currentPage));
+        Inventory currentlyEditing = Bukkit.createInventory(null, 54, format("Page " + currentPage));
         for (Map.Entry<resourceCategory, ArrayList<Integer>> categories : categories.entrySet()) {
             resourceCategory resourceCategory1 = categories.getKey();
             if (resourceCategory1.equals(resourceCategory)) {
@@ -156,7 +151,7 @@ public class Resource implements Listener {
                     Resource resource = resources.get(integer);
                     if (totalIndex % 45 == 0 && totalIndex != 0) {
 
-                        Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
+                        Inventory addedInventory = Bukkit.createInventory(null, 54, format("Page " + currentPage));
                         addedInventory.setContents(currentlyEditing.getContents().clone());
                         allPages.add(addedInventory);
 
@@ -185,7 +180,7 @@ public class Resource implements Listener {
                 }
             }
         }
-        Inventory addedInventory = Bukkit.createInventory(null, 54, format("page " + currentPage));
+        Inventory addedInventory = Bukkit.createInventory(null, 54, format("Page " + currentPage));
         addedInventory.setContents(currentlyEditing.getContents().clone());
         addedInventory.setItem(45, leftArrow);
         addedInventory.setItem(53, rightArrow);
@@ -234,11 +229,11 @@ public class Resource implements Listener {
                     break;
             }
 
-            Inventory inventory = Bukkit.createInventory(null, 54, "page 1");
+            Inventory inventory = Bukkit.createInventory(null, 54, "Page 1");
             inventory.setContents(getPage(1, browsingCategory.get(p)).getContents());
             p.openInventory(inventory);
         }
-        if (name.contains(format("page"))) {
+        if (name.contains(format("Page"))) {
             e.setCancelled(true);
             int currentPage = Integer.parseInt(name.split(" ")[1]);
             Player p = (Player) e.getWhoClicked();
@@ -266,6 +261,7 @@ public class Resource implements Listener {
                         categories.put(browsingCategory.get(p), new ArrayList<>());
                     }
                     categories.get(browsingCategory.get(p)).add(ID);
+                    sortCategory(browsingCategory.get(p));
                     p.openInventory(getPage(currentPage, browsingCategory.get(p)));
                 }
             }
@@ -274,11 +270,18 @@ public class Resource implements Listener {
             if (e.getClick().equals(ClickType.RIGHT) && slot < 45){
                 int num = slot + (currentPage - 1) * 45;
                 int ID = categories.get(browsingCategory.get(p)).get(num);
+                Resource resource = resources.get(ID);
+                p.getInventory().addItem(resource.getItemStack());
                 resources.remove(ID);
-                categories.remove(ID);
+                categories.get(browsingCategory.get(p)).remove((Integer) ID);
+                sortCategory(browsingCategory.get(p));
                 p.openInventory(getPage(currentPage, browsingCategory.get(p)));
             }
         }
+    }
+
+    private static void sortCategory(resourceCategory resourceCategory){
+        Collections.sort(categories.get(resourceCategory));
     }
 
     public static void saveResources() throws IOException {

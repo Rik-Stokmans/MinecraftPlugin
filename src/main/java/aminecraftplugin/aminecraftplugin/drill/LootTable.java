@@ -70,6 +70,12 @@ public class LootTable {
 
 
         selectInventory.setItem(45, leftArrow);
+        for (int i = 46; i < 53; i++){
+            selectInventory.setItem(i, grayGlass);
+        }
+        selectInventory.setItem(53, rightArrow);
+
+
     }
 
 

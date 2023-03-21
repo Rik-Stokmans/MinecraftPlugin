@@ -58,12 +58,15 @@ public final class Main extends JavaPlugin {
         getServer().getPluginCommand("removemarket").setTabCompleter(new nullTabCompleter());
 
         //ticker all
+        /*
         BukkitScheduler scheduler = getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             for (Market m : Market.markets.values()) {
                 m.tick();
             }
         }, 0L, 20L);
+
+        */
     }
 
     @Override

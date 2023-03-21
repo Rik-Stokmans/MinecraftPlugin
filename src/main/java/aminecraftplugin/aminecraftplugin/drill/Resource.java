@@ -207,7 +207,7 @@ public class Resource implements Listener {
     private void clickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
-        if (name.contains("choose category")){
+        if (name.contains("Choose category")){
             e.setCancelled(true);
             int slot = e.getRawSlot();
             Player p = (Player) e.getWhoClicked();
@@ -402,8 +402,7 @@ public class Resource implements Listener {
                 return resourceCategory.GEMSTONES;
             } else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resourceKey)) {
                 return resourceCategory.ARCHEOLOGY;
-            }
-            else if (categories.get(resourceCategory.OTHER).contains(resourceKey)) {
+            } else if (categories.get(resourceCategory.OTHER).contains(resourceKey)) {
                 return resourceCategory.OTHER;
             }
         }

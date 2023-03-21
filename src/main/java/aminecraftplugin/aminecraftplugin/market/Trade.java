@@ -17,45 +17,42 @@ public class Trade {
     double buyPrice;
     double sellPrice;
     int itemKey;
+    int strength;
 
     //trade logic
-    int stockBaseline = 1000;
-    int stock = 1000;
+    double stock;
 
-    public Trade(int _itemKey) {
+    public Trade(int _itemKey, int _strength) {
+        stock = 0;
         Resource resource = Resource.resources.get(_itemKey);
+        strength = _strength;
         item = resource.getItemStack();
         name = resource.getName();
         baseValue = resource.getValue();
-        sellPrice = baseValue;
-        buyPrice = sellPrice + sellPrice * 0.05;
         itemKey = _itemKey;
+        tick();
     }
 
 
 
     //tick method to update this trade
-    public void tick(boolean includeStock) {
-        Random rand = new Random();
-        double oneDevBaseMultiple = 1 / (stock / stockBaseline);
-        if (stock > stockBaseline) {
-            sellPrice = baseValue * oneDevBaseMultiple;
-            if (includeStock) {
-                if (rand.nextDouble() < 1 - oneDevBaseMultiple) stock--;
-            }
-        }
-        else sellPrice = baseValue * ((-1 / stockBaseline) * stock + 2);
-
+    public void tick() {
+        if (stock > 0) sellPrice = (strength * baseValue)/(stock + strength);
+        else sellPrice = (2 * baseValue + ((strength * baseValue)/(stock - strength)));
         buyPrice = sellPrice * 1.05;
     }
 
     public ItemStack generateTradeItem() {
+        tick();
         ItemStack tradeItem = item;
         ItemMeta meta = tradeItem.getItemMeta();
         ArrayList<String> lore = new ArrayList<>();
         lore.add(" ");
-        lore.add(format("&aBuy: " + buyPrice + "$/Kg"));
-        lore.add(format("&cSell: " + sellPrice + "$/Kg"));
+        lore.add(format("&aBuy: &f" + String.format("%.2f",buyPrice) + " &e$/Kg"));
+        lore.add(format("&cSell: &f" + String.format("%.2f",sellPrice) + " &e$/Kg"));
+        lore.add(" ");
+        lore.add(format("&8Estimated price"));
+        lore.add(format("&8Market may change"));
         lore.add(" ");
         lore.add(format("&7 - left click to buy"));
         lore.add(format("&7 - right click to sell"));
@@ -101,16 +98,10 @@ public class Trade {
     public void setItemKey(int itemKey) {
         this.itemKey = itemKey;
     }
-    public int getStockBaseline() {
-        return stockBaseline;
-    }
-    public void setStockBaseline(int stockBaseline) {
-        this.stockBaseline = stockBaseline;
-    }
-    public int getStock() {
+    public double getStock() {
         return stock;
     }
-    public void setStock(int stock) {
+    public void setStock(double stock) {
         this.stock = stock;
     }
 

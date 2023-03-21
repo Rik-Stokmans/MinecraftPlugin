@@ -20,6 +20,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.Backpack.backpacks;
@@ -40,6 +41,7 @@ public class Market implements Listener {
     public static ItemStack metalsCategoryButton;
     public static ItemStack energyCategoryButton;
     public static ItemStack gemstonesCategoryButton;
+    public static ItemStack otherCategoryButton;
     public static ItemStack sellAllButton;
     public static ItemStack changeOrderAmountButton;
     public static ItemStack resetOrderSizeButton;
@@ -49,6 +51,7 @@ public class Market implements Listener {
     public static ItemStack orderRemoveHundered;
     public static ItemStack orderRemoveTen;
     public static ItemStack orderRemoveOne;
+    public static ItemStack addItemToMenu;
 
     public static Inventory marketCategoryGuiMenu;
     public static Inventory marketOrderSizeMenu;
@@ -60,15 +63,15 @@ public class Market implements Listener {
     public static HashMap<Integer, Market> markets = new HashMap<>();
 
     //all market attributes
-    String name;
-    Location location;
-    ArrayList<Trade> trades;
-    Inventory metalsGuiMenu;
-    Inventory energyGuiMenu;
-    Inventory gemstonesGuiMenu;
-    double stock = 1;
-    int strength = 1000;
-    int key;
+    private String name;
+    private Location location;
+    private HashMap<Integer, Trade> trades;
+    private Inventory metalsGuiMenu;
+    private Inventory energyGuiMenu;
+    private Inventory gemstonesGuiMenu;
+    private Inventory otherItemsGuiMenu;
+    private int strength = 1000;
+    private int key;
 
 
     //market init
@@ -84,14 +87,13 @@ public class Market implements Listener {
 
     }
 
+    //when creating a new market
     public Market(String _name, Location _location, int _key, int _strength) {
         name = _name;
         location = _location;
-        trades = new ArrayList<>();
         key = _key;
         strength = _strength;
-        //temp
-        trades.add(new Trade(1));
+        trades = new HashMap<>();
         generateMarketMenus();
     }
 
@@ -99,7 +101,7 @@ public class Market implements Listener {
     public Market(String _name, Location _location, ArrayList<Integer> _tradeItemKeys, int _key) {
         name = _name;
         location = _location;
-        trades = generateTrades(_tradeItemKeys);
+        //trades = generateTrades(_tradeItemKeys);
         key = _key;
         generateMarketMenus();
     }
@@ -111,7 +113,7 @@ public class Market implements Listener {
         ArrayList<Trade> trades = new ArrayList<>();
         for(int key : tradeItemKeys) {
             if (Resource.resources.containsKey(key)) {
-                Trade trade = new Trade(key);
+                Trade trade = new Trade(key, strength);
                 trades.add(trade);
             }
         }
@@ -122,11 +124,10 @@ public class Market implements Listener {
 
     //method to generate the inventory of the market
     private void generateMarketMenus() {
-        boolean hasTrades = this.trades.size() > 0;
-
         metalsGuiMenu = Bukkit.createInventory(null, 54, format("&eMetals"));
         energyGuiMenu = Bukkit.createInventory(null, 54, format("&eEnergy"));
         gemstonesGuiMenu = Bukkit.createInventory(null, 54, format("&eGemstones"));
+        otherItemsGuiMenu = Bukkit.createInventory(null, 54, format("&eOther"));
 
         //trade items
         updateTrades();
@@ -136,31 +137,38 @@ public class Market implements Listener {
             metalsGuiMenu.setItem(i, darkDivider);
             energyGuiMenu.setItem(i, darkDivider);
             gemstonesGuiMenu.setItem(i, darkDivider);
+            otherItemsGuiMenu.setItem(i, darkDivider);
         }
 
         //back button
         metalsGuiMenu.setItem(45, backButton);
         energyGuiMenu.setItem(45, backButton);
         gemstonesGuiMenu.setItem(45, backButton);
+        otherItemsGuiMenu.setItem(45, backButton);
 
         //sell all button
         metalsGuiMenu.setItem(49, sellAllButton);
         energyGuiMenu.setItem(49, sellAllButton);
         gemstonesGuiMenu.setItem(49, sellAllButton);
+        otherItemsGuiMenu.setItem(49, sellAllButton);
 
         //order size editor
         metalsGuiMenu.setItem(53, changeOrderAmountButton);
         energyGuiMenu.setItem(53, changeOrderAmountButton);
         gemstonesGuiMenu.setItem(53, changeOrderAmountButton);
+        otherItemsGuiMenu.setItem(53, changeOrderAmountButton);
     }
 
     private void updateTrades() {
         int metalsSlot = 0;
         int energySlot = 0;
         int gemstonesSlot = 0;
-        for (Trade t : trades) {
+        int otherItemsSlot = 0;
+        ArrayList<Integer> tradesToRemove = new ArrayList<>();
+        for (Trade t : trades.values()) {
+            if (!resources.containsKey(t.itemKey)) tradesToRemove.add(t.itemKey);
             //metals
-            if (getCategoryFromResourceKey(t.getItemKey()).equals(resourceCategory.METALS)) {
+            else if (getCategoryFromResourceKey(t.getItemKey()).equals(resourceCategory.METALS)) {
                 ItemStack tradeItem = t.generateTradeItem();
                 metalsGuiMenu.setItem(metalsSlot, tradeItem);
                 metalsSlot++;
@@ -177,9 +185,17 @@ public class Market implements Listener {
                 gemstonesGuiMenu.setItem(gemstonesSlot, tradeItem);
                 gemstonesSlot++;
             }
+            //other items
+            else if (getCategoryFromResourceKey(t.getItemKey()).equals(resourceCategory.OTHER)) {
+                ItemStack tradeItem = t.generateTradeItem();
+                otherItemsGuiMenu.setItem(otherItemsSlot, tradeItem);
+                otherItemsSlot++;
+            }
+        }
+        if (!tradesToRemove.isEmpty()) for (int tradeToRemove : tradesToRemove) {
+            trades.remove(tradeToRemove);
         }
     }
-
 
 
 
@@ -224,10 +240,10 @@ public class Market implements Listener {
     public void inventoryClick(InventoryClickEvent e) {
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null) return;
-
         Player p = (Player) e.getWhoClicked();
         String invName = e.getView().getTitle();
-        //makes items protected
+
+        //opened the change order menu
         if (clickedItem.isSimilar(changeOrderAmountButton)) {
             openOrderSizeEditorGui(p);
             e.setCancelled(true);
@@ -235,16 +251,28 @@ public class Market implements Listener {
         }
         boolean buySellOrder = false;
         if (invName.equals(format("&eCategory Selector"))) {
+
+            if (clickedItem.isSimilar(addItemToMenu)) {
+                openAddItemMenu(p);
+            }
+
             e.setCancelled(true);
             if (!e.isLeftClick()) return;
             if (e.getCurrentItem().isSimilar(metalsCategoryButton)) {
-                    p.openInventory(latestMarketOpen.get(p).metalsGuiMenu);
+                p.openInventory(latestMarketOpen.get(p).metalsGuiMenu);
+                latestMarketOpen.get(p).updateTrades();
             }
             else if (e.getCurrentItem().isSimilar(energyCategoryButton)) {
                 p.openInventory(latestMarketOpen.get(p).energyGuiMenu);
+                latestMarketOpen.get(p).updateTrades();
             }
             else if (e.getCurrentItem().isSimilar(gemstonesCategoryButton)) {
                 p.openInventory(latestMarketOpen.get(p).gemstonesGuiMenu);
+                latestMarketOpen.get(p).updateTrades();
+            }
+            else if (e.getCurrentItem().isSimilar(otherCategoryButton)) {
+                p.openInventory(latestMarketOpen.get(p).otherItemsGuiMenu);
+                latestMarketOpen.get(p).updateTrades();
             }
         }
         else if (invName.equals(format("&eMetals"))) {
@@ -260,6 +288,12 @@ public class Market implements Listener {
             if (e.getSlot() <= 35) buySellOrder = true;
         }
         else if (invName.equals(format("&eGemstones"))) {
+            e.setCancelled(true);
+            if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
+
+            if (e.getSlot() <= 35) buySellOrder = true;
+        }
+        else if (invName.equals(format("&eOther"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
@@ -281,9 +315,16 @@ public class Market implements Listener {
             playerOrderSize.put(p, orderSize);
             p.getOpenInventory().setItem(22, generateOrderInfoItem(orderSize));
         }
+        else if (invName.equals(format("&eAdd item"))) {
+            e.setCancelled(true);
+            latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
+            p.openInventory(marketCategoryGuiMenu);
+            latestMarketOpen.get(p).updateTrades();
+        }
 
         //todo
         if (buySellOrder) {
+            Market market = latestMarketOpen.get(p);
             int key = getKeyFromItemstack(clickedItem);
             int orderSize = playerOrderSize.get(p);
             if (!backpacks.containsKey(p)) {
@@ -292,13 +333,15 @@ public class Market implements Listener {
             double itemAmountInBackpack = backpacks.get(p).getItemAmountInBackpack(key);
             //buy
             if (e.getClick().isLeftClick()) {
-                double worth = getResourceFromKey(key).getValue();
+                for (int i : market.trades.keySet()) p.sendMessage(i + "");
+                double stock = market.trades.get(key).getStock();
+                double worth = market.trades.get(key).getBaseValue();
 
                 double amountBought = orderSize;
                 double price = 0;
 
-                double x1 = stock - amountBought; // -6
-                double x2 = stock; // -5
+                double x1 = stock - amountBought;
+                double x2 = stock;
 
                 p.sendMessage(strength + ", " + stock + ", " + x2 + ", " + x1);
 
@@ -311,27 +354,20 @@ public class Market implements Listener {
                     price = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
                 }
                 else if (x1 < 0 && x2 > 0) {
-                    price = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(10 * Double.MIN_VALUE + worth * strength))))
-                            + (worth * (2 * Double.MIN_VALUE + strength * Math.log(Math.abs(Double.MIN_VALUE - strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
+                    price = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
+                            + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
-
-                p.sendMessage(String.valueOf("price: " + price));
+                stock -= amountBought;
+                market.trades.get(key).setStock(stock);
+                market.trades.get(key).tick();
+                e.setCurrentItem(market.trades.get(key).generateTradeItem());
+                p.sendMessage("price: " + price * 1.05);
             }
             //sell
             else if (e.getClick().isRightClick()) {
 
 
             }
-        }
-    }
-
-
-
-    //function that slowly shifts the prices to base price
-    public void tick() {
-        Random rand = new Random();
-        for (Trade trade : trades) {
-            if (rand.nextDouble() > 0.1) trade.tick(true);
         }
     }
 
@@ -381,6 +417,10 @@ public class Market implements Listener {
         ArrayList<String> gemstonesCategoryButtonLore = new ArrayList<>();
         gemstonesCategoryButtonLore.add(format("&7Open the &egemstones &7tab"));
         gemstonesCategoryButton = createGuiItem("&eGemstones", gemstonesCategoryButtonLore, Material.EMERALD);
+
+        ArrayList<String> otherCategoryButtonLore = new ArrayList<>();
+        otherCategoryButtonLore.add(format("&7Open the &eother &7items tab"));
+        otherCategoryButton = createGuiItem("&eOther", otherCategoryButtonLore, Material.SUNFLOWER);
         //new
         ArrayList<String> sellAllButtonLore = new ArrayList<>();
         sellAllButtonLore.add(format("&7Sell all items of this category"));
@@ -418,6 +458,10 @@ public class Market implements Listener {
         orderRemoveOneLore.add(format("&7Remove &e1Kg &7from your order size"));
         orderRemoveOne = createGuiItem("&eRemove 1Kg", orderRemoveOneLore, Material.RED_TERRACOTTA);
 
+        ArrayList<String> addItemToMenuLore = new ArrayList<>();
+        addItemToMenuLore.add(format("&7Add a &eitem &7to this market"));
+        addItemToMenu = createGuiItem("&eAdd item", addItemToMenuLore, Material.GREEN_GLAZED_TERRACOTTA);
+
         darkDivider = createGuiItem(" ", new ArrayList<>(), Material.BLACK_STAINED_GLASS_PANE);
         lightDivider = createGuiItem(" ", new ArrayList<>(), Material.GRAY_STAINED_GLASS_PANE);
     }
@@ -448,15 +492,44 @@ public class Market implements Listener {
         return createGuiItem("&eOrder Size", orderInfoItemLore, Material.BOOK);
     }
 
+    private void openAddItemMenu(Player p) {
+        Inventory addItemInventory = Bukkit.createInventory(null, 54, format("&eAdd item"));
+
+        for (Resource r : resources.values()) {
+            boolean alreadyInMarket = false;
+            for (Trade trade : latestMarketOpen.get(p).trades.values()) {
+                if (trade.getItem().isSimilar(r.getItemStack())) alreadyInMarket = true;
+            }
+            if (!alreadyInMarket) {
+                ItemStack item = r.getItemStack();
+                ItemMeta imeta = item.getItemMeta();
+                List<String> lore = new ArrayList<>();
+                lore.add("");
+                resourceCategory category = getCategoryFromResourceKey(r.getKey());
+                if (category.equals(resourceCategory.METALS)) lore.add(format("&9&lMetal"));
+                else if (category.equals(resourceCategory.ENERGY)) lore.add(format("&9&lEnergy"));
+                else if (category.equals(resourceCategory.GEMSTONES)) lore.add(format("&9&lGemstones"));
+                else if (category.equals(resourceCategory.OTHER)) lore.add(format("&9&lOther"));
+                imeta.setLore(lore);
+                item.setItemMeta(imeta);
+                addItemInventory.addItem(item);
+            }
+        }
+
+        p.openInventory(addItemInventory);
+    }
+
 
 
     //method to make the main menu for all markets
     private static void initialiseMarketCategoryGuiMenu() {
         marketCategoryGuiMenu = Bukkit.createInventory(null, 27, format("&eCategory Selector"));
 
-        marketCategoryGuiMenu.setItem(11, metalsCategoryButton);
-        marketCategoryGuiMenu.setItem(13, energyCategoryButton);
-        marketCategoryGuiMenu.setItem(15, gemstonesCategoryButton);
+        marketCategoryGuiMenu.setItem(10, metalsCategoryButton);
+        marketCategoryGuiMenu.setItem(12, energyCategoryButton);
+        marketCategoryGuiMenu.setItem(14, gemstonesCategoryButton);
+        marketCategoryGuiMenu.setItem(16, otherCategoryButton);
+        marketCategoryGuiMenu.setItem(22, addItemToMenu);
     }
 
 
@@ -567,10 +640,10 @@ public class Market implements Listener {
     public void setLocation(Location location) {
         this.location = location;
     }
-    public ArrayList<Trade> getTrades() {
+    public HashMap<Integer, Trade> getTrades() {
         return trades;
     }
-    public void setTrades(ArrayList<Trade> trades) {
+    public void setTrades(HashMap<Integer, Trade> trades) {
         this.trades = trades;
     }
     public Inventory getMetalsGuiMenu() {

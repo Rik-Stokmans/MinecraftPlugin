@@ -67,7 +67,7 @@ public class Market implements Listener {
     Inventory metalsGuiMenu;
     Inventory energyGuiMenu;
     Inventory gemstonesGuiMenu;
-    double stock = 0;
+    double stock = -5;
     int strength = 1000;
     int key;
 
@@ -302,21 +302,15 @@ public class Market implements Listener {
                 p.sendMessage(strength + ", " + stock + ", " + x1 + ", " + x2);
 
                 if ((x1) >= 0) {
-                    if (x1 == 0) {
-                        x1 -= 0.0000001;
-                    }
-                    price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) - (strength * stock * Math.log(10 * x1 + strength * stock));
-
+                    if (x1 == 0) x1 += Double.MIN_VALUE;
+                    price = (strength * stock * Math.log(Math.abs(10 * x2 + strength * stock))) - (strength * stock * Math.log(10 * x1 + strength * stock));
                 }
                 else if (x2 <= 0) {
-                    if (x2 == 0){
-                        x2 -= 0.0000001;
-                    }
-                    price = 2 * strength * x2 + strength * stock * Math.log(Math.abs(10 * x2 - strength * stock)) - 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
-
+                    if (x2 == 0) x2 -= Double.MIN_VALUE;
+                    price = (2 * strength * x2 + strength * stock * Math.log(Math.abs(10 * x2 - strength * stock))) - (2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock)));
                 }
                 else if (x1 < 0 && x2 > 0) {
-                    price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) + 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
+                    price = (strength * stock * Math.log(Math.abs(10 * x2 + strength * stock))) + (2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock)));
                 }
 
                 p.sendMessage(String.valueOf("price: " + price));

@@ -333,7 +333,6 @@ public class Market implements Listener {
             double itemAmountInBackpack = backpacks.get(p).getItemAmountInBackpack(key);
             //buy
             if (e.getClick().isLeftClick()) {
-                for (int i : market.trades.keySet()) p.sendMessage(i + "");
                 double stock = market.trades.get(key).getStock();
                 double worth = market.trades.get(key).getBaseValue();
 
@@ -345,7 +344,7 @@ public class Market implements Listener {
 
                 p.sendMessage(strength + ", " + stock + ", " + x2 + ", " + x1);
 
-                if ((x1) >= 0) {
+                if (x1 >= 0) {
                     if (x1 == 0) x1 += Double.MIN_VALUE;
                     price = (worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(10 * x1 + worth * strength));
                 }
@@ -357,16 +356,44 @@ public class Market implements Listener {
                     price = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
+                //todo check if player has enough money to buy the items
                 stock -= amountBought;
+                price = price * 1.05;
                 market.trades.get(key).setStock(stock);
                 market.trades.get(key).tick();
                 e.setCurrentItem(market.trades.get(key).generateTradeItem());
-                p.sendMessage("price: " + price * 1.05);
+                p.sendMessage("price: " + price);
             }
             //sell
             else if (e.getClick().isRightClick()) {
+                double stock = market.trades.get(key).getStock();
+                double worth = market.trades.get(key).getBaseValue();
 
+                double amountSold = orderSize;
+                if (orderSize > itemAmountInBackpack) amountSold = itemAmountInBackpack;
 
+                double value = 0;
+
+                double x1 = stock;
+                double x2 = stock + amountSold;
+
+                if (x1 >= 0) {
+                    if (x1 == 0) x1 += Double.MIN_VALUE;
+                    value = (worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(10 * x1 + worth * strength));
+                }
+                else if (x2 <= 0) {
+                    if (x2 == 0) x2 -= Double.MIN_VALUE;
+                    value = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
+                }
+                else if (x1 < 0 && x2 > 0) {
+                    value = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
+                            + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
+                }
+                stock += amountSold;
+                market.trades.get(key).setStock(stock);
+                market.trades.get(key).tick();
+                e.setCurrentItem(market.trades.get(key).generateTradeItem());
+                p.sendMessage("value: " + value);
             }
         }
     }
@@ -486,6 +513,7 @@ public class Market implements Listener {
 
         p.openInventory(marketOrderSizeMenu);
     }
+
     private ItemStack generateOrderInfoItem(int orderSize) {
         ArrayList<String> orderInfoItemLore = new ArrayList<>();
         orderInfoItemLore.add(format("&b" + orderSize + "&7Kg"));

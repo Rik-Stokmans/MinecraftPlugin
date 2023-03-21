@@ -20,4 +20,7 @@ commands:
     usage: /removemarket
   addloottable:
     description: add loot table
-    usage: /addloottable
+    usage: /addloottable <name>
+  checkloottables:
+    description: check loot tables
+    usage: /checkloottables

@@ -1,11 +1,9 @@
 package aminecraftplugin.aminecraftplugin;
 
-import aminecraftplugin.aminecraftplugin.commands.CreateMarket;
-import aminecraftplugin.aminecraftplugin.commands.RemoveMarket;
-import aminecraftplugin.aminecraftplugin.commands.addResourceCommand;
-import aminecraftplugin.aminecraftplugin.commands.addValueCommand;
+import aminecraftplugin.aminecraftplugin.commands.*;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.nullTabCompleter;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.numTabCompleter;
+import aminecraftplugin.aminecraftplugin.drill.LootTable;
 import aminecraftplugin.aminecraftplugin.drill.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -37,6 +35,9 @@ public final class Main extends JavaPlugin {
             getServer().getPluginManager().registerEvents(l, this);
         }
 
+        //loottable init
+        LootTable.init();
+
         //resource init
         Resource.init();
 
@@ -57,6 +58,11 @@ public final class Main extends JavaPlugin {
         getServer().getPluginCommand("removemarket").setExecutor(new RemoveMarket());
         getServer().getPluginCommand("removemarket").setTabCompleter(new nullTabCompleter());
 
+        getServer().getPluginCommand("addloottable").setExecutor(new addLootTableCommand());
+        getServer().getPluginCommand("addloottable").setTabCompleter(new nullTabCompleter());
+        getServer().getPluginCommand("checkloottables").setExecutor(new checkLootTableCommand());
+        getServer().getPluginCommand("checkloottables").setTabCompleter(new nullTabCompleter());
+
         //ticker all
         /*
         BukkitScheduler scheduler = getServer().getScheduler();
@@ -73,7 +79,12 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
 
+        //resource save
         Resource.save();
+
+        //lootable save
+        LootTable.save();
+
     }
 
 

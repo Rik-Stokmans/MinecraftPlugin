@@ -1,7 +1,9 @@
 package aminecraftplugin.aminecraftplugin.market;
 
+import aminecraftplugin.aminecraftplugin.drill.Backpack;
 import aminecraftplugin.aminecraftplugin.drill.Resource;
 import aminecraftplugin.aminecraftplugin.drill.resourceCategory;
+import aminecraftplugin.aminecraftplugin.utils.Function;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -20,9 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+import static aminecraftplugin.aminecraftplugin.drill.Backpack.backpacks;
 import static aminecraftplugin.aminecraftplugin.drill.Resource.getCategoryFromResourceKey;
 import static aminecraftplugin.aminecraftplugin.drill.Resource.getKeyFromItemstack;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.Integral.integral;
 
 public class Market implements Listener {
 
@@ -63,7 +67,8 @@ public class Market implements Listener {
     Inventory metalsGuiMenu;
     Inventory energyGuiMenu;
     Inventory gemstonesGuiMenu;
-    int strength;
+    double stock = 0;
+    int strength = 1000;
     int key;
 
 
@@ -88,8 +93,6 @@ public class Market implements Listener {
         strength = _strength;
         //temp
         trades.add(new Trade(1));
-        trades.add(new Trade(2));
-        trades.add(new Trade(3));
         generateMarketMenus();
     }
 
@@ -282,14 +285,37 @@ public class Market implements Listener {
 
         //todo
         if (buySellOrder) {
+            int key = getKeyFromItemstack(clickedItem);
+            int orderSize = playerOrderSize.get(p);
+            if (!backpacks.containsKey(p)) {
+                backpacks.put(p, new Backpack());
+            }
+            double itemAmountInBackpack = backpacks.get(p).getItemAmountInBackpack(key);
             //buy
             if (e.getClick().isLeftClick()) {
-                int key = getKeyFromItemstack(clickedItem);
+                double amountBought = orderSize;
+                double price = 0;
 
+                double x1 = stock - amountBought; // -1
+                double x2 = stock; // 0
 
+                p.sendMessage(strength + ", " + stock + ", " + x1 + ", " + x2);
+
+                if ((x1) >= 0) {
+                    price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) - (strength * stock * Math.log(10 * x1 + strength * stock));
+                }
+                else if (x2 <= 0) {
+                    price = 2 * strength * x2 + strength * stock * Math.log(Math.abs(10 * x2 - strength * stock)) - 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
+                }
+                else if (x1 < 0 && x2 > 0) {
+                    price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) + 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
+                }
+
+                p.sendMessage(String.valueOf("price: " + price));
             }
             //sell
             else if (e.getClick().isRightClick()) {
+
 
             }
         }

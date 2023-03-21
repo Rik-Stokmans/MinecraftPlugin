@@ -23,8 +23,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.Backpack.backpacks;
-import static aminecraftplugin.aminecraftplugin.drill.Resource.getCategoryFromResourceKey;
-import static aminecraftplugin.aminecraftplugin.drill.Resource.getKeyFromItemstack;
+import static aminecraftplugin.aminecraftplugin.drill.Resource.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Integral.integral;
 
@@ -67,7 +66,7 @@ public class Market implements Listener {
     Inventory metalsGuiMenu;
     Inventory energyGuiMenu;
     Inventory gemstonesGuiMenu;
-    double stock = -5;
+    double stock = 1;
     int strength = 1000;
     int key;
 
@@ -293,25 +292,27 @@ public class Market implements Listener {
             double itemAmountInBackpack = backpacks.get(p).getItemAmountInBackpack(key);
             //buy
             if (e.getClick().isLeftClick()) {
+                double worth = getResourceFromKey(key).getValue();
+
                 double amountBought = orderSize;
                 double price = 0;
 
-                double x1 = stock - amountBought; // -1
-                double x2 = stock; // 0
+                double x1 = stock - amountBought; // -6
+                double x2 = stock; // -5
 
-                p.sendMessage(strength + ", " + stock + ", " + x1 + ", " + x2);
+                p.sendMessage(strength + ", " + stock + ", " + x2 + ", " + x1);
 
                 if ((x1) >= 0) {
                     if (x1 == 0) x1 += Double.MIN_VALUE;
-                    price = (strength * stock * Math.log(Math.abs(10 * x2 + strength * stock))) - (strength * stock * Math.log(10 * x1 + strength * stock));
+                    price = (worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(10 * x1 + worth * strength));
                 }
                 else if (x2 <= 0) {
                     if (x2 == 0) x2 -= Double.MIN_VALUE;
-                    price = (strength * (2 * x2 + stock * Math.log(Math.abs(x2 - stock)))) - (strength * (2 * x1 + stock * Math.log(Math.abs(x1 - stock))));
+                    price = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
                 }
                 else if (x1 < 0 && x2 > 0) {
-                    price = ((strength * stock * Math.log(Math.abs(10 * x2 + strength * stock))) - (strength * stock * Math.log(Math.abs(10 * Double.MIN_VALUE + strength * stock))))
-                            + (strength * (2 * Double.MIN_VALUE + stock * Math.log(Math.abs(Double.MIN_VALUE - stock))) - (strength * (2 * x1 + stock * Math.log(Math.abs(x1 - stock)))));
+                    price = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(10 * Double.MIN_VALUE + worth * strength))))
+                            + (worth * (2 * Double.MIN_VALUE + strength * Math.log(Math.abs(Double.MIN_VALUE - strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
 
                 p.sendMessage(String.valueOf("price: " + price));

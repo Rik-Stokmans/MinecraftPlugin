@@ -311,7 +311,7 @@ public class Market implements Listener {
                 }
                 else if (x1 < 0 && x2 > 0) {
                     price = ((strength * stock * Math.log(Math.abs(10 * x2 + strength * stock))) - (strength * stock * Math.log(Math.abs(10 * Double.MIN_VALUE + strength * stock))))
-                            + (strength * (2 * Double.MIN_VALUE + stock * Math.log(Math.abs(Double.MIN_VALUE - stock))) - strength * (2 * x1 + stock * Math.log(Math.abs(x1 - stock))));
+                            + (strength * (2 * Double.MIN_VALUE + stock * Math.log(Math.abs(Double.MIN_VALUE - stock))) - (strength * (2 * x1 + stock * Math.log(Math.abs(x1 - stock)))));
                 }
 
                 p.sendMessage(String.valueOf("price: " + price));

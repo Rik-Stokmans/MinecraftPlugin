@@ -303,17 +303,17 @@ public class Market implements Listener {
 
                 if ((x1) >= 0) {
                     if (x1 == 0) {
-                        price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock));
-                    } else {
-                        price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) - (strength * stock * Math.log(10 * x1 + strength * stock));
+                        x1 -= 0.0000001;
                     }
+                    price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) - (strength * stock * Math.log(10 * x1 + strength * stock));
+
                 }
                 else if (x2 <= 0) {
                     if (x2 == 0){
-                        price = 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
-                    } else {
-                        price = 2 * strength * x2 + strength * stock * Math.log(Math.abs(10 * x2 - strength * stock)) - 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
+                        x2 -= 0.0000001;
                     }
+                    price = 2 * strength * x2 + strength * stock * Math.log(Math.abs(10 * x2 - strength * stock)) - 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));
+
                 }
                 else if (x1 < 0 && x2 > 0) {
                     price = strength * stock * Math.log(Math.abs(10 * x2 + strength * stock)) + 2 * strength * x1 + strength * stock * Math.log(Math.abs(10 * x1 - strength * stock));

@@ -207,7 +207,7 @@ public class Resource implements Listener {
     private void clickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
-        if (name.contains("choose category")){
+        if (name.contains("Choose category")){
             e.setCancelled(true);
             int slot = e.getRawSlot();
             Player p = (Player) e.getWhoClicked();

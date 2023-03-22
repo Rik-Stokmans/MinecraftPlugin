@@ -115,7 +115,12 @@ public class LootTable {
             LootTable lootTable = lootTableHashMap.get(i);
             ItemStack list = new ItemStack(Material.FILLED_MAP);
             ItemMeta listMeta = list.getItemMeta();
+            listMeta.setDisplayName(lootTable.getName());
             ArrayList<String> lore = new ArrayList<>();
+
+            Location loc = lootTable.getLocation();
+            lore.add("Location: (" + "x: " + loc.getX() + ", y: " + loc.getY() + ", z: " + loc.getZ() + ")");
+
             for (Map.Entry<Resource, Float> entry : lootTable.getTable().entrySet()){
                 Resource resource = entry.getKey();
                 Float f = entry.getValue();

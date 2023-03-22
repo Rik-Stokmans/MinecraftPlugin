@@ -1,9 +1,11 @@
 package aminecraftplugin.aminecraftplugin.drill;
 
+
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -70,8 +72,7 @@ public class LootTable {
     private static int findNewID(){
         int index = 1;
         while(true){
-            if (lootTableHashMap.containsKey(index)){
-                index++;
+            if (!lootTableHashMap.containsKey(index)){
                 break;
             }
             index++;
@@ -184,9 +185,10 @@ public class LootTable {
 
     }
 
+
     public static HashMap<Integer, LootTable> loadLoottables() throws IOException {
 
-        loottableFile = loadFile("resources.yml");
+        loottableFile = loadFile("loottables.yml");
         if (loottableFile == null) return new HashMap<>();
         if (loottableFile.getConfigurationSection("data") == null) return new HashMap<>();
 

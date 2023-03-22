@@ -24,6 +24,7 @@ import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
 import static aminecraftplugin.aminecraftplugin.drill.resourceCategory.getCategory;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
 public class Resource implements Listener {
 
@@ -114,31 +115,16 @@ public class Resource implements Listener {
 
     private static int getMaxAmountOfPages(){
         int amount = resources.keySet().size();
-        int pages = (int) Math.ceil(amount / 45);
+        int pages = (int) Math.ceil(amount / 36);
         return pages;
     }
 
     private static ArrayList<Inventory> getAllPages(resourceCategory resourceCategory){
 
-        ItemStack leftArrow = new ItemStack(Material.ARROW);
-        ItemMeta meta = leftArrow.getItemMeta();
-        meta.setDisplayName("Previous page");
-        leftArrow.setItemMeta(meta);
-
-        ItemStack rightArrow = new ItemStack(Material.ARROW);
-        ItemMeta meta2 = rightArrow.getItemMeta();
-        meta2.setDisplayName("Next page");
-        rightArrow.setItemMeta(meta2);
-
-        ItemStack grayGlass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta3 = grayGlass.getItemMeta();
-        meta3.setDisplayName(format("&7"));
-        grayGlass.setItemMeta(meta3);
-
         ArrayList<Inventory> allPages = new ArrayList<>();
         int totalIndex = 0;
         int currentPage = 1;
-        Inventory currentlyEditing = Bukkit.createInventory(null, 54, format("Page " + currentPage));
+        Inventory currentlyEditing = getDefaultScrollableInventory("Page " + currentPage, true);
         for (Map.Entry<resourceCategory, ArrayList<Integer>> categories : categories.entrySet()) {
             resourceCategory resourceCategory1 = categories.getKey();
             if (resourceCategory1.equals(resourceCategory)) {
@@ -149,18 +135,13 @@ public class Resource implements Listener {
                         continue;
                     }
                     Resource resource = resources.get(integer);
-                    if (totalIndex % 45 == 0 && totalIndex != 0) {
+                    if (totalIndex % 35 == 0 && totalIndex != 0) {
 
-                        Inventory addedInventory = Bukkit.createInventory(null, 54, format("Page " + currentPage));
+                        Inventory addedInventory = Bukkit.createInventory(null, 54, "Page " + currentPage);
                         addedInventory.setContents(currentlyEditing.getContents().clone());
                         allPages.add(addedInventory);
 
-                        currentlyEditing = Bukkit.createInventory(null, 54);
-                        currentlyEditing.setItem(45, leftArrow);
-                        currentlyEditing.setItem(53, rightArrow);
-                        for (int i = 46; i < 53; i++) {
-                            currentlyEditing.setItem(i, grayGlass);
-                        }
+                        currentlyEditing = getDefaultScrollableInventory("Page " + currentPage, true);
                     }
                     ItemStack item = resource.getItemStack().clone();
                     ItemMeta metaItem = item.getItemMeta();
@@ -182,11 +163,6 @@ public class Resource implements Listener {
         }
         Inventory addedInventory = Bukkit.createInventory(null, 54, format("Page " + currentPage));
         addedInventory.setContents(currentlyEditing.getContents().clone());
-        addedInventory.setItem(45, leftArrow);
-        addedInventory.setItem(53, rightArrow);
-        for (int i = 46; i < 53; i++){
-            addedInventory.setItem(i, grayGlass);
-        }
         allPages.add(addedInventory);
         return allPages;
     }
@@ -241,8 +217,8 @@ public class Resource implements Listener {
 
             if (e.getCurrentItem() != null &&
                     e.getClick().equals(ClickType.LEFT)) {
-                if (slot < 45){
-                    int num = slot + (currentPage - 1) * 45;
+                if (slot < 36){
+                    int num = slot + (currentPage - 1) * 36;
                     int ID = categories.get(browsingCategory.get(p)).get(num);
                     Resource resource = resources.get(ID);
                     p.getInventory().addItem(resource.getItemStack());
@@ -267,8 +243,8 @@ public class Resource implements Listener {
             }
 
 
-            if (e.getClick().equals(ClickType.RIGHT) && slot < 45){
-                int num = slot + (currentPage - 1) * 45;
+            if (e.getClick().equals(ClickType.RIGHT) && slot < 36){
+                int num = slot + (currentPage - 1) * 36;
                 int ID = categories.get(browsingCategory.get(p)).get(num);
                 Resource resource = resources.get(ID);
                 p.getInventory().addItem(resource.getItemStack());

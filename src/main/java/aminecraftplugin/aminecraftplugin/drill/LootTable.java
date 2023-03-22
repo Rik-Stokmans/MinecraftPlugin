@@ -24,13 +24,15 @@ import java.util.Map;
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
 public class LootTable implements Listener {
 
 
     //resource weight factor
-    public static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
+    private static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
     private static YamlConfiguration loottableFile;
+    private static HashMap<Player, LootTable> lootTableBrowsing = new HashMap<>();
 
 
     private HashMap<Resource, Float> table = new HashMap<>();
@@ -85,34 +87,18 @@ public class LootTable implements Listener {
     }
 
     public void openLoottableMenu(Player p){
-        p.closeInventory();
+        lootTableBrowsing.put(p, this);
+
+        Inventory inventory = getDefaultScrollableInventory(this.getName(), true);
+
+
+        p.openInventory(inventory);
     }
 
     public static void openSelectLoottableMenu(Player p){
-        Inventory selectInventory = Bukkit.createInventory(null, 54, "Select Loot Table");
 
+        Inventory selectInventory = getDefaultScrollableInventory("Select Loot Table", false);;
 
-        ItemStack leftArrow = new ItemStack(Material.ARROW);
-        ItemMeta meta = leftArrow.getItemMeta();
-        meta.setDisplayName("Previous page");
-        leftArrow.setItemMeta(meta);
-
-        ItemStack rightArrow = new ItemStack(Material.ARROW);
-        ItemMeta meta2 = rightArrow.getItemMeta();
-        meta2.setDisplayName("Next page");
-        rightArrow.setItemMeta(meta2);
-
-        ItemStack grayGlass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta meta3 = grayGlass.getItemMeta();
-        meta3.setDisplayName(format("&7"));
-        grayGlass.setItemMeta(meta3);
-
-
-        selectInventory.setItem(45, leftArrow);
-        for (int i = 46; i < 53; i++){
-            selectInventory.setItem(i, grayGlass);
-        }
-        selectInventory.setItem(53, rightArrow);
 
         int index = 0;
         for (Integer i : lootTableHashMap.keySet()){

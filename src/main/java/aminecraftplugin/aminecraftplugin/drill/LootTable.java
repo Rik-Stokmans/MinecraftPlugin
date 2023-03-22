@@ -8,12 +8,15 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,10 +25,8 @@ import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
-public class LootTable {
+public class LootTable implements Listener {
 
-
-    //todo: make GUI to create new loottables, save and loading
 
     //resource weight factor
     public static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
@@ -37,6 +38,9 @@ public class LootTable {
     private String name;
     private int ID;
 
+    public LootTable(){
+
+    }
 
     public LootTable(String name, Location location, int ID){
         this.name = name;
@@ -119,7 +123,7 @@ public class LootTable {
             ArrayList<String> lore = new ArrayList<>();
 
             Location loc = lootTable.getLocation();
-            lore.add("Location: (" + "x: " + loc.getX() + ", y: " + loc.getY() + ", z: " + loc.getZ() + ")");
+            lore.add("Location: (" + "x: " + Math.round(loc.getX()) + ", y: " + Math.round(loc.getY()) + ", z: " + Math.round(loc.getZ()) + ")");
 
             for (Map.Entry<Resource, Float> entry : lootTable.getTable().entrySet()){
                 Resource resource = entry.getKey();

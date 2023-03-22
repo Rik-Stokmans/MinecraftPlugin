@@ -12,15 +12,15 @@ commands:
   addvalue:
     description: add value to item in hand
     usage: /addvalue
-  CreateMarket:
+  createmarket:
     description: create a market
     usage: /createmarket (name)
-  RemoveMarket:
+  removemarket:
     description: removes a market
     usage: /removemarket
-  addloottable:
-    description: add loot table
-    usage: /addloottable <name>
+  createloottable:
+    description: create a loot table with name
+    usage: /createloottable <name>
   checkloottables:
     description: check loot tables
     usage: /checkloottables

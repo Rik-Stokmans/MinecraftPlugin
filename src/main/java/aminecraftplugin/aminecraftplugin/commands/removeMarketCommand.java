@@ -2,7 +2,6 @@ package aminecraftplugin.aminecraftplugin.commands;
 
 import aminecraftplugin.aminecraftplugin.market.Market;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import static aminecraftplugin.aminecraftplugin.market.Market.markets;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
-public class RemoveMarket implements CommandExecutor {
+public class removeMarketCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {

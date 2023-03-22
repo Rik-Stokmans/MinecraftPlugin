@@ -8,8 +8,8 @@ import aminecraftplugin.aminecraftplugin.drill.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,9 +18,14 @@ import java.util.ArrayList;
 public final class Main extends JavaPlugin {
 
     private static String path;
+    public static Plugin plugin;
+
 
     @Override
     public void onEnable() {
+
+        plugin = this;
+
 
         //file path
         path = getDataFolder().getAbsoluteFile().toString();
@@ -29,7 +34,7 @@ public final class Main extends JavaPlugin {
 
         ArrayList<Listener> events = new ArrayList<>();
         //list of events
-        events.add(new Market()); events.add(new Resource()); events.add(new events());
+        events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);
@@ -44,24 +49,15 @@ public final class Main extends JavaPlugin {
         //market things
         Market.init();
 
-        Main main = this;
 
-
-        //todo: make this better
         //commands
-        getServer().getPluginCommand("addresource").setExecutor(new addResourceCommand());
-        getServer().getPluginCommand("addresource").setTabCompleter(new nullTabCompleter());
-        getServer().getPluginCommand("addvalue").setExecutor(new addValueCommand());
-        getServer().getPluginCommand("addvalue").setTabCompleter(new numTabCompleter());
-        getServer().getPluginCommand("createmarket").setExecutor(new CreateMarket());
-        getServer().getPluginCommand("createmarket").setTabCompleter(new nullTabCompleter());
-        getServer().getPluginCommand("removemarket").setExecutor(new RemoveMarket());
-        getServer().getPluginCommand("removemarket").setTabCompleter(new nullTabCompleter());
+        new Command("addresource", new addResourceCommand());
+        new Command("addvalue", new addValueCommand(), new numTabCompleter());
+        new Command("createmarket", new createMarketCommand());
+        new Command("removemarket", new removeMarketCommand());
+        new Command("createloottable", new createLootTableCommand());
+        new Command("checkloottables", new checkLootTableCommand());
 
-        getServer().getPluginCommand("addloottable").setExecutor(new addLootTableCommand());
-        getServer().getPluginCommand("addloottable").setTabCompleter(new nullTabCompleter());
-        getServer().getPluginCommand("checkloottables").setExecutor(new checkLootTableCommand());
-        getServer().getPluginCommand("checkloottables").setTabCompleter(new nullTabCompleter());
 
         //ticker all
         /*

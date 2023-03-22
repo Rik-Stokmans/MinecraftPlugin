@@ -1,22 +1,17 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
 import aminecraftplugin.aminecraftplugin.market.Market;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.player.PlayerChatEvent;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
 
 import static aminecraftplugin.aminecraftplugin.market.Market.markets;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
-public class CreateMarket implements CommandExecutor {
+public class createMarketCommand implements CommandExecutor {
 
     //todo: niet 2x dezelfde naam
     //todo: tabcompleter toont alle markets

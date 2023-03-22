@@ -205,7 +205,7 @@ public class LootTable {
         loottableFile.getConfigurationSection("data").getKeys(false).forEach(key -> {
 
             String name = loottableFile.getString("data." + key + ".name");
-            Location location = loottableFile.getLocation("data." + key + ".value");
+            Location location = loottableFile.getLocation("data." + key + ".location");
             int ID = loottableFile.getInt("data." + key + ".id");
 
             LootTable lootTable = new LootTable(name, location, ID);

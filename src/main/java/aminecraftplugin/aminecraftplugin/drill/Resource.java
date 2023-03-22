@@ -402,8 +402,7 @@ public class Resource implements Listener {
                 return resourceCategory.GEMSTONES;
             } else if (categories.get(resourceCategory.ARCHEOLOGY).contains(resourceKey)) {
                 return resourceCategory.ARCHEOLOGY;
-            }
-            else if (categories.get(resourceCategory.OTHER).contains(resourceKey)) {
+            } else if (categories.get(resourceCategory.OTHER).contains(resourceKey)) {
                 return resourceCategory.OTHER;
             }
         }

@@ -126,6 +126,8 @@ public class LootTable {
             selectInventory.setItem(index, list);
             index++;
         }
+
+        p.openInventory(selectInventory);
     }
 
 
@@ -203,12 +205,14 @@ public class LootTable {
 
             LootTable lootTable = new LootTable(name, location, ID);
 
-            loottableFile.getConfigurationSection("data." + key + "items").getKeys(false).forEach(key2 -> {
-                int resourceID = Integer.valueOf(key2);
-                Resource resource = Resource.getResourceFromKey(resourceID);
-                Float f = (Float) loottableFile.get("data." + key + ".items." + resourceID);
-                lootTable.getTable().put(resource, f);
-            });
+            if ((loottableFile.getConfigurationSection("data." + key + ".items")) != null) {
+                loottableFile.getConfigurationSection("data." + key + ".items").getKeys(false).forEach(key2 -> {
+                    int resourceID = Integer.valueOf(key2);
+                    Resource resource = Resource.getResourceFromKey(resourceID);
+                    Float f = (Float) loottableFile.get("data." + key + ".items." + resourceID);
+                    lootTable.getTable().put(resource, f);
+                });
+            }
 
             lootTableHashMap.put(ID, lootTable);
         });

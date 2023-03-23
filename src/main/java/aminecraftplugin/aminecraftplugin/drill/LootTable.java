@@ -129,7 +129,7 @@ public class LootTable implements Listener {
                 lootTableAdding.put(p, lootTable);
                 openResourceGUI(p);
             }
-            if (e.getCurrentItem() != null &&
+            else if (e.getCurrentItem() != null &&
                     e.getClick().equals(ClickType.LEFT)) {
                 if (slot < 36){
                     int num = slot + (currentPage - 1) * 36;
@@ -183,7 +183,7 @@ public class LootTable implements Listener {
         Inventory currentlyEditing = getDefaultScrollableInventory( lootTable.getName() + " Loot Table Page " + currentPage, true);
         for (Integer ID : lootTable.getIDs()) {
             Resource resource = lootTable.IDinTableToResource(ID);
-            Float factor = lootTable.getTable().get(resource);
+            Float factor = lootTable.getTable().get(ID);
             if (totalIndex % 35 == 0 && totalIndex != 0) {
 
                 Inventory addedInventory = Bukkit.createInventory(null, 54, lootTable.getName() + " Loot Table Page " + currentPage);
@@ -203,8 +203,10 @@ public class LootTable implements Listener {
                 lore.add(format("&aLeft click to increase factor"));
                 lore.add(format("&cRight click to decrease factor"));
                 lore.add(format("&e-----Resource info-----"));
-                lore.add(format("&7ID: &f" + resource.getValue()));
+                lore.add(format("&7ID: &f" + resource.getKey()));
                 lore.add(format("&7value: &f" + resource.getValue()));
+                lore.add("");
+                lore.add(format("&c&nShift+Rightclick to remove from loot table"));
                 metaItem.setLore(lore);
                 item.setItemMeta(metaItem);
             }

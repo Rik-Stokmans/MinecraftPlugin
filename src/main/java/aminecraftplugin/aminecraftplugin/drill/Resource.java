@@ -255,6 +255,9 @@ public class Resource implements Listener {
                         lore.add(format("&e-----Resource info-----"));
                         lore.add(format("&7ID: &f" + integer));
                         lore.add(format("&7value: &f" + resource.getValue()));
+                        lore.add("");
+                        lore.add(format("&aLeft click to copy to inventory"));
+                        lore.add(format("&cRight click to delete"));
                         metaItem.setLore(lore);
                         item.setItemMeta(metaItem);
                     }

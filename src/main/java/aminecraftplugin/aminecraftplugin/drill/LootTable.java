@@ -258,10 +258,12 @@ public class LootTable implements Listener {
 
             lore.add(format("&7Location: &f(" + "x: " + Math.round(loc.getX()) + ", y: " + Math.round(loc.getY()) + ", z: " + Math.round(loc.getZ()) + ")"));
             lore.add(format("&7ID: &f" + lootTable.getID()));
+            lore.add("");
+            lore.add("&7Resources:");
             for (Integer i2 : lootTable.getIDs()){
                 Resource resource = lootTable.IDinTableToResource(i2);
                 Float f = lootTable.getTable().get(i2);
-                lore.add(resource.getName() + ": " + f);
+                lore.add(format("  - &7" + resource.getName() + ": &f" + f));
             }
             listMeta.setLore(lore);
             list.setItemMeta(listMeta);

@@ -122,9 +122,19 @@ public class Resource implements Listener {
                     if (adding){
                         LootTable lootTable = lootTableAdding.get(p);
                         int newID = lootTable.findNewID();
-                        lootTable.getIDs().add(newID);
                         lootTable.getTable().put(newID, 1.0f);
                         lootTable.getResources().put(newID, ID);
+
+                        //insert new ID into correct position (sorted array list)
+                        int index = 0;
+                        for (Integer i : lootTable.getIDs()){
+                            if (i > newID){
+                                break;
+                            }
+                            index++;
+                        }
+                        lootTable.getIDs().add(index, newID);
+
                         lootTable.openLoottableMenu(p, 1);
                     } else {
                         p.getInventory().addItem(resource.getItemStack());
@@ -243,8 +253,8 @@ public class Resource implements Listener {
                         metaItem.setDisplayName(resource.getName());
                         ArrayList<String> lore = new ArrayList<>();
                         lore.add(format("&e-----Resource info-----"));
-                        lore.add("&7ID: &f" + resource.getValue());
-                        lore.add("&7value: &f" + resource.getValue());
+                        lore.add(format("&7ID: &f" + integer));
+                        lore.add(format("&7value: &f" + resource.getValue()));
                         metaItem.setLore(lore);
                         item.setItemMeta(metaItem);
                     }

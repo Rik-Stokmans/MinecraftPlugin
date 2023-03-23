@@ -197,13 +197,13 @@ public class LootTable implements Listener {
                 metaItem.setDisplayName(resource.getName());
                 ArrayList<String> lore = new ArrayList<>();
                 lore.add(format("&e-----Table info-----"));
-                lore.add("&7ID: &f" + ID);
-                lore.add("&7Spawn factor: &f" + factor);
-                lore.add("&aLeft click to increase factor");
-                lore.add("&cRight click to decrease factor");
+                lore.add(format("&7ID: &f" + ID));
+                lore.add(format("&7Spawn factor: &f" + factor));
+                lore.add(format("&aLeft click to increase factor"));
+                lore.add(format("&cRight click to decrease factor"));
                 lore.add(format("&e-----Resource info-----"));
-                lore.add("&7ID: &f" + resource.getValue());
-                lore.add("&7value: &f" + resource.getValue());
+                lore.add(format("&7ID: &f" + resource.getValue()));
+                lore.add(format("&7value: &f" + resource.getValue()));
                 metaItem.setLore(lore);
                 item.setItemMeta(metaItem);
             }
@@ -253,8 +253,8 @@ public class LootTable implements Listener {
 
             Location loc = lootTable.getLocation();
 
-            lore.add("Location: (" + "x: " + Math.round(loc.getX()) + ", y: " + Math.round(loc.getY()) + ", z: " + Math.round(loc.getZ()) + ")");
-            lore.add("ID: " + lootTable.getID());
+            lore.add(format("&7Location: &f(" + "x: " + Math.round(loc.getX()) + ", y: " + Math.round(loc.getY()) + ", z: " + Math.round(loc.getZ()) + ")"));
+            lore.add(format("&7ID: &f" + lootTable.getID()));
             for (Integer i2 : lootTable.getIDs()){
                 Resource resource = lootTable.IDinTableToResource(i2);
                 Float f = lootTable.getTable().get(i2);
@@ -361,7 +361,7 @@ public class LootTable implements Listener {
             if ((loottableFile.getConfigurationSection("data." + key + ".factors")) != null) {
                 loottableFile.getConfigurationSection("data." + key + ".factors").getKeys(false).forEach(key2 -> {
                     int lootID = Integer.valueOf(key2);
-                    Float f = (Float) loottableFile.get("data." + key + ".factors." + lootID);
+                    Float f = Float.valueOf(String.valueOf(loottableFile.get("data." + key + ".factors." + lootID)));
                     lootTable.getTable().put(lootID, f);
                 });
             }

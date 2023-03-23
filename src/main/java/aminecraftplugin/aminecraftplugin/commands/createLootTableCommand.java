@@ -21,7 +21,7 @@ public class createLootTableCommand implements CommandExecutor {
             Location location = p.getLocation();
 
             LootTable lootTable = new LootTable(name, location);
-            lootTable.openLoottableMenu(p);
+            lootTable.openLoottableMenu(p, 1);
             return true;
         }
 

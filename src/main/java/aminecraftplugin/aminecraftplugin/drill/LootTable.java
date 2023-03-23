@@ -1,15 +1,18 @@
 package aminecraftplugin.aminecraftplugin.drill;
 
 
+import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -23,6 +26,8 @@ import java.util.Map;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
+import static aminecraftplugin.aminecraftplugin.drill.Resource.getResourceFromKey;
+import static aminecraftplugin.aminecraftplugin.drill.Resource.openResourceGUI;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
@@ -33,9 +38,18 @@ public class LootTable implements Listener {
     private static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
     private static YamlConfiguration loottableFile;
     private static HashMap<Player, LootTable> lootTableBrowsing = new HashMap<>();
+    public static HashMap<Player, LootTable> lootTableAdding = new HashMap<>();
 
 
-    private HashMap<Resource, Float> table = new HashMap<>();
+    //keys of resources sorted by key ascending
+    private HashMap<Integer, Integer> resources = new HashMap<>();
+
+    //float is factor
+    private HashMap<Integer, Float> table = new HashMap<>();
+
+    //sorted array list
+    private ArrayList<Integer> IDs = new ArrayList<>();
+
     private Location location;
     private String name;
     private int ID;
@@ -75,10 +89,10 @@ public class LootTable implements Listener {
     }
 
 
-    private static int findNewID(){
+    public int findNewID(){
         int index = 1;
         while(true){
-            if (!lootTableHashMap.containsKey(index)){
+            if (!this.getIDs().contains(index)){
                 break;
             }
             index++;
@@ -86,19 +100,148 @@ public class LootTable implements Listener {
         return index;
     }
 
-    public void openLoottableMenu(Player p){
+    private Resource IDinTableToResource(Integer ID){
+        int resourceID = this.getResources().get(ID);
+        Resource resource = getResourceFromKey(resourceID);
+        return resource;
+    }
+
+    @EventHandler
+    private void clickEvent(InventoryClickEvent e){
+        if (e.getView() == null) return;
+        String name = e.getView().getTitle();
+        if (name.contains("Select Loot Table")) {
+            e.setCancelled(true);
+            Player p = (Player) e.getWhoClicked();
+            int slot = e.getRawSlot();
+            if (lootTableHashMap.containsKey(slot + 1)){
+                LootTable lootTable = lootTableHashMap.get(slot + 1);
+                lootTable.openLoottableMenu(p, 1);
+            }
+        } else if (name.contains("Loot Table Page ")){
+            e.setCancelled(true);
+            int currentPage = Integer.parseInt(name.split("Loot Table Page ")[1]);
+            int slot = e.getRawSlot();
+            Player p = (Player) e.getWhoClicked();
+            LootTable lootTable = lootTableBrowsing.get(p);
+            if (e.getCurrentItem() != null && e.getCurrentItem().getType().equals(Material.LIME_STAINED_GLASS_PANE)){
+                lootTableAdding.put(p, lootTable);
+                openResourceGUI(p);
+            }
+            if (e.getCurrentItem() != null &&
+                    e.getClick().equals(ClickType.LEFT)) {
+                if (slot < 36){
+                    int num = slot + (currentPage - 1) * 36;
+                    int ID = lootTable.getIDs().get(num);
+                    Float f = lootTable.getTable().get(ID) + 0.1f;
+                    lootTable.getTable().put(ID, f);
+                    lootTable.openLoottableMenu(p, currentPage);
+                }
+                else if (slot == 45 && currentPage > 1) {
+                    lootTable.openLoottableMenu(p, currentPage - 1);
+                } else if (slot == 49){
+                    openSelectLoottableMenu(p);
+                } else if (slot == 53 && currentPage < getMaxAmountOfPages(lootTable)) {
+                    lootTable.openLoottableMenu(p, currentPage + 1);
+                }
+            }
+            else if (e.getCurrentItem() != null && e.getClick().equals(ClickType.RIGHT) && slot < 36){
+                int num = slot + (currentPage - 1) * 36;
+                int IDinTable = num + 1;
+                Float f = lootTable.getTable().get(IDinTable) - 0.1f;
+                lootTable.getTable().put(IDinTable, f);
+                lootTable.openLoottableMenu(p, currentPage);
+            }
+            else if (e.getCurrentItem() != null && e.getClick().equals(ClickType.SHIFT_RIGHT) && slot < 36){
+                int num = slot + (currentPage - 1) * 36;
+                int ID = lootTable.getIDs().get(num);
+                lootTable.getTable().remove(ID);
+                resources.remove(ID);
+                lootTable.getIDs().remove(Integer.valueOf(ID));
+                lootTable.openLoottableMenu(p, currentPage);
+            }
+        }
+
+    }
+
+    private static int getMaxAmountOfPages(LootTable lootTable){
+        int amount = lootTable.getTable().keySet().size();
+        int pages = (int) Math.ceil(amount / 36);
+        return pages;
+    }
+
+    private static Inventory getPage(int page, LootTable lootTable){
+        return getAllPages(lootTable).get(page - 1);
+    }
+
+    private static ArrayList<Inventory> getAllPages(LootTable lootTable){
+
+        ArrayList<Inventory> allPages = new ArrayList<>();
+        int totalIndex = 0;
+        int currentPage = 1;
+        Inventory currentlyEditing = getDefaultScrollableInventory( lootTable.getName() + " Loot Table Page " + currentPage, true);
+        for (Integer ID : lootTable.getIDs()) {
+            Resource resource = lootTable.IDinTableToResource(ID);
+            Float factor = lootTable.getTable().get(resource);
+            if (totalIndex % 35 == 0 && totalIndex != 0) {
+
+                Inventory addedInventory = Bukkit.createInventory(null, 54, lootTable.getName() + " Loot Table Page " + currentPage);
+                addedInventory.setContents(currentlyEditing.getContents().clone());
+                allPages.add(addedInventory);
+                currentlyEditing = getDefaultScrollableInventory(lootTable.getName() + " Loot Table Page " + currentPage, true);
+                totalIndex = 0;
+            }
+            ItemStack item = resource.getItemStack().clone();
+            ItemMeta metaItem = item.getItemMeta();
+            if (metaItem != null) {
+                metaItem.setDisplayName(resource.getName());
+                ArrayList<String> lore = new ArrayList<>();
+                lore.add(format("&e-----Table info-----"));
+                lore.add("&7ID: &f" + ID);
+                lore.add("&7Spawn factor: &f" + factor);
+                lore.add("&aLeft click to increase factor");
+                lore.add("&cRight click to decrease factor");
+                lore.add(format("&e-----Resource info-----"));
+                lore.add("&7ID: &f" + resource.getValue());
+                lore.add("&7value: &f" + resource.getValue());
+                metaItem.setLore(lore);
+                item.setItemMeta(metaItem);
+            }
+            currentlyEditing.setItem(totalIndex, item);
+            totalIndex += 1;
+
+        }
+        ItemStack greenGlass = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+        ItemMeta glassMeta = greenGlass.getItemMeta();
+        glassMeta.setDisplayName(format("&aClick to add resource"));
+        greenGlass.setItemMeta(glassMeta);
+
+        currentlyEditing.setItem(totalIndex, greenGlass);
+        Inventory addedInventory = Bukkit.createInventory(null, 54, lootTable.getName() + " Loot Table Page " + currentPage);
+        addedInventory.setContents(currentlyEditing.getContents().clone());
+        allPages.add(addedInventory);
+        return allPages;
+    }
+
+    public void openLoottableMenu(Player p, int page){
+
+        if (lootTableAdding.containsKey(p)){
+            lootTableAdding.remove(p);
+        }
+
         lootTableBrowsing.put(p, this);
 
-        Inventory inventory = getDefaultScrollableInventory(this.getName(), true);
-
-
+        Inventory inventory = getPage(page, this);
         p.openInventory(inventory);
     }
 
     public static void openSelectLoottableMenu(Player p){
 
-        Inventory selectInventory = getDefaultScrollableInventory("Select Loot Table", false);;
+        if (lootTableAdding.containsKey(p)){
+            lootTableAdding.remove(p);
+        }
 
+        Inventory selectInventory = getDefaultScrollableInventory("Select Loot Table", false);;
 
         int index = 0;
         for (Integer i : lootTableHashMap.keySet()){
@@ -109,11 +252,12 @@ public class LootTable implements Listener {
             ArrayList<String> lore = new ArrayList<>();
 
             Location loc = lootTable.getLocation();
-            lore.add("Location: (" + "x: " + Math.round(loc.getX()) + ", y: " + Math.round(loc.getY()) + ", z: " + Math.round(loc.getZ()) + ")");
 
-            for (Map.Entry<Resource, Float> entry : lootTable.getTable().entrySet()){
-                Resource resource = entry.getKey();
-                Float f = entry.getValue();
+            lore.add("Location: (" + "x: " + Math.round(loc.getX()) + ", y: " + Math.round(loc.getY()) + ", z: " + Math.round(loc.getZ()) + ")");
+            lore.add("ID: " + lootTable.getID());
+            for (Integer i2 : lootTable.getIDs()){
+                Resource resource = lootTable.IDinTableToResource(i2);
+                Float f = lootTable.getTable().get(i2);
                 lore.add(resource.getName() + ": " + f);
             }
             listMeta.setLore(lore);
@@ -126,24 +270,21 @@ public class LootTable implements Listener {
     }
 
 
-    @EventHandler
-    private void clickEvent(InventoryClickEvent e){
-        if (e.getView() == null) return;
-        String name = e.getView().getTitle();
-        if (name.contains("Select Loot Table")) {
-            e.setCancelled(true);
-            int slot = e.getRawSlot();
-            Player p = (Player) e.getWhoClicked();
-            if (lootTableHashMap.containsKey(slot + 1)){
-                LootTable lootTable = lootTableHashMap.get(slot + 1);
-                lootTable.openLoottableMenu(p);
-            }
-        }
 
+
+    public HashMap<Integer, Integer> getResources() {
+        return resources;
     }
 
+    public ArrayList<Integer> getIDs() {
+        return IDs;
+    }
 
-    public HashMap<Resource, Float> getTable() {
+    public void setIDs(ArrayList<Integer> IDs) {
+        this.IDs = IDs;
+    }
+
+    public HashMap<Integer, Float> getTable() {
         return table;
     }
 
@@ -160,7 +301,6 @@ public class LootTable implements Listener {
     }
 
 
-
     public static void saveLoottables() throws IOException {
 
         for (Map.Entry<Integer, LootTable> set : lootTableHashMap.entrySet()) {
@@ -168,10 +308,17 @@ public class LootTable implements Listener {
             int id = set.getKey();
             LootTable lootTable = set.getValue();
             if (lootTable != null) {
-                for (Map.Entry<Resource, Float> set2 : lootTable.getTable().entrySet()){
-                    Resource resource = set2.getKey();
+
+                loottableFile.set("data." + id + ".IDs", lootTable.getIDs());
+                for (Map.Entry<Integer, Integer> set2 : lootTable.getResources().entrySet()) {
+                    Integer lootID = set2.getKey();
+                    Integer resourceID = set2.getValue();
+                    loottableFile.set("data." + id + ".resourceIDs." + lootID, resourceID);
+                }
+                for (Map.Entry<Integer, Float> set2 : lootTable.getTable().entrySet()){
+                    Integer lootID = set2.getKey();
                     Float f = set2.getValue();
-                    loottableFile.set("data." + id + ".items." + resource.getKey(), f);
+                    loottableFile.set("data." + id + ".factors." + lootID, f);
                 }
                 loottableFile.set("data." + id + ".name", lootTable.getName());
                 loottableFile.set("data." + id + ".location", lootTable.getLocation());
@@ -200,12 +347,22 @@ public class LootTable implements Listener {
 
             LootTable lootTable = new LootTable(name, location, ID);
 
-            if ((loottableFile.getConfigurationSection("data." + key + ".items")) != null) {
-                loottableFile.getConfigurationSection("data." + key + ".items").getKeys(false).forEach(key2 -> {
-                    int resourceID = Integer.valueOf(key2);
-                    Resource resource = Resource.getResourceFromKey(resourceID);
-                    Float f = (Float) loottableFile.get("data." + key + ".items." + resourceID);
-                    lootTable.getTable().put(resource, f);
+            ArrayList<Integer> IDs = (ArrayList<Integer>) loottableFile.getIntegerList("data." + key + "IDs");
+            lootTable.setIDs(IDs);
+
+            if ((loottableFile.getConfigurationSection("data." + key + ".resourceIDs")) != null) {
+                loottableFile.getConfigurationSection("data." + key + ".resourceIDs").getKeys(false).forEach(key2 -> {
+                    int lootID = Integer.valueOf(key2);
+                    Integer resourceID = loottableFile.getInt("data." + key + ".resourceIDs." + lootID);
+                    lootTable.getResources().put(lootID, resourceID);
+                });
+            }
+
+            if ((loottableFile.getConfigurationSection("data." + key + ".factors")) != null) {
+                loottableFile.getConfigurationSection("data." + key + ".factors").getKeys(false).forEach(key2 -> {
+                    int lootID = Integer.valueOf(key2);
+                    Float f = (Float) loottableFile.get("data." + key + ".factors." + lootID);
+                    lootTable.getTable().put(lootID, f);
                 });
             }
 

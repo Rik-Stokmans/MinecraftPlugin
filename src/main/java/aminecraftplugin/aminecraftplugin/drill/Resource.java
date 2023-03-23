@@ -22,6 +22,7 @@ import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
+import static aminecraftplugin.aminecraftplugin.drill.LootTable.lootTableAdding;
 import static aminecraftplugin.aminecraftplugin.drill.resourceCategory.getCategory;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
@@ -75,6 +76,94 @@ public class Resource implements Listener {
         }
     }
 
+    @EventHandler
+    private void clickEvent(InventoryClickEvent e){
+        if (e.getView() == null) return;
+        String name = e.getView().getTitle();
+        if (name.contains("Choose category")){
+            e.setCancelled(true);
+            Player p = (Player) e.getWhoClicked();
+            int slot = e.getRawSlot();
+            switch (slot){
+                case(0):
+                    browsingCategory.put(p, resourceCategory.METALS);
+                    break;
+                case(1):
+                    browsingCategory.put(p, resourceCategory.ENERGY);
+                    break;
+                case(2):
+                    browsingCategory.put(p, resourceCategory.GEMSTONES);
+                    break;
+                case(3):
+                    browsingCategory.put(p, resourceCategory.ARCHEOLOGY);
+                    break;
+                case(4):
+                    browsingCategory.put(p, resourceCategory.OTHER);
+                    break;
+            }
+
+            openCategoryMenu(p, browsingCategory.get(p), 1);
+        }
+        if (name.contains("resource category")) {
+            e.setCancelled(true);
+            int currentPage = Integer.parseInt(name.split("category Page ")[1]);
+            int slot = e.getRawSlot();
+            Player p = (Player) e.getWhoClicked();
+            boolean adding = false;
+            if (lootTableAdding.containsKey(p)){
+                adding = true;
+            }
+            if (e.getCurrentItem() != null &&
+                    e.getClick().equals(ClickType.LEFT)) {
+                if (slot < 36){
+                    int num = slot + (currentPage - 1) * 36;
+                    int ID = categories.get(browsingCategory.get(p)).get(num);
+                    Resource resource = resources.get(ID);
+                    if (adding){
+                        LootTable lootTable = lootTableAdding.get(p);
+                        int newID = lootTable.findNewID();
+                        lootTable.getIDs().add(newID);
+                        lootTable.getTable().put(newID, 1.0f);
+                        lootTable.getResources().put(newID, ID);
+                        lootTable.openLoottableMenu(p, 1);
+                    } else {
+                        p.getInventory().addItem(resource.getItemStack());
+                    }
+                }
+                else if (slot == 45 && currentPage > 1) {
+                    openCategoryMenu(p, browsingCategory.get(p), currentPage - 1);
+                } else if (slot == 49){
+                    openResourceGUI(p);
+                } else if (slot == 53 && currentPage < getMaxAmountOfPages(browsingCategory.get(p))) {
+                    openCategoryMenu(p, browsingCategory.get(p), currentPage + 1);
+                } else if (slot > 53) {
+                    net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
+                    NBTTagCompound nbt = nmsItem.u();
+                    int ID = findEmptyID();
+                    Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"), ID);
+                    resources.put(ID, resource);
+                    if (categories.get(browsingCategory.get(p)) == null){
+                        categories.put(browsingCategory.get(p), new ArrayList<>());
+                    }
+                    categories.get(browsingCategory.get(p)).add(ID);
+                    openCategoryMenu(p, browsingCategory.get(p), currentPage);
+                }
+            }
+
+
+            if (e.getClick().equals(ClickType.RIGHT) && slot < 36 && !adding){
+                int num = slot + (currentPage - 1) * 36;
+                int ID = categories.get(browsingCategory.get(p)).get(num);
+                Resource resource = resources.get(ID);
+                p.getInventory().addItem(resource.getItemStack());
+                resources.remove(ID);
+                categories.get(browsingCategory.get(p)).remove((Integer) ID);
+                sortCategory(browsingCategory.get(p));
+                p.openInventory(getPage(p, currentPage, browsingCategory.get(p)));
+            }
+        }
+    }
+
 
     public static void openResourceGUI(Player p) {
 
@@ -113,18 +202,23 @@ public class Resource implements Listener {
 
     }
 
-    private static int getMaxAmountOfPages(){
-        int amount = resources.keySet().size();
+    private static int getMaxAmountOfPages(resourceCategory resourceCategory){
+        if (!categories.containsKey(resourceCategory)) return 0;
+        int amount = categories.get(resourceCategory).size();
         int pages = (int) Math.ceil(amount / 36);
         return pages;
     }
 
-    private static ArrayList<Inventory> getAllPages(resourceCategory resourceCategory){
+    private static ArrayList<Inventory> getAllPages(Player p, resourceCategory resourceCategory){
 
         ArrayList<Inventory> allPages = new ArrayList<>();
         int totalIndex = 0;
         int currentPage = 1;
-        Inventory currentlyEditing = getDefaultScrollableInventory("Page " + currentPage, true);
+        String name = resourceCategory + " resource category " + "Page " + currentPage;
+        if (lootTableAdding.containsKey(p)){
+            name = "Select resource from resource category Page " + currentPage;
+        }
+        Inventory currentlyEditing = getDefaultScrollableInventory(name, true);
         for (Map.Entry<resourceCategory, ArrayList<Integer>> categories : categories.entrySet()) {
             resourceCategory resourceCategory1 = categories.getKey();
             if (resourceCategory1.equals(resourceCategory)) {
@@ -137,19 +231,20 @@ public class Resource implements Listener {
                     Resource resource = resources.get(integer);
                     if (totalIndex % 35 == 0 && totalIndex != 0) {
 
-                        Inventory addedInventory = Bukkit.createInventory(null, 54, "Page " + currentPage);
+                        Inventory addedInventory = Bukkit.createInventory(null, 54, resourceCategory + " resource category " + "Page " + currentPage);
                         addedInventory.setContents(currentlyEditing.getContents().clone());
                         allPages.add(addedInventory);
 
-                        currentlyEditing = getDefaultScrollableInventory("Page " + currentPage, true);
+                        currentlyEditing = getDefaultScrollableInventory(resourceCategory + " resource category " + "Page " + currentPage, true);
                     }
                     ItemStack item = resource.getItemStack().clone();
                     ItemMeta metaItem = item.getItemMeta();
                     if (metaItem != null) {
                         metaItem.setDisplayName(resource.getName());
                         ArrayList<String> lore = new ArrayList<>();
-                        lore.add("ID: " + integer);
-                        lore.add("value: " + resource.getValue());
+                        lore.add(format("&e-----Resource info-----"));
+                        lore.add("&7ID: &f" + resource.getValue());
+                        lore.add("&7value: &f" + resource.getValue());
                         metaItem.setLore(lore);
                         item.setItemMeta(metaItem);
                     }
@@ -161,7 +256,7 @@ public class Resource implements Listener {
                 }
             }
         }
-        Inventory addedInventory = Bukkit.createInventory(null, 54, format("Page " + currentPage));
+        Inventory addedInventory = Bukkit.createInventory(null, 54, resourceCategory + " resource category " + "Page " + currentPage);
         addedInventory.setContents(currentlyEditing.getContents().clone());
         allPages.add(addedInventory);
         return allPages;
@@ -175,86 +270,17 @@ public class Resource implements Listener {
         return index;
     }
 
-    private static Inventory getPage(int page, resourceCategory resourceCategory){
-        return getAllPages(resourceCategory).get(page - 1);
+    private static Inventory getPage(Player p, int page, resourceCategory resourceCategory){
+        return getAllPages(p, resourceCategory).get(page - 1);
     }
 
-    @EventHandler
-    private void clickEvent(InventoryClickEvent e){
-        if (e.getView() == null) return;
-        String name = e.getView().getTitle();
-        if (name.contains("Choose category")){
-            e.setCancelled(true);
-            int slot = e.getRawSlot();
-            Player p = (Player) e.getWhoClicked();
-            switch (slot){
-                case(0):
-                    browsingCategory.put(p, resourceCategory.METALS);
-                    break;
-                case(1):
-                    browsingCategory.put(p, resourceCategory.ENERGY);
-                    break;
-                case(2):
-                    browsingCategory.put(p, resourceCategory.GEMSTONES);
-                    break;
-                case(3):
-                    browsingCategory.put(p, resourceCategory.ARCHEOLOGY);
-                    break;
-                case(4):
-                    browsingCategory.put(p, resourceCategory.OTHER);
-                    break;
-            }
-
-            Inventory inventory = Bukkit.createInventory(null, 54, "Page 1");
-            inventory.setContents(getPage(1, browsingCategory.get(p)).getContents());
-            p.openInventory(inventory);
-        }
-        if (name.contains(format("Page"))) {
-            e.setCancelled(true);
-            int currentPage = Integer.parseInt(name.split(" ")[1]);
-            Player p = (Player) e.getWhoClicked();
-            int slot = e.getRawSlot();
-
-            if (e.getCurrentItem() != null &&
-                    e.getClick().equals(ClickType.LEFT)) {
-                if (slot < 36){
-                    int num = slot + (currentPage - 1) * 36;
-                    int ID = categories.get(browsingCategory.get(p)).get(num);
-                    Resource resource = resources.get(ID);
-                    p.getInventory().addItem(resource.getItemStack());
-                }
-                else if (slot == 45 && currentPage > 1) {
-                    p.openInventory(getPage(currentPage - 1, browsingCategory.get(p)));
-                } else if (slot == 53 && currentPage < getMaxAmountOfPages()) {
-                    p.openInventory(getPage(currentPage + 1, browsingCategory.get(p)));
-                } else if (slot > 53) {
-                    net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
-                    NBTTagCompound nbt = nmsItem.u();
-                    int ID = findEmptyID();
-                    Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"), ID);
-                    resources.put(ID, resource);
-                    if (categories.get(browsingCategory.get(p)) == null){
-                        categories.put(browsingCategory.get(p), new ArrayList<>());
-                    }
-                    categories.get(browsingCategory.get(p)).add(ID);
-                    sortCategory(browsingCategory.get(p));
-                    p.openInventory(getPage(currentPage, browsingCategory.get(p)));
-                }
-            }
-
-
-            if (e.getClick().equals(ClickType.RIGHT) && slot < 36){
-                int num = slot + (currentPage - 1) * 36;
-                int ID = categories.get(browsingCategory.get(p)).get(num);
-                Resource resource = resources.get(ID);
-                p.getInventory().addItem(resource.getItemStack());
-                resources.remove(ID);
-                categories.get(browsingCategory.get(p)).remove((Integer) ID);
-                sortCategory(browsingCategory.get(p));
-                p.openInventory(getPage(currentPage, browsingCategory.get(p)));
-            }
-        }
+    private static void openCategoryMenu(Player p, resourceCategory resourceCategory, int page){
+        Inventory inventory = Bukkit.createInventory(null, 54, resourceCategory + " resource category " + "Page " + page);
+        sortCategory(resourceCategory);
+        inventory.setContents(getPage(p, page, resourceCategory).getContents());
+        p.openInventory(inventory);
     }
+
 
     private static void sortCategory(resourceCategory resourceCategory){
         Collections.sort(categories.get(resourceCategory));

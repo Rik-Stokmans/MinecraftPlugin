@@ -57,7 +57,7 @@ public final class Main extends JavaPlugin {
         new Command("removemarket", new removeMarketCommand());
         new Command("createloottable", new createLootTableCommand());
         new Command("checkloottables", new checkLootTableCommand());
-
+        new Command("getloot", new getLootCommand());
 
         //ticker all
         /*

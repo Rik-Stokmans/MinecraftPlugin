@@ -36,7 +36,7 @@ public class LootTable implements Listener {
 
 
     //resource weight factor
-    private static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
+    public static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
     private static YamlConfiguration loottableFile;
     private static HashMap<Player, LootTable> lootTableBrowsing = new HashMap<>();
     public static HashMap<Player, LootTable> lootTableAdding = new HashMap<>();

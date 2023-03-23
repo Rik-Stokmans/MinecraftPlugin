@@ -5,22 +5,35 @@ api-version: 1.19
 authors: [ Duffie13, Vermulst ]
 commands:
   addresource:
+    permission: drilz.operator
     description: add new resource to the game
     usage: /addresource
     aliases:
       - resources
   addvalue:
+    permission: drilz.operator
     description: add value to item in hand
     usage: /addvalue
   createmarket:
+    permission: drilz.operator
     description: create a market
     usage: /createmarket (name)
   removemarket:
+    permission: drilz.operator
     description: removes a market
     usage: /removemarket
   createloottable:
+    permission: drilz.operator
     description: create a loot table with name
     usage: /createloottable <name>
   checkloottables:
+    permission: drilz.operator
     description: check loot tables
     usage: /checkloottables
+  getloot:
+    permission: drilz.operator
+    description: get random piece of loot
+
+permissions:
+  drilz.operator:
+    default: op

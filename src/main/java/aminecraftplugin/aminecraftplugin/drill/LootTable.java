@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
@@ -347,7 +348,7 @@ public class LootTable implements Listener {
 
             LootTable lootTable = new LootTable(name, location, ID);
 
-            ArrayList<Integer> IDs = (ArrayList<Integer>) loottableFile.getIntegerList("data." + key + "IDs");
+            ArrayList<Integer> IDs = (ArrayList<Integer>) loottableFile.getIntegerList("data." + key + ".IDs");
             lootTable.setIDs(IDs);
 
             if ((loottableFile.getConfigurationSection("data." + key + ".resourceIDs")) != null) {

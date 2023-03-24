@@ -1,11 +1,11 @@
 package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.commands.*;
-import aminecraftplugin.aminecraftplugin.commands.tabcompleters.nullTabCompleter;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.numTabCompleter;
-import aminecraftplugin.aminecraftplugin.drill.LootTable;
-import aminecraftplugin.aminecraftplugin.drill.Resource;
+import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
+import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
+import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
@@ -40,10 +40,13 @@ public final class Main extends JavaPlugin {
             getServer().getPluginManager().registerEvents(l, this);
         }
 
-        //loottable init
+        //playerprofiles loading data
+        PlayerProfile.init();
+
+        //loottable loading data
         LootTable.init();
 
-        //resource init
+        //resource loading data
         Resource.init();
 
         //market things
@@ -75,11 +78,15 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         // Plugin shutdown logic
 
-        //resource save
-        Resource.save();
+        //playerprofiles save
+        PlayerProfile.save();
 
         //lootable save
         LootTable.save();
+
+        //resource save
+        Resource.save();
+
 
     }
 

@@ -1,11 +1,10 @@
-package aminecraftplugin.aminecraftplugin.drill;
+package aminecraftplugin.aminecraftplugin.drill.loot;
 
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_19_R2.inventory.util.CraftInventoryCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,14 +15,13 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
-import static aminecraftplugin.aminecraftplugin.drill.LootTable.lootTableAdding;
-import static aminecraftplugin.aminecraftplugin.drill.resourceCategory.getCategory;
+import static aminecraftplugin.aminecraftplugin.drill.loot.LootTable.lootTableAdding;
+import static aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory.getCategory;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
@@ -299,7 +297,7 @@ public class Resource implements Listener {
         Collections.sort(categories.get(resourceCategory));
     }
 
-    public static void saveResources() throws IOException {
+    private static void saveResources() throws IOException {
 
         for (Map.Entry<Integer, Resource> set : resources.entrySet()) {
 
@@ -316,7 +314,7 @@ public class Resource implements Listener {
 
     }
 
-    public static HashMap<Integer, Resource> loadResources() throws IOException{
+    private static HashMap<Integer, Resource> loadResources() throws IOException{
 
         resourceFile = loadFile("resources.yml");
         if (resourceFile == null) return new HashMap<>();
@@ -396,7 +394,10 @@ public class Resource implements Listener {
         return key;
     }
 
-
+    @Override
+    public String toString() {
+        return name;
+    }
 
     public static Resource getResourceFromKey(int ID){
         for (Resource resource : resources.values()){

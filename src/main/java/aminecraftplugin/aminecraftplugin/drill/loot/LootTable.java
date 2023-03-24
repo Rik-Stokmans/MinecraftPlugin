@@ -88,7 +88,7 @@ public class LootTable implements Listener {
     public int findNewID(){
         int index = 1;
         while(true){
-            if (!this.getIDs().contains(index)){
+            if (!lootTableHashMap.containsKey(index)){
                 break;
             }
             index++;

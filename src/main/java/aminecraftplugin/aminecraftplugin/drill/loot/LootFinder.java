@@ -32,28 +32,33 @@ public class LootFinder {
         //exponent (higher prospecting skill -> lower exponent -> more rare resources)
         double exponent = 5 - logBase(prospectingSkill, 6);
 
+        double totalWeight = 0.0;
+        for (Map.Entry<LootTable, Double> entry : this.getLootTables().entrySet()) {
+
+            LootTable lootTable = entry.getKey();
+            double factor = entry.getValue();
+            //calculate total weight
+            for (int i : lootTable.getIDs()) {
+                int resourceID = lootTable.getResources().get(i);
+                Resource resource = getResourceFromKey(resourceID);
+                totalWeight += (1 / (Math.pow(resource.getValue(), exponent))) * factor;
+            }
+
+        }
+
         for (Map.Entry<LootTable, Double> entry : this.getLootTables().entrySet()){
             LootTable lootTable = entry.getKey();
 
             //factor based on distance to loot table
             double factor = entry.getValue();
-            double totalWeight = 0.0;
-
-            //calculate total weight
-            for (int i : lootTable.getIDs()){
-                int resourceID = lootTable.getResources().get(i);
-                Resource resource = getResourceFromKey(resourceID);
-                totalWeight += (1/(Math.pow(resource.getValue(), exponent)));
-            }
-
             //calculate percentage and roll chances
             for (int i : lootTable.getIDs()){
                 int resourceID = lootTable.getResources().get(i);
                 //factor in loot table
                 float factor2 = lootTable.getTable().get(i);
                 Resource resource = getResourceFromKey(resourceID);
-                double weight = (1/(Math.pow(resource.getValue(), exponent)));
-                double percentage = ((weight * 100) / totalWeight) * factor * factor2;
+                double weight = (1/(Math.pow(resource.getValue(), exponent))) * factor * factor2;
+                double percentage = ((weight * 100) / totalWeight);
                 double rollChance = new Random().nextDouble() * 100;
                 if (rollChance <= percentage){
                     double amountOfKG = 0.1715 * Math.log(miningSkill) + 0.1475;

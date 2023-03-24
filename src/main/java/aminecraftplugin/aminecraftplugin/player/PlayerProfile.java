@@ -43,6 +43,7 @@ public class PlayerProfile implements Listener {
         this.miningSkill = 1;
         this.prospectingSkill = 1;
         this.backPack = new Backpack();
+        playerProfiles.put(p.getUniqueId(), this);
     }
 
     public static PlayerProfile getPlayerProfile(Player p){
@@ -114,21 +115,25 @@ public class PlayerProfile implements Listener {
 
         File[] allPlayerFiles = new File(plugin.getDataFolder() + "/playerdata").listFiles();
 
+        if (allPlayerFiles == null) return new HashMap<>();
+
         for (File file : allPlayerFiles){
 
             YamlConfiguration playerFile = loadFile("playerdata/" + file.getName());
             if (playerFile == null) continue;
 
-            String uuidName = file.getName().split(".")[0];
+            String uuidName = file.getName().substring(0, file.getName().length() - 4);
             UUID uuid = UUID.fromString(uuidName);
 
             int miningSkill = playerFile.getInt("skills.mining");
             int prospectingSkill = playerFile.getInt("skills.prospecting");
             HashMap<Integer, Double> backpack = new HashMap<>();
-            playerFile.getConfigurationSection("backpack").getKeys(false).forEach(key -> {
-                double kg = playerFile.getDouble("backpack." + key);
-                backpack.put(Integer.valueOf(key), kg);
-            });
+            if (playerFile.contains("backpack")) {
+                playerFile.getConfigurationSection("backpack").getKeys(false).forEach(key -> {
+                    double kg = playerFile.getDouble("backpack." + key);
+                    backpack.put(Integer.valueOf(key), kg);
+                });
+            }
 
             PlayerProfile playerProfile = new PlayerProfile();
             playerProfile.setMiningSkill(miningSkill);

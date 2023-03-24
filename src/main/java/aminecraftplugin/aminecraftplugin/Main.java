@@ -35,6 +35,7 @@ public final class Main extends JavaPlugin {
         ArrayList<Listener> events = new ArrayList<>();
         //list of events
         events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
+        events.add(new PlayerProfile());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);

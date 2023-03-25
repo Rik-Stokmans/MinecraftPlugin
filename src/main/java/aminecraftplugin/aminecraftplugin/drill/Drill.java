@@ -72,6 +72,7 @@ public class Drill implements Listener {
                     drill.place(p);
                 }
             }.runTaskLater(plugin, 1l);
+
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -83,18 +84,14 @@ public class Drill implements Listener {
 
     private void place(Player p){
 
-        int length = 0; //facing direction
-        int width = 0;
-        int height = 0;
+        Location drillLoc = this.getLocation();
 
+        //facing direction
         String s = getCardinalDirection(p);
         ImmutablePair<Integer, Integer> pair = getXandZ(s);
 
-        p.sendMessage("x: " + pair.getKey() + ", z: " + pair.getValue());
 
-        ArrayList<Location> locations = new ArrayList<>();
-        Location drillLoc = this.getLocation();
-
+        //get structure
         StructureManager structureManager = Bukkit.getStructureManager();
         Map<NamespacedKey, Structure> structureMap = structureManager.getStructures();
         Structure structure = null;
@@ -103,16 +100,13 @@ public class Drill implements Listener {
                 structure = structureMap.get(namespacedKey);
             }
         }
-        length = (int) structure.getSize().getZ();
-        width = (int) structure.getSize().getX();
-        height = (int) structure.getSize().getY();
 
-        p.sendMessage("length: " + length, ", width: " + width + ", height: " + height);
+        int length = (int) structure.getSize().getZ();
+        int width = (int) structure.getSize().getX();
+        int height = (int) structure.getSize().getY();
 
-
-        //get all destroyed blocks
-        int lengthRemainder = length % 2;
-        int widthRemainder = width % 2;
+        //get all blocks to be destroyed
+        ArrayList<Location> locations = new ArrayList<>();
         int lengthFloor = (int) -Math.ceil((length - 1) / 2);
         int lengthCeiling = (int) Math.ceil((length - 1) / 2);
         for (int l = lengthFloor; l <= lengthCeiling; l++){
@@ -137,7 +131,7 @@ public class Drill implements Listener {
         }
 
 
-        //structure default = facing north
+        //placing structure with correct rotation
         StructureRotation structureRotation = StructureRotation.NONE;
         if (pair.getValue() == -1){
             structureRotation = StructureRotation.NONE;

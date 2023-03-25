@@ -1,6 +1,6 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
-import aminecraftplugin.aminecraftplugin.drill.Drill;
+import aminecraftplugin.aminecraftplugin.drill.structures.Drill;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

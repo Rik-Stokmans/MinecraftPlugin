@@ -1,4 +1,4 @@
-package aminecraftplugin.aminecraftplugin.drill;
+package aminecraftplugin.aminecraftplugin.drill.structures;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.LootFinder;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
@@ -15,22 +15,25 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.structure.Structure;
 import org.bukkit.structure.StructureManager;
 
 import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
-import static aminecraftplugin.aminecraftplugin.drill.DrillType.getDrillTypeFromName;
+import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
+import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
 
-public class Drill implements Listener {
+public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.structures.Structure {
 
-    public static HashMap<UUID, Drill> drills = new HashMap<>();
+    public static HashMap<UUID, Integer> scheduleRemoveDrill = new HashMap<>();
 
     private OfflinePlayer owner;
     private Location location;
@@ -54,30 +57,11 @@ public class Drill implements Listener {
         this.drillType = getDrillTypeFromName(drillType);
         this.drillTier = drillTier;
 
-        drills.put(owner.getUniqueId(), this);
+        aminecraftplugin.aminecraftplugin.drill.structures.Structure.addStructure(owner.getUniqueId(), this);
     }
 
-    //drill place
-    @EventHandler
-    private void drillPlace(BlockPlaceEvent e){
-        if (e.getBlock().getType().equals(Material.HOPPER)) {
-            Player p = e.getPlayer();
-            ItemStack itemPlaced = e.getItemInHand();
-            if (CraftItemStack.asNMSCopy(itemPlaced).u() == null) return;
-
-            e.setCancelled(true);
-            Location placedLoc = e.getBlock().getLocation();
-            Drill drill = new Drill(placedLoc, p, itemPlaced);
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    drill.place(p);
-                }
-            }.runTaskLater(plugin, 1l);
-        }
-    }
-
-    private void place(Player p){
+    @Override
+    public void place(Player p){
 
         Location drillLoc = this.getLocation();
 
@@ -163,13 +147,14 @@ public class Drill implements Listener {
         }
 
         structure.place(this.getLocation().clone().add(
-                pair.getValue() * Math.ceil(width / 2) + pair.getKey() * Math.ceil(length / 2),
-                0,
-                -pair.getKey() * Math.ceil(width / 2) + pair.getValue() * Math.floor(length / 2)),
+                        pair.getValue() * Math.ceil(width / 2) + pair.getKey() * Math.ceil(length / 2),
+                        0,
+                        -pair.getKey() * Math.ceil(width / 2) + pair.getValue() * Math.floor(length / 2)),
                 true, structureRotation, Mirror.NONE, 0, 1, new Random());
     }
 
-    private void destroy(){
+    @Override
+    public ItemStack destroy(){
         for (BlockState destroyedBlock : destroyedBlocks){
             destroyedBlock.update(true);
             if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
@@ -185,8 +170,39 @@ public class Drill implements Listener {
             }
 
         }
-        destroyedBlocks = new ArrayList<>();
+
+        ItemStack drill = new ItemStack(Material.HOPPER);
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
+        NBTTagCompound nbt = nmsItem.u();
+        if (nbt == null) nbt = new NBTTagCompound();
+        nbt.a("drilltier", this.getDrillTier());
+        nbt.a("drilltype", this.getDrillType().getNameFromDrillType());
+        nmsItem.c(nbt);
+        return CraftItemStack.asBukkitCopy(nmsItem);
+
     }
+
+    //drill place
+    @EventHandler
+    public void structurePlace(BlockPlaceEvent e){
+        if (e.getBlock().getType().equals(Material.HOPPER)) {
+            Player p = e.getPlayer();
+            ItemStack itemPlaced = e.getItemInHand();
+            if (CraftItemStack.asNMSCopy(itemPlaced).u() == null) return;
+
+            e.setCancelled(true);
+            Location placedLoc = e.getBlock().getLocation();
+            Drill drill = new Drill(placedLoc, p, itemPlaced);
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    drill.place(p);
+                }
+            }.runTaskLater(plugin, 1l);
+        }
+    }
+
+
 
 
     //todo: GUI to display loot

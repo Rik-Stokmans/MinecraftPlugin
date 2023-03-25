@@ -11,6 +11,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -25,6 +26,7 @@ public class PlayerProfile implements Listener {
     private int miningSkill;
     private int prospectingSkill;
     private Backpack backPack;
+    private ArrayList<ItemStack> offlineItems = new ArrayList<>();
 
     @EventHandler
     private void joinEvent(PlayerJoinEvent e){
@@ -48,6 +50,18 @@ public class PlayerProfile implements Listener {
 
     public static PlayerProfile getPlayerProfile(Player p){
         return playerProfiles.get(p.getUniqueId());
+    }
+
+    public void addOfflineItem(ItemStack itemStack){
+        this.getOfflineItems().add(itemStack);
+    }
+
+    public ArrayList<ItemStack> getOfflineItems() {
+        return offlineItems;
+    }
+
+    public void setOfflineItems(ArrayList<ItemStack> offlineItems) {
+        this.offlineItems = offlineItems;
     }
 
     public int getMiningSkill() {
@@ -100,6 +114,12 @@ public class PlayerProfile implements Listener {
             playerFile.set("skills.mining", playerProfile.getMiningSkill());
             playerFile.set("skills.prospecting", playerProfile.getProspectingSkill());
 
+            int index = 1;
+            for (ItemStack item : playerProfile.getOfflineItems()) {
+                playerFile.set("offlineitems." + index, item);
+                index ++;
+            }
+
             for (Map.Entry<Integer, Double> resource : playerProfile.getBackPack().getBackpack().entrySet()){
                 playerFile.set("backpack." + resource.getKey(), resource.getValue());
             }
@@ -127,6 +147,15 @@ public class PlayerProfile implements Listener {
 
             int miningSkill = playerFile.getInt("skills.mining");
             int prospectingSkill = playerFile.getInt("skills.prospecting");
+
+            ArrayList<ItemStack> offlineItems = new ArrayList<>();
+            if (playerFile.contains("offlineitems")){
+                playerFile.getConfigurationSection("offlineitems").getKeys(false).forEach(key -> {
+                    ItemStack item = playerFile.getItemStack("offlineitems." + key);
+                    offlineItems.add(item);
+                });
+            }
+
             HashMap<Integer, Double> backpack = new HashMap<>();
             if (playerFile.contains("backpack")) {
                 playerFile.getConfigurationSection("backpack").getKeys(false).forEach(key -> {
@@ -139,7 +168,7 @@ public class PlayerProfile implements Listener {
             playerProfile.setMiningSkill(miningSkill);
             playerProfile.setProspectingSkill(prospectingSkill);
             playerProfile.setBackPack(new Backpack(backpack));
-
+            playerProfile.setOfflineItems(offlineItems);
 
             playerProfiles.put(uuid, playerProfile);
         }

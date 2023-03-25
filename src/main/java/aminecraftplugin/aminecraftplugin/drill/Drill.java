@@ -6,6 +6,8 @@ import net.minecraft.nbt.NBTTagCompound;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
@@ -13,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.structure.Structure;
@@ -22,7 +25,6 @@ import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
 import static aminecraftplugin.aminecraftplugin.drill.DrillType.getDrillTypeFromName;
-import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
 
@@ -34,7 +36,7 @@ public class Drill implements Listener {
     private Location location;
     private DrillType drillType;
     private int drillTier;
-    private HashMap<Location, Material> destroyedBlocks = new HashMap();
+    private ArrayList<BlockState> destroyedBlocks = new ArrayList<>();
 
     public Drill(){
 
@@ -72,13 +74,6 @@ public class Drill implements Listener {
                     drill.place(p);
                 }
             }.runTaskLater(plugin, 1l);
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    drill.destroy();
-                }
-            }.runTaskLater(plugin, 20l);
         }
     }
 
@@ -89,7 +84,6 @@ public class Drill implements Listener {
         //facing direction
         String s = getCardinalDirection(p);
         ImmutablePair<Integer, Integer> pair = getXandZ(s);
-
 
         //get structure
         StructureManager structureManager = Bukkit.getStructureManager();
@@ -107,11 +101,12 @@ public class Drill implements Listener {
 
         //get all blocks to be destroyed
         ArrayList<Location> locations = new ArrayList<>();
-        int lengthFloor = (int) -Math.ceil((length - 1) / 2);
-        int lengthCeiling = (int) Math.ceil((length - 1) / 2);
+        ArrayList<Location> ignoredLocations = new ArrayList<>();
+        int lengthFloor = (int) -Math.ceil(((length + 2) - 1) / 2);
+        int lengthCeiling = (int) Math.ceil((length + 2) / 2);
         for (int l = lengthFloor; l <= lengthCeiling; l++){
-            int widthFloor = (int) -Math.ceil((width - 1) / 2);
-            int widthCeiling = (int) Math.ceil((width - 1) / 2);
+            int widthFloor = (int) -Math.ceil(((width + 2) - 1) / 2);
+            int widthCeiling = (int) Math.ceil(((width + 2) - 1) / 2);
             for (int w = widthFloor; w <= widthCeiling; w++){
 
                 for (int h = 1; h <= height; h++){
@@ -119,15 +114,39 @@ public class Drill implements Listener {
                             (l * pair.getKey() + w * pair.getValue()),
                             h - 1,
                             (w * pair.getKey() + l * pair.getValue()));
-                    locations.add(loc);
+
+                    Material type = loc.getBlock().getType();
+                    Location locUp = loc.clone().add(0,1,0);
+
+                    //exception to not place tall grass twice
+                    if (type.equals(Material.TALL_GRASS) || type.equals(Material.LARGE_FERN)){
+                        ignoredLocations.add(locUp);
+                    }
+
+                    //exception to not break surroundings
+                    while ((locUp.getBlock().isPassable() || locUp.getBlock().getType().hasGravity())
+                            && !locUp.getBlock().getType().equals(Material.AIR)){
+                        if (!ignoredLocations.contains(locUp)) {
+                            locations.add(locUp);
+                        }
+                        locUp = locUp.clone().add(0,1,0);
+                    }
+
+                    if (!locations.contains(loc) && !ignoredLocations.contains(loc)) {
+                        locations.add(loc);
+                    }
                 }
             }
         }
         for (Location loc : locations){
             Block block = loc.getBlock();
-            Material material = block.getType();
+            destroyedBlocks.add(block.getState());
             block.setType(Material.AIR);
-            destroyedBlocks.put(loc, material);
+        }
+        for (Location loc : ignoredLocations){
+            Block block = loc.getBlock();
+            destroyedBlocks.add(block.getState());
+            block.setType(Material.AIR);
         }
 
 
@@ -151,13 +170,24 @@ public class Drill implements Listener {
     }
 
     private void destroy(){
-        for (Map.Entry<Location, Material> destroyedBlock : destroyedBlocks.entrySet()){
-            Location loc = destroyedBlock.getKey();
-            Material material = destroyedBlock.getValue();
-            loc.getBlock().setType(material);
+        for (BlockState destroyedBlock : destroyedBlocks){
+            destroyedBlock.update(true);
+            if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        destroyedBlock.getBlock().setType(destroyedBlock.getType());
+                        Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
+                        BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
+                        locUp.getBlock().setBlockData(blockData2);
+                    }
+                }.runTaskLater(plugin, 1l);
+            }
+
         }
-        destroyedBlocks = new HashMap<>();
+        destroyedBlocks = new ArrayList<>();
     }
+
 
     //todo: GUI to display loot
     //oven/hopper GUI for collecting
@@ -185,7 +215,7 @@ public class Drill implements Listener {
         return drillTier;
     }
 
-    public HashMap<Location, Material> getDestroyedBlocks() {
+    public ArrayList<BlockState> getDestroyedBlocks() {
         return destroyedBlocks;
     }
 }

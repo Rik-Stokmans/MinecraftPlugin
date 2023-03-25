@@ -5,12 +5,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.structure.StructureManager;
+import org.bukkit.util.BlockVector;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,17 +24,27 @@ import java.util.UUID;
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
+import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 
 public interface Structure {
 
-    public static HashMap<UUID, ArrayList<Structure>> structures = new HashMap<>();
-    public static HashMap<UUID, Integer> scheduleRemoveStructures = new HashMap<>();
+    public void place(Player p);
+    public ItemStack destroy(boolean offline);
+    public String getStructureName();
+    public Location getLocation();
 
-    public static YamlConfiguration savedBlocksFile = new YamlConfiguration();
-    public static HashMap<Location, ItemStack> savedBlocks = new HashMap<>();
+    @EventHandler public void structurePlace(BlockPlaceEvent e);
 
-    static Material[] doubleBlocks = new Material[]{Material.LARGE_FERN, Material.TALL_GRASS, Material.LILAC, Material.PEONY, Material.ROSE_BUSH, Material.SUNFLOWER};
+    
+
+    HashMap<UUID, ArrayList<Structure>> structures = new HashMap<>();
+    HashMap<UUID, Integer> scheduleRemoveStructures = new HashMap<>();
+
+    YamlConfiguration savedBlocksFile = new YamlConfiguration();
+    HashMap<Location, ItemStack> savedBlocks = new HashMap<>();
+
+    Material[] doubleBlocks = new Material[]{Material.LARGE_FERN, Material.TALL_GRASS, Material.LILAC, Material.PEONY, Material.ROSE_BUSH, Material.SUNFLOWER};
 
     static void addStructure(UUID uuid, Structure structure){
         if (!structures.containsKey(uuid)){
@@ -87,10 +100,59 @@ public interface Structure {
         }
     }
 
-    public void place(Player p);
-    public ItemStack destroy(boolean offline);
+    static org.bukkit.structure.Structure getStructure(String s){
+        StructureManager structureManager = Bukkit.getStructureManager();
+        Map<NamespacedKey, org.bukkit.structure.Structure> structureMap = structureManager.getStructures();
+        org.bukkit.structure.Structure structure = null;
+        for (NamespacedKey namespacedKey : structureMap.keySet()){
+            if (namespacedKey.asString().equals("minecraft:" + s)){
+                structure = structureMap.get(namespacedKey);
+            }
+        }
+        return structure;
 
-    @EventHandler public void structurePlace(BlockPlaceEvent e);
+    }
+
+    static boolean canBePlaced(String structureName, Location placedLoc, Player p){
+        for (ArrayList<aminecraftplugin.aminecraftplugin.drill.structures.Structure> structures : structures.values()){
+            for (aminecraftplugin.aminecraftplugin.drill.structures.Structure structure : structures) {
+                org.bukkit.structure.Structure structureComparing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structure.getStructureName());
+                org.bukkit.structure.Structure structurePlacing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structureName);
+
+                double biggest1 = 0.0;
+                BlockVector vector1 = structureComparing.getSize();
+                if (vector1.getX() > biggest1){
+                    biggest1 = vector1.getX() + 2;
+                }
+                if (vector1.getY() > biggest1){
+                    biggest1 = vector1.getY() + 1;
+                }
+                if (vector1.getZ() > biggest1){
+                    biggest1 = vector1.getZ() + 2;
+                }
+
+                double biggest2 = 0.0;
+                BlockVector vector2 = structurePlacing.getSize();
+                if (vector2.getX() > biggest2){
+                    biggest2 = vector2.getX() + 2;
+                }
+                if (vector2.getY() > biggest2){
+                    biggest2 = vector2.getY() + 1;
+                }
+                if (vector1.getZ() > biggest2){
+                    biggest2 = vector2.getZ() + 2;
+                }
+
+                double minDistance = (biggest1 + biggest2) / 2;
+                if (placedLoc.distance(structure.getLocation()) < minDistance) {
+                    p.sendMessage(format("&cThis structure is too close to another one"));
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 
 
 }

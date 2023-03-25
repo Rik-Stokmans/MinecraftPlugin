@@ -15,10 +15,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.structure.Structure;
-import org.bukkit.structure.StructureManager;
+import org.bukkit.util.BlockVector;
 
 import java.util.*;
 
@@ -26,6 +27,7 @@ import static aminecraftplugin.aminecraftplugin.Main.plugin;
 import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
+import static aminecraftplugin.aminecraftplugin.utils.RemoveHandItem.removeHandItem;
 
 public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.structures.Structure {
 
@@ -64,14 +66,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         ImmutablePair<Integer, Integer> pair = getXandZ(s);
 
         //get structure
-        StructureManager structureManager = Bukkit.getStructureManager();
-        Map<NamespacedKey, Structure> structureMap = structureManager.getStructures();
-        Structure structure = null;
-        for (NamespacedKey namespacedKey : structureMap.keySet()){
-            if (namespacedKey.asString().equals("minecraft:" + this.getDrillType().getNameFromDrillType())){
-                structure = structureMap.get(namespacedKey);
-            }
-        }
+        Structure structure = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(this.getDrillType().getNameFromDrillType());
 
         int length = (int) structure.getSize().getZ();
         int width = (int) structure.getSize().getX();
@@ -184,6 +179,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     }
 
+
     //drill place
     @EventHandler
     public void structurePlace(BlockPlaceEvent e){
@@ -191,9 +187,20 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             Player p = e.getPlayer();
             ItemStack itemPlaced = e.getItemInHand();
             if (CraftItemStack.asNMSCopy(itemPlaced).u() == null) return;
-
             e.setCancelled(true);
             Location placedLoc = e.getBlock().getLocation();
+
+            net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemPlaced);
+            NBTTagCompound nbt = nmsItem.u();
+            String drillType = nbt.l("drilltype");
+
+            //check if near structures have enough distance
+            if (!aminecraftplugin.aminecraftplugin.drill.structures.Structure.canBePlaced(drillType, placedLoc, p)) return;
+
+            //remove drill from hand
+            removeHandItem(p, e.getHand());
+
+            //create drill and place
             Drill drill = new Drill(placedLoc, p, itemPlaced);
             new BukkitRunnable() {
                 @Override
@@ -204,7 +211,15 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
     }
 
+    @Override
+    public String getStructureName() {
+        return this.getDrillType().getNameFromDrillType();
+    }
 
+    @Override
+    public Location getLocation() {
+        return location;
+    }
 
 
     //todo: GUI to display loot
@@ -217,9 +232,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
     }
 
-    public Location getLocation() {
-        return location;
-    }
 
     public OfflinePlayer getOwner() {
         return owner;

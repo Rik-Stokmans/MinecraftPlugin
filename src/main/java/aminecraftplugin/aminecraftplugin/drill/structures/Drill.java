@@ -14,12 +14,13 @@ import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.structure.Structure;
-import org.bukkit.util.BlockVector;
 
 import java.util.*;
 
@@ -67,58 +68,14 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
         //get structure
         Structure structure = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(this.getDrillType().getNameFromDrillType());
-
         int length = (int) structure.getSize().getZ();
         int width = (int) structure.getSize().getX();
-        int height = (int) structure.getSize().getY();
 
         //get all blocks to be destroyed
-        ArrayList<Location> locations = new ArrayList<>();
-        ArrayList<Location> ignoredLocations = new ArrayList<>();
-        int lengthFloor = (int) -Math.ceil(((length + 2) - 1) / 2);
-        int lengthCeiling = (int) Math.ceil((length + 2) / 2);
-        for (int l = lengthFloor; l <= lengthCeiling; l++){
-            int widthFloor = (int) -Math.ceil(((width + 2) - 1) / 2);
-            int widthCeiling = (int) Math.ceil(((width + 2) - 1) / 2);
-            for (int w = widthFloor; w <= widthCeiling; w++){
+        ArrayList<Location> locations = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructureSpace(drillLoc, structure, pair);
 
-                for (int h = 1; h <= height; h++){
-                    Location loc = drillLoc.clone().add(
-                            (l * pair.getKey() + w * pair.getValue()),
-                            h - 1,
-                            (w * pair.getKey() + l * pair.getValue()));
 
-                    Material type = loc.getBlock().getType();
-                    Location locUp = loc.clone().add(0,1,0);
-
-                    //exception to not place tall grass twice
-                    for (Material material : doubleBlocks){
-                        if (type.equals(material)){
-                            ignoredLocations.add(locUp);
-                        }
-                    }
-
-                    //exception to not break surroundings
-                    while ((locUp.getBlock().isPassable() || locUp.getBlock().getType().hasGravity())
-                            && !locUp.getBlock().getType().equals(Material.AIR)){
-                        if (!ignoredLocations.contains(locUp)) {
-                            locations.add(locUp);
-                        }
-                        locUp = locUp.clone().add(0,1,0);
-                    }
-
-                    if (!locations.contains(loc) && !ignoredLocations.contains(loc)) {
-                        locations.add(loc);
-                    }
-                }
-            }
-        }
         for (Location loc : locations){
-            Block block = loc.getBlock();
-            destroyedBlocks.add(block.getState());
-            block.setType(Material.AIR);
-        }
-        for (Location loc : ignoredLocations){
             Block block = loc.getBlock();
             destroyedBlocks.add(block.getState());
             block.setType(Material.AIR);
@@ -211,6 +168,13 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
     }
 
+
+    @Override
+    public void openStructureMenu(Player p) {
+        Inventory inventory = Bukkit.createInventory(null, 54, "Drill");
+        p.openInventory(inventory);
+    }
+
     @Override
     public String getStructureName() {
         return this.getDrillType().getNameFromDrillType();
@@ -220,6 +184,16 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     public Location getLocation() {
         return location;
     }
+
+    @Override
+    public ArrayList<Location> getLocations() {
+        ArrayList<Location> locations = new ArrayList<>();
+        for (BlockState blockState : this.getDestroyedBlocks()){
+            locations.add(blockState.getLocation());
+        }
+        return locations;
+    }
+
 
 
     //todo: GUI to display loot

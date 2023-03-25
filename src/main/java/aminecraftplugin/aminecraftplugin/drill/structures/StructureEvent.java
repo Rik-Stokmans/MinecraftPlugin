@@ -1,9 +1,12 @@
 package aminecraftplugin.aminecraftplugin.drill.structures;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -52,6 +55,25 @@ public class StructureEvent implements Listener {
                 p.getInventory().addItem(item);
             }
             playerProfiles.get(uuid).setOfflineItems(new ArrayList<>());
+        }
+    }
+
+
+    @EventHandler
+    public void structureRightClick(PlayerInteractEvent e){
+        if (e.getAction().equals(Action.RIGHT_CLICK_BLOCK)){
+            Player p = e.getPlayer();
+            Location loc = e.getClickedBlock().getLocation();
+            if (structures.containsKey(p.getUniqueId())) {
+                for (aminecraftplugin.aminecraftplugin.drill.structures.Structure structure : structures.get(p.getUniqueId())) {
+                    for (Location loc1 : structure.getLocations()) {
+                        if (loc.equals(loc1)) {
+                            e.setCancelled(true);
+                            structure.openStructureMenu(p);
+                        }
+                    }
+                }
+            }
         }
     }
 

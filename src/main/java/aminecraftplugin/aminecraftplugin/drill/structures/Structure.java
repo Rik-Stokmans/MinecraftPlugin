@@ -1,6 +1,7 @@
 package aminecraftplugin.aminecraftplugin.drill.structures;
 
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,6 +12,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.structure.StructureManager;
 import org.bukkit.util.BlockVector;
@@ -33,18 +35,20 @@ public interface Structure {
     public ItemStack destroy(boolean offline);
     public String getStructureName();
     public Location getLocation();
+    public ArrayList<Location> getLocations();
+    public void openStructureMenu(Player p);
 
     @EventHandler public void structurePlace(BlockPlaceEvent e);
 
-    
 
     HashMap<UUID, ArrayList<Structure>> structures = new HashMap<>();
     HashMap<UUID, Integer> scheduleRemoveStructures = new HashMap<>();
 
     YamlConfiguration savedBlocksFile = new YamlConfiguration();
     HashMap<Location, ItemStack> savedBlocks = new HashMap<>();
-
     Material[] doubleBlocks = new Material[]{Material.LARGE_FERN, Material.TALL_GRASS, Material.LILAC, Material.PEONY, Material.ROSE_BUSH, Material.SUNFLOWER};
+
+
 
     static void addStructure(UUID uuid, Structure structure){
         if (!structures.containsKey(uuid)){
@@ -151,6 +155,55 @@ public interface Structure {
             }
         }
         return true;
+    }
+
+    static ArrayList<Location> getStructureSpace(Location location, org.bukkit.structure.Structure structure, ImmutablePair<Integer, Integer> pair){
+
+        ArrayList<Location> locations = new ArrayList<>();
+        ArrayList<Location> ignoredLocations = new ArrayList<>();
+        int length = (int) structure.getSize().getZ();
+        int width = (int) structure.getSize().getX();
+        int height = (int) structure.getSize().getY();
+
+        int lengthFloor = (int) -Math.ceil(((length + 2) - 1) / 2);
+        int lengthCeiling = (int) Math.ceil((length + 2) / 2);
+        for (int l = lengthFloor; l <= lengthCeiling; l++){
+            int widthFloor = (int) -Math.ceil(((width + 2) - 1) / 2);
+            int widthCeiling = (int) Math.ceil(((width + 2) - 1) / 2);
+            for (int w = widthFloor; w <= widthCeiling; w++){
+
+                for (int h = 1; h <= height; h++){
+                    Location loc = location.clone().add(
+                            (l * pair.getKey() + w * pair.getValue()),
+                            h - 1,
+                            (w * pair.getKey() + l * pair.getValue()));
+
+                    Material type = loc.getBlock().getType();
+                    Location locUp = loc.clone().add(0,1,0);
+
+                    //exception to not place tall grass twice
+                    for (Material material : doubleBlocks){
+                        if (type.equals(material)){
+                            ignoredLocations.add(locUp);
+                        }
+                    }
+
+                    //exception to not break surroundings
+                    while ((locUp.getBlock().isPassable() || locUp.getBlock().getType().hasGravity())
+                            && !locUp.getBlock().getType().equals(Material.AIR)){
+                        if (!ignoredLocations.contains(locUp)) {
+                            locations.add(locUp);
+                        }
+                        locUp = locUp.clone().add(0,1,0);
+                    }
+
+                    if (!locations.contains(loc) && !ignoredLocations.contains(loc)) {
+                        locations.add(loc);
+                    }
+                }
+            }
+        }
+        return locations;
     }
 
 

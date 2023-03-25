@@ -7,6 +7,7 @@ import aminecraftplugin.aminecraftplugin.drill.structures.Drill;
 import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.drill.structures.Structure;
+import aminecraftplugin.aminecraftplugin.drill.structures.StructureEvent;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.Bukkit;
@@ -44,7 +45,7 @@ public final class Main extends JavaPlugin {
         ArrayList<Listener> events = new ArrayList<>();
         //list of events
         events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
-        events.add(new PlayerProfile()); events.add(new Drill());
+        events.add(new PlayerProfile()); events.add(new Drill()); events.add(new StructureEvent());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);

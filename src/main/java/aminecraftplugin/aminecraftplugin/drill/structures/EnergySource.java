@@ -15,9 +15,10 @@ public class EnergySource implements Structure, Listener {
     }
 
     @Override
-    public ItemStack destroy() {
+    public ItemStack destroy(boolean offline) {
         return null;
     }
+
 
     @EventHandler
     public void structurePlace(BlockPlaceEvent e) {

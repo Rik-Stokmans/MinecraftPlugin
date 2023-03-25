@@ -28,7 +28,7 @@ public class StructureEvent implements Listener {
             @Override
             public void run() {
                 for (Structure structure : structures.get(uuid)) {
-                    ItemStack structureRemoved = structure.destroy();
+                    ItemStack structureRemoved = structure.destroy(false);
                     playerProfiles.get(uuid).addOfflineItem(structureRemoved);
                 }
             }

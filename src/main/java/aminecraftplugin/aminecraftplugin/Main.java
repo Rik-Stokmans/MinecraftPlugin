@@ -62,6 +62,8 @@ public final class Main extends JavaPlugin {
         //market things
         Market.init();
 
+        //load long grass blocks
+        Structure.loadAndPlaceLongGrass();
 
         //commands
         new Command("addresource", new addResourceCommand());
@@ -98,6 +100,9 @@ public final class Main extends JavaPlugin {
 
         //destroy all drills in the world
         Structure.destroyAll();
+
+        //save long grass blocks
+        Structure.saveLongGrass();
 
         //playerprofiles save
         PlayerProfile.save();

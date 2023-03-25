@@ -15,11 +15,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.structure.Structure;
 import org.bukkit.structure.StructureManager;
 
@@ -27,13 +24,10 @@ import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
 import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
-import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
 
 public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.structures.Structure {
-
-    public static HashMap<UUID, Integer> scheduleRemoveDrill = new HashMap<>();
 
     private OfflinePlayer owner;
     private Location location;
@@ -103,8 +97,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     Location locUp = loc.clone().add(0,1,0);
 
                     //exception to not place tall grass twice
-                    if (type.equals(Material.TALL_GRASS) || type.equals(Material.LARGE_FERN)){
-                        ignoredLocations.add(locUp);
+                    for (Material material : doubleBlocks){
+                        if (type.equals(material)){
+                            ignoredLocations.add(locUp);
+                        }
                     }
 
                     //exception to not break surroundings
@@ -153,20 +149,26 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 true, structureRotation, Mirror.NONE, 0, 1, new Random());
     }
 
+
+
     @Override
-    public ItemStack destroy(){
+    public ItemStack destroy(boolean offline){
         for (BlockState destroyedBlock : destroyedBlocks){
             destroyedBlock.update(true);
             if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        destroyedBlock.getBlock().setType(destroyedBlock.getType());
-                        Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
-                        BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
-                        locUp.getBlock().setBlockData(blockData2);
-                    }
-                }.runTaskLater(plugin, 1l);
+                if (!offline) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            destroyedBlock.getBlock().setType(destroyedBlock.getType());
+                            Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
+                            BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
+                            locUp.getBlock().setBlockData(blockData2);
+                        }
+                    }.runTaskLater(plugin, 1l);
+                } else {
+                    savedBlocks.put(destroyedBlock.getLocation(), new ItemStack(destroyedBlock.getType()));
+                }
             }
 
         }

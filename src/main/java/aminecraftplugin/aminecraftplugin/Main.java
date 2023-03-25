@@ -1,7 +1,9 @@
 package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.commands.*;
+import aminecraftplugin.aminecraftplugin.commands.tabcompleters.getDrillTabCompleter;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.numTabCompleter;
+import aminecraftplugin.aminecraftplugin.drill.Drill;
 import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.market.Market;
@@ -35,7 +37,7 @@ public final class Main extends JavaPlugin {
         ArrayList<Listener> events = new ArrayList<>();
         //list of events
         events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
-        events.add(new PlayerProfile());
+        events.add(new PlayerProfile()); events.add(new Drill());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);
@@ -62,6 +64,7 @@ public final class Main extends JavaPlugin {
         new Command("createloottable", new createLootTableCommand());
         new Command("checkloottables", new checkLootTableCommand());
         new Command("getloot", new getLootCommand());
+        new Command("getdrill", new getDrillCommand(), new getDrillTabCompleter());
 
         //ticker all
         /*

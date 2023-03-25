@@ -33,6 +33,9 @@ commands:
   getloot:
     permission: drilz.operator
     description: get random piece of loot
+  getDrill:
+    permission: drilz.operator
+    description: get drill with command
 
 permissions:
   drilz.operator:

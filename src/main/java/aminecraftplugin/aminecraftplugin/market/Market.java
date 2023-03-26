@@ -199,6 +199,12 @@ public class Market implements Listener {
 
 
 
+    public void executeMarketEvent(MarketEvent marketEvent) {
+        double stockChange = marketEvent.stockChange;
+
+
+    }
+
     //gui methods
     private void openMarket(Player p) {
         p.openInventory(marketCategoryGuiMenu);
@@ -337,6 +343,7 @@ public class Market implements Listener {
                 double worth = market.trades.get(key).getBaseValue();
 
                 double amountBought = orderSize;
+                //todo check if the player has enough space in backpack
                 double price = 0;
 
                 double x1 = stock - amountBought;
@@ -346,14 +353,14 @@ public class Market implements Listener {
 
                 if (x1 >= 0) {
                     if (x1 == 0) x1 += Double.MIN_VALUE;
-                    price = (worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(10 * x1 + worth * strength));
+                    price = (worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(worth * x1 + worth * strength));
                 }
                 else if (x2 <= 0) {
                     if (x2 == 0) x2 -= Double.MIN_VALUE;
                     price = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
                 }
                 else if (x1 < 0 && x2 > 0) {
-                    price = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
+                    price = ((worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
                 //todo check if player has enough money to buy the items
@@ -370,7 +377,10 @@ public class Market implements Listener {
                 double worth = market.trades.get(key).getBaseValue();
 
                 double amountSold = orderSize;
-                if (orderSize > itemAmountInBackpack) amountSold = itemAmountInBackpack;
+                if (orderSize > itemAmountInBackpack) {
+                    amountSold = itemAmountInBackpack;
+                    p.sendMessage(format("&cYou don't have enough items in your backpack"));
+                }
 
                 double value = 0;
 
@@ -379,14 +389,14 @@ public class Market implements Listener {
 
                 if (x1 >= 0) {
                     if (x1 == 0) x1 += Double.MIN_VALUE;
-                    value = (worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(10 * x1 + worth * strength));
+                    value = (worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(worth * x1 + worth * strength));
                 }
                 else if (x2 <= 0) {
                     if (x2 == 0) x2 -= Double.MIN_VALUE;
                     value = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
                 }
                 else if (x1 < 0 && x2 > 0) {
-                    value = ((worth * strength * Math.log(Math.abs(10 * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
+                    value = ((worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
                 stock += amountSold;

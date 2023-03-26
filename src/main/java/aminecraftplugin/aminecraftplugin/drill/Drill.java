@@ -18,9 +18,9 @@ public class Drill {
     //oven/hopper GUI for collecting
     public void drill(Player p){
         LootFinder loot = new LootFinder(this.getLocation());
-        for (ItemStack itemStack : loot.getLoot()){
+        /*for (ItemStack itemStack : loot.getLoot()){
             p.getInventory().addItem(itemStack);
-        }
+        }*/
     }
 
     public Location getLocation() {

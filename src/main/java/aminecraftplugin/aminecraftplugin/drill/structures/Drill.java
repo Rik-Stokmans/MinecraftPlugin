@@ -2,6 +2,9 @@ package aminecraftplugin.aminecraftplugin.drill.structures;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.LootFinder;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
+import me.filoghost.holographicdisplays.api.hologram.line.HologramLine;
+import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
 import net.minecraft.nbt.NBTTagCompound;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bukkit.*;
@@ -19,13 +22,19 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.structure.Structure;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.*;
 
+import static aminecraftplugin.aminecraftplugin.Main.api;
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
 import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
+import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
 import static aminecraftplugin.aminecraftplugin.utils.RemoveHandItem.removeHandItem;
@@ -34,12 +43,19 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     private OfflinePlayer owner;
     private Location location;
+    private LootFinder lootFinder;
     private DrillType drillType;
     private int drillTier;
+    private Hologram hologram;
+    private Structure structure;
+    private HashMap<Resource, Double> resources = new HashMap<>();
     private ArrayList<BlockState> destroyedBlocks = new ArrayList<>();
 
-    public Drill(){
+    private static DecimalFormat df = new DecimalFormat("#.##");
 
+
+    public Drill(){
+        df.setRoundingMode(RoundingMode.FLOOR);
     }
 
     public Drill(Location location, OfflinePlayer owner, ItemStack drill){
@@ -55,6 +71,105 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.drillTier = drillTier;
 
         aminecraftplugin.aminecraftplugin.drill.structures.Structure.addStructure(owner.getUniqueId(), this);
+
+        //loot
+        this.structure = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(this.getDrillType().getNameFromDrillType());
+        this.hologram = api.createHologram(this.getLocation().clone().add(0.5, this.getThisStructure().getSize().getY() + 0.5, 0.5));
+        this.correctHologramPosition();
+        this.lootFinder = new LootFinder(this.getLocation());
+        this.scheduleLootFinding(this.getOwner());
+    }
+
+    private void clearHologram(){
+        this.getHologram().getLines().clear();
+    }
+    private void correctHologramPosition(){
+        this.getHologram().setPosition(this.getLocation().clone().add(0.5, this.getThisStructure().getSize().getY() + 0.2 + this.getHologram().getLines().getHeight(), 0.5));
+    }
+
+    private void scheduleLootFinding(OfflinePlayer p){
+
+        this.clearHologram();
+        this.getHologram().getLines().appendText("Searching for resources...");
+        this.correctHologramPosition();
+        LootFinder lootFinder = this.getLootFinder();
+        Drill drill = this;
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                HashMap<Resource, Double> foundResources = lootFinder.findLoot(p);
+                if (foundResources.isEmpty()){
+                    scheduleLootFinding(p);
+                } else {
+                    drill.scheduleLootMining(foundResources, p);
+                }
+            }
+        }.runTaskLater(plugin, 30 * 20l);
+    }
+
+    private void scheduleLootMining(HashMap<Resource, Double> resources, OfflinePlayer p){
+        Drill drill = this;
+        Double miningPerSecond = 0.02 * Math.log(drill.getDrillTier() + (Math.E - 1));
+
+        HashMap<Resource, Double> mined = new HashMap<>();
+        for (Resource resource : resources.keySet()){
+            mined.put(resource, 0.0);
+        }
+
+        this.clearHologram();
+        this.getHologram().getLines().appendText("Mining resources:");
+        for (Map.Entry<Resource, Double> entry : mined.entrySet()){
+            Resource resource = entry.getKey();
+            Double kgMined = entry.getValue();
+            this.getHologram().getLines().appendText(" - " + resource.getName() + ": " + df.format(kgMined) + "Kg");
+        }
+        this.correctHologramPosition();
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Double kgMined = miningPerSecond / 20;
+                for (Map.Entry<Resource, Double> entry : resources.entrySet()){
+                    Resource resource = entry.getKey();
+                    Double kgLeft = entry.getValue();
+                    if (kgMined > kgLeft){
+                        kgMined = kgLeft;
+                    }
+                    resources.put(resource, kgLeft - kgMined);
+                    mined.put(resource, mined.get(resource) + kgMined);
+
+                    for (Map.Entry<Resource, Double> entry2 : mined.entrySet()){
+                        Resource resource2 = entry2.getKey();
+                        Double kgMined2 = entry2.getValue();
+                        boolean found = false;
+                        for (int i = 0; i < drill.getHologram().getLines().size(); i++){
+                            HologramLine hologramLine = drill.getHologram().getLines().get(i);
+                            if (hologramLine instanceof TextHologramLine){
+                                TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
+                                if (textHologramLine.getText().contains(resource2.getName())){
+                                    found = true;
+                                    drill.getHologram().getLines().insertText(i, " - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
+                                    drill.getHologram().getLines().remove(i + 1);
+                                    break;
+                                }
+                            }
+                        }
+                        if (!found){
+                            drill.getHologram().getLines().appendText(" - " + resource2.getName() + ": " + kgMined2 + "Kg");
+                        }
+                    }
+                    if (!drill.getResources().containsKey(resource)){
+                        drill.getResources().put(resource, kgMined);
+                    } else {
+                        drill.getResources().put(resource, drill.getResources().get(resource) + kgMined);
+                    }
+                    if (kgMined == kgLeft){
+                        drill.scheduleLootFinding(p);
+                        this.cancel();
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 1l, 1l);
     }
 
     @Override
@@ -67,12 +182,11 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         ImmutablePair<Integer, Integer> pair = getXandZ(s);
 
         //get structure
-        Structure structure = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(this.getDrillType().getNameFromDrillType());
-        int length = (int) structure.getSize().getZ();
-        int width = (int) structure.getSize().getX();
+        int length = (int) this.getThisStructure().getSize().getZ();
+        int width = (int) this.getThisStructure().getSize().getX();
 
         //get all blocks to be destroyed
-        ArrayList<Location> locations = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructureSpace(drillLoc, structure, pair);
+        ArrayList<Location> locations = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructureSpace(drillLoc, this.getThisStructure(), pair);
 
 
         for (Location loc : locations){
@@ -172,6 +286,18 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     @Override
     public void openStructureMenu(Player p) {
         Inventory inventory = Bukkit.createInventory(null, 54, "Drill");
+        int index = 0;
+        for (Map.Entry<Resource, Double> resource : this.getResources().entrySet()){
+            ItemStack item = resource.getKey().getItemStack();
+            ItemMeta itemMeta = item.getItemMeta();
+            ArrayList<String> lore = new ArrayList<>();
+            lore.add(format("&7kg: &f" + df.format(resource.getValue())));
+            itemMeta.setLore(lore);
+            item.setItemMeta(itemMeta);
+            inventory.setItem(index, item);
+
+            index++;
+        }
         p.openInventory(inventory);
     }
 
@@ -221,5 +347,21 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     public ArrayList<BlockState> getDestroyedBlocks() {
         return destroyedBlocks;
+    }
+
+    public LootFinder getLootFinder() {
+        return lootFinder;
+    }
+
+    public HashMap<Resource, Double> getResources() {
+        return resources;
+    }
+
+    public Hologram getHologram() {
+        return hologram;
+    }
+
+    public Structure getThisStructure() {
+        return structure;
     }
 }

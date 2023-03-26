@@ -10,6 +10,7 @@ import aminecraftplugin.aminecraftplugin.drill.structures.Structure;
 import aminecraftplugin.aminecraftplugin.drill.structures.StructureEvent;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -27,15 +28,17 @@ public final class Main extends JavaPlugin {
 
     private static String path;
     public static Plugin plugin;
-
+    public static boolean useHolographicDisplays;
+    public static HolographicDisplaysAPI api;
 
     @Override
     public void onEnable() {
 
-
-
         plugin = this;
 
+        //holographicdisplays
+        useHolographicDisplays = Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays");
+        api = HolographicDisplaysAPI.get(plugin);
 
         //file path
         path = getDataFolder().getAbsoluteFile().toString();
@@ -98,6 +101,8 @@ public final class Main extends JavaPlugin {
             p.sendMessage(format("&aUpdating server..."));
             p.sendMessage(format("&aAll drills, energy sources and other structures need to be replaced"));
         }
+
+        api.deleteHolograms();
 
         //destroy all drills in the world
         Structure.destroyAll();

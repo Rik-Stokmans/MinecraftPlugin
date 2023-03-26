@@ -3,6 +3,7 @@ package aminecraftplugin.aminecraftplugin.drill.loot;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -21,7 +22,7 @@ public class LootFinder {
         this.lootTables = calculateLootTable(location);
     }
 
-    public HashMap<Resource, Double> findLoot(Player p){
+    public HashMap<Resource, Double> findLoot(OfflinePlayer p){
 
         HashMap<Resource, Double> foundResources = new HashMap<>();
 

@@ -319,9 +319,14 @@ public class Market implements Listener {
         }
         else if (invName.equals(format("&eAdd item"))) {
             e.setCancelled(true);
-            latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
-            p.openInventory(marketCategoryGuiMenu);
-            latestMarketOpen.get(p).updateTrades();
+            if (p.isOp()) {
+                latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
+                p.openInventory(marketCategoryGuiMenu);
+                latestMarketOpen.get(p).updateTrades();
+            } else {
+                p.sendMessage(format("&cOnly operators can edit markets"));
+            }
+
         }
 
         //todo

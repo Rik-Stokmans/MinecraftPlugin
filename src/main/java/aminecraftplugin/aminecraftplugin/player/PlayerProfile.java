@@ -44,7 +44,7 @@ public class PlayerProfile implements Listener {
     public PlayerProfile(Player p){
         this.miningSkill = 1;
         this.prospectingSkill = 1;
-        this.backPack = new Backpack();
+        this.backPack = new Backpack(p);
         playerProfiles.put(p.getUniqueId(), this);
     }
 

@@ -1,9 +1,7 @@
 package aminecraftplugin.aminecraftplugin.market;
 
-import aminecraftplugin.aminecraftplugin.drill.Backpack;
-import aminecraftplugin.aminecraftplugin.drill.Resource;
-import aminecraftplugin.aminecraftplugin.drill.resourceCategory;
-import aminecraftplugin.aminecraftplugin.utils.Function;
+import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -21,12 +19,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
-import static aminecraftplugin.aminecraftplugin.drill.Backpack.backpacks;
-import static aminecraftplugin.aminecraftplugin.drill.Resource.*;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
+import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
-import static aminecraftplugin.aminecraftplugin.utils.Integral.integral;
 
 public class Market implements Listener {
 
@@ -333,10 +329,7 @@ public class Market implements Listener {
             Market market = latestMarketOpen.get(p);
             int key = getKeyFromItemstack(clickedItem);
             int orderSize = playerOrderSize.get(p);
-            if (!backpacks.containsKey(p)) {
-                backpacks.put(p, new Backpack());
-            }
-            double itemAmountInBackpack = backpacks.get(p).getItemAmountInBackpack(key);
+            double itemAmountInBackpack = getPlayerProfile(p).getBackPack().getItemAmountInBackpack(key);
             //buy
             if (e.getClick().isLeftClick()) {
                 double stock = market.trades.get(key).getStock();

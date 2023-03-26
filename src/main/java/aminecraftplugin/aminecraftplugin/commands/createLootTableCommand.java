@@ -1,6 +1,6 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
-import aminecraftplugin.aminecraftplugin.drill.LootTable;
+import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

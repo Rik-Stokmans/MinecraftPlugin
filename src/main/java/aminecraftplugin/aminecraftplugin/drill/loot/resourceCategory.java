@@ -1,4 +1,4 @@
-package aminecraftplugin.aminecraftplugin.drill;
+package aminecraftplugin.aminecraftplugin.drill.loot;
 
 public enum resourceCategory {
 

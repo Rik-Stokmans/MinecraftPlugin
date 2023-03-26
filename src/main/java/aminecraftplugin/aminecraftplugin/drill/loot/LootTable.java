@@ -1,16 +1,13 @@
-package aminecraftplugin.aminecraftplugin.drill;
+package aminecraftplugin.aminecraftplugin.drill.loot;
 
 
-import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -19,16 +16,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
-import static aminecraftplugin.aminecraftplugin.drill.Resource.getResourceFromKey;
-import static aminecraftplugin.aminecraftplugin.drill.Resource.openResourceGUI;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.openResourceGUI;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
@@ -93,7 +88,7 @@ public class LootTable implements Listener {
     public int findNewID(){
         int index = 1;
         while(true){
-            if (!this.getIDs().contains(index)){
+            if (!lootTableHashMap.containsKey(index)){
                 break;
             }
             index++;
@@ -305,6 +300,10 @@ public class LootTable implements Listener {
         return ID;
     }
 
+    @Override
+    public String toString() {
+        return name;
+    }
 
     public static void saveLoottables() throws IOException {
 

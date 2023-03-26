@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import static aminecraftplugin.aminecraftplugin.drill.LootTable.openSelectLoottableMenu;
+import static aminecraftplugin.aminecraftplugin.drill.loot.LootTable.openSelectLoottableMenu;
 
 public class checkLootTableCommand implements CommandExecutor {
     @Override

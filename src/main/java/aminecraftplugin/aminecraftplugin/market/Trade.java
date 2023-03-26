@@ -1,11 +1,10 @@
 package aminecraftplugin.aminecraftplugin.market;
 
-import aminecraftplugin.aminecraftplugin.drill.Resource;
+import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 

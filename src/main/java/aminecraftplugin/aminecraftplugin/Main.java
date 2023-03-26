@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,8 +67,13 @@ public final class Main extends JavaPlugin {
         //market things
         Market.init();
 
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Structure.loadAndPlaceLongGrass();
+            }
+        }.runTaskLater(plugin, 5l);
         //load long grass blocks
-        Structure.loadAndPlaceLongGrass();
 
         //commands
         new Command("addresource", new addResourceCommand());

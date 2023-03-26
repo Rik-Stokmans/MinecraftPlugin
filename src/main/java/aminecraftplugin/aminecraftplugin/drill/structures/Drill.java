@@ -19,6 +19,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +46,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private Location location;
     private LootFinder lootFinder;
     private DrillType drillType;
+    private Inventory inventory;
     private int drillTier;
     private Hologram hologram;
     private Structure structure;
@@ -61,6 +63,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     public Drill(Location location, OfflinePlayer owner, ItemStack drill){
         this.location = location;
         this.owner = owner;
+        this.inventory = Bukkit.createInventory(null, 54, "Drill");
 
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
         NBTTagCompound nbt = nmsItem.u();
@@ -158,11 +161,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                             drill.getHologram().getLines().appendText(" - " + resource2.getName() + ": " + kgMined2 + "Kg");
                         }
                     }
-                    if (!drill.getResources().containsKey(resource)){
-                        drill.getResources().put(resource, kgMined);
-                    } else {
-                        drill.getResources().put(resource, drill.getResources().get(resource) + kgMined);
-                    }
+                    drill.addResource(resource, kgMined);
                     if (kgMined == kgLeft){
                         drill.scheduleLootFinding(p);
                         this.cancel();
@@ -221,20 +220,33 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     public ItemStack destroy(boolean offline){
         for (BlockState destroyedBlock : destroyedBlocks){
             destroyedBlock.update(true);
-            if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
+            if (destroyedBlock.getBlockData().getAsString().contains("half=")) {
                 if (!offline) {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            destroyedBlock.getBlock().setType(destroyedBlock.getType());
-                            Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
-                            BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
-                            locUp.getBlock().setBlockData(blockData2);
-                        }
-                    }.runTaskLater(plugin, 1l);
+                    if (destroyedBlock.getBlockData().getAsString().contains("half=upper")) {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                destroyedBlock.getBlock().setType(destroyedBlock.getType());
+                                Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
+                                BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=lower]");
+                                locUp.getBlock().setBlockData(blockData2);
+                            }
+                        }.runTaskLater(plugin, 1l);
+                    } else if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                destroyedBlock.getBlock().setType(destroyedBlock.getType());
+                                Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
+                                BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
+                                locUp.getBlock().setBlockData(blockData2);
+                            }
+                        }.runTaskLater(plugin, 1l);
+                    }
                 } else {
-                    savedBlocks.put(destroyedBlock.getLocation(), new ItemStack(destroyedBlock.getType()));
+                    savedBlocks.put(destroyedBlock.getLocation(), destroyedBlock.getBlockData());
                 }
+
             }
 
         }
@@ -282,10 +294,33 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
     }
 
+    public void addResource(Resource resource, Double kg){
+        if (!this.getResources().containsKey(resource)){
+            this.getResources().put(resource, kg);
+        } else {
+            this.getResources().put(resource, this.getResources().get(resource) + kg);
+        }
+        this.updateStructureInventory();
+    }
+
+    public void updateStructureInventory(){
+        int index = 0;
+        for (Map.Entry<Resource, Double> resource : this.getResources().entrySet()){
+            ItemStack item = resource.getKey().getItemStack();
+            ItemMeta itemMeta = item.getItemMeta();
+            ArrayList<String> lore = new ArrayList<>();
+            lore.add(format("&7kg: &f" + df.format(resource.getValue())));
+            itemMeta.setLore(lore);
+            item.setItemMeta(itemMeta);
+            inventory.setItem(index, item);
+
+            index++;
+        }
+    }
 
     @Override
     public void openStructureMenu(Player p) {
-        Inventory inventory = Bukkit.createInventory(null, 54, "Drill");
+        Inventory inventory = this.getInventory();
         int index = 0;
         for (Map.Entry<Resource, Double> resource : this.getResources().entrySet()){
             ItemStack item = resource.getKey().getItemStack();
@@ -299,6 +334,16 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             index++;
         }
         p.openInventory(inventory);
+    }
+
+    @EventHandler
+    private void drillClick(InventoryClickEvent e){
+        if (e.getView() == null) return;
+        String name = e.getView().getTitle();
+        if (name.contains("Drill")) {
+            e.setCancelled(true);
+        }
+
     }
 
     @Override
@@ -332,6 +377,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
     }
 
+    public Inventory getInventory() {
+        return inventory;
+    }
 
     public OfflinePlayer getOwner() {
         return owner;

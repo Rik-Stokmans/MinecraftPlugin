@@ -7,8 +7,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
@@ -45,7 +49,7 @@ public interface Structure {
     HashMap<UUID, Integer> scheduleRemoveStructures = new HashMap<>();
 
     YamlConfiguration savedBlocksFile = new YamlConfiguration();
-    HashMap<Location, ItemStack> savedBlocks = new HashMap<>();
+    HashMap<Location, BlockData> savedBlocks = new HashMap<>();
     Material[] doubleBlocks = new Material[]{Material.LARGE_FERN, Material.TALL_GRASS, Material.LILAC, Material.PEONY, Material.ROSE_BUSH, Material.SUNFLOWER};
 
 
@@ -72,9 +76,15 @@ public interface Structure {
 
     static void saveLongGrass(){
         int id = 1;
-        for (Map.Entry<Location, ItemStack> entry : savedBlocks.entrySet()){
+        for (Map.Entry<Location, BlockData> entry : savedBlocks.entrySet()){
+
+            boolean upper = true;
+            if (entry.getValue().getAsString().contains("lower")){
+                upper = false;
+            }
             savedBlocksFile.set("data." + id + ".location", entry.getKey());
-            savedBlocksFile.set("data." + id + ".material", new ItemStack(entry.getValue()));
+            savedBlocksFile.set("data." + id + ".material", new ItemStack(entry.getValue().getMaterial()));
+            savedBlocksFile.set("data." + id + ".upper", upper);
             id++;
         }
         try {
@@ -95,11 +105,19 @@ public interface Structure {
             savedBlocksFile.getConfigurationSection("data").getKeys(false).forEach(key -> {
                 Location loc = finalSavedBlocksFile.getLocation("data." + key + ".location");
                 Material material = finalSavedBlocksFile.getItemStack("data." + key + ".material").getType();
+                boolean upper = finalSavedBlocksFile.getBoolean("data." + key + ".upper");
 
-                loc.getBlock().setType(material);
                 Location locUp = loc.clone().add(0, 1, 0);
+                Location locDown = loc.clone().add(0, -1, 0);
                 BlockData blockData2 = Bukkit.createBlockData(material, "[half=upper]");
-                locUp.getBlock().setBlockData(blockData2);
+
+                if (!upper) {
+                    loc.getBlock().setType(material);
+                    locUp.getBlock().setBlockData(blockData2);
+                } else {
+                    locDown.getBlock().setType(material);
+                    loc.getBlock().setBlockData(blockData2);
+                }
             });
         }
     }
@@ -117,7 +135,26 @@ public interface Structure {
 
     }
 
+    static double biggestFromVector(BlockVector blockVector){
+        double biggest1 = 0.0;
+        if (blockVector.getX() > biggest1){
+            biggest1 = blockVector.getX() + 2;
+        }
+        if (blockVector.getY() > biggest1){
+            biggest1 = blockVector.getY() + 1;
+        }
+        if (blockVector.getZ() > biggest1){
+            biggest1 = blockVector.getZ() + 2;
+        }
+        return biggest1;
+    }
+
     static boolean canBePlaced(String structureName, Location placedLoc, Player p){
+        double distance = biggestFromVector(getStructure(structureName).getSize());
+        if (placedLoc.getWorld().getNearbyEntities(placedLoc, distance, distance, distance).stream().filter(entity -> !(entity instanceof LivingEntity)).collect(Collectors.toList()).size() != 0){
+            p.sendMessage(format("&cCan not place while entities are nearby"));
+            return false;
+        }
         for (ArrayList<aminecraftplugin.aminecraftplugin.drill.structures.Structure> structures : structures.values()){
             for (aminecraftplugin.aminecraftplugin.drill.structures.Structure structure : structures) {
                 org.bukkit.structure.Structure structureComparing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structure.getStructureName());
@@ -180,11 +217,17 @@ public interface Structure {
 
                     Material type = loc.getBlock().getType();
                     Location locUp = loc.clone().add(0,1,0);
+                    Location locDown = loc.clone().add(0,-1,0);
 
                     //exception to not place tall grass twice
                     for (Material material : doubleBlocks){
                         if (type.equals(material)){
-                            ignoredLocations.add(locUp);
+                            if (loc.getBlock().getBlockData().getAsString().contains("[half=upper]")){
+                                ignoredLocations.add(locDown);
+                            }
+                            if (loc.getBlock().getBlockData().getAsString().contains("[half=lower]")){
+                                ignoredLocations.add(locUp);
+                            }
                         }
                     }
 

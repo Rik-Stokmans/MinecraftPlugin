@@ -39,7 +39,9 @@ public final class Main extends JavaPlugin {
 
         //holographicdisplays
         useHolographicDisplays = Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays");
-        api = HolographicDisplaysAPI.get(plugin);
+        if (useHolographicDisplays) {
+            api = HolographicDisplaysAPI.get(this);
+        }
 
         //file path
         path = getDataFolder().getAbsoluteFile().toString();

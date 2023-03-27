@@ -10,6 +10,8 @@ import aminecraftplugin.aminecraftplugin.drill.structures.Structure;
 import aminecraftplugin.aminecraftplugin.drill.structures.StructureEvent;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.ProtocolManager;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -31,6 +33,7 @@ public final class Main extends JavaPlugin {
     public static Plugin plugin;
     public static boolean useHolographicDisplays;
     public static HolographicDisplaysAPI api;
+    public static ProtocolManager protocolManager;
 
     @Override
     public void onEnable() {
@@ -42,6 +45,9 @@ public final class Main extends JavaPlugin {
         if (useHolographicDisplays) {
             api = HolographicDisplaysAPI.get(this);
         }
+
+        //protocollib
+        protocolManager = ProtocolLibrary.getProtocolManager();
 
         //file path
         path = getDataFolder().getAbsoluteFile().toString();

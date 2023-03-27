@@ -19,7 +19,7 @@ public class getDrillCommand implements CommandExecutor {
             net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
             NBTTagCompound nbt = nmsItem.u();
             if (nbt == null) nbt = new NBTTagCompound();
-            nbt.a("drilltier", strings[0]);
+            nbt.a("drilltier", Integer.parseInt(strings[0]));
 
             String name = "";
             for (int i = 1; i < strings.length; i++){

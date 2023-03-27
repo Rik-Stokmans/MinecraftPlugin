@@ -57,7 +57,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
 
     public Drill(){
-        df.setRoundingMode(RoundingMode.FLOOR);
     }
 
     public Drill(Location location, OfflinePlayer owner, ItemStack drill){
@@ -93,13 +92,33 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private void scheduleLootFinding(OfflinePlayer p){
 
         this.clearHologram();
-        this.getHologram().getLines().appendText("Searching for resources...");
+        this.getHologram().getLines().appendText("Searching for resources");
         this.correctHologramPosition();
         LootFinder lootFinder = this.getLootFinder();
         Drill drill = this;
+
+        this.getLocation().getWorld().playSound(this.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+
         BukkitTask task = new BukkitRunnable() {
             @Override
             public void run() {
+                HologramLine hologramLine = drill.getHologram().getLines().get(0);
+                TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
+                String currentLine = textHologramLine.getText();
+                int dotCount = currentLine.length() - currentLine.replaceAll("\\.","").length();
+                int newDotCount = dotCount + 1;
+                if (newDotCount == 4) newDotCount = 0;
+                String newLine = "Searching for resources";
+                for (int i = 0; i < newDotCount; i++){
+                    newLine += ".";
+                }
+                textHologramLine.setText(newLine);
+            }
+        }.runTaskTimer(plugin, 10l, 10l);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                task.cancel();
                 HashMap<Resource, Double> foundResources = lootFinder.findLoot(p);
                 if (foundResources.isEmpty()){
                     scheduleLootFinding(p);
@@ -107,12 +126,12 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     drill.scheduleLootMining(foundResources, p);
                 }
             }
-        }.runTaskLater(plugin, 30 * 20l);
+        }.runTaskLater(plugin, 15 * 20l);
     }
 
     private void scheduleLootMining(HashMap<Resource, Double> resources, OfflinePlayer p){
         Drill drill = this;
-        Double miningPerSecond = 0.02 * Math.log(drill.getDrillTier() + (Math.E - 1));
+        Double miningPerSecond = 0.01 * Math.log(drill.getDrillTier() + (Math.E - 1));
 
         HashMap<Resource, Double> mined = new HashMap<>();
         for (Resource resource : resources.keySet()){
@@ -138,27 +157,21 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     if (kgMined > kgLeft){
                         kgMined = kgLeft;
                     }
-                    resources.put(resource, kgLeft - kgMined);
-                    mined.put(resource, mined.get(resource) + kgMined);
+                    resources.replace(resource, kgLeft - kgMined);
+                    mined.replace(resource, mined.get(resource) + kgMined);
 
+                    int j = drill.getHologram().getLines().size();
                     for (Map.Entry<Resource, Double> entry2 : mined.entrySet()){
                         Resource resource2 = entry2.getKey();
                         Double kgMined2 = entry2.getValue();
-                        boolean found = false;
-                        for (int i = 0; i < drill.getHologram().getLines().size(); i++){
+                        for (int i = 0; i < j; i++){
                             HologramLine hologramLine = drill.getHologram().getLines().get(i);
                             if (hologramLine instanceof TextHologramLine){
                                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
                                 if (textHologramLine.getText().contains(resource2.getName())){
-                                    found = true;
-                                    drill.getHologram().getLines().insertText(i, " - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
-                                    drill.getHologram().getLines().remove(i + 1);
-                                    break;
+                                    textHologramLine.setText(" - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
                                 }
                             }
-                        }
-                        if (!found){
-                            drill.getHologram().getLines().appendText(" - " + resource2.getName() + ": " + kgMined2 + "Kg");
                         }
                     }
                     drill.addResource(resource, kgMined);

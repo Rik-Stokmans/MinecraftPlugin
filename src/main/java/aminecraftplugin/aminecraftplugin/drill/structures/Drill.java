@@ -96,7 +96,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private void scheduleLootFinding(OfflinePlayer p){
 
         int totalDuration = 25;
-        double oneStoneDuration = (int) (totalDuration / (3 * Math.pow(Math.log(Math.E + this.getDrillTier()), 0.5)));
+        double oneStoneDuration = (totalDuration / (3 * Math.pow(Math.log(Math.E + this.getDrillTier()), 0.5)));
 
         this.clearHologram();
         this.getHologram().getLines().appendText("Searching for resources");
@@ -161,7 +161,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     private void scheduleLootMining(HashMap<Resource, Double> resources, OfflinePlayer p){
         Drill drill = this;
-        Double miningPerSecond = 0.01 * Math.log(drill.getDrillTier() + (Math.E - 1));
+
+        Double miningPerSecond = 0.01 * Math.pow(Math.log(Math.E + drill.getDrillTier()), 0.5);
 
         HashMap<Resource, Double> mined = new HashMap<>();
         for (Resource resource : resources.keySet()){

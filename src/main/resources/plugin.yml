@@ -15,6 +15,10 @@ commands:
     permission: drilz.operator
     description: add value to item in hand
     usage: /addvalue
+  addmaterial:
+    permission: drilz.operator
+    description: add material
+    usage: /addmaterial
   createmarket:
     permission: drilz.operator
     description: create a market

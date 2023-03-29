@@ -224,7 +224,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     protocolManager.broadcastServerPacket(packetContainer);
                     stage[0]++;
                 }
-            }.runTaskTimer(plugin, totalDelay + (totalSeconds / 10), (totalSeconds / 10));
+            }.runTaskTimer(plugin, (totalDelay + (totalSeconds / 10)) * 20, ((totalSeconds / 10)) * 20);
             totalDelay += totalSeconds;
         }
 

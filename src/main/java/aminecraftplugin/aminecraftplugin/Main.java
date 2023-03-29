@@ -2,6 +2,7 @@ package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.commands.*;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.getDrillTabCompleter;
+import aminecraftplugin.aminecraftplugin.commands.tabcompleters.materialTabCompleter;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.numTabCompleter;
 import aminecraftplugin.aminecraftplugin.drill.structures.Drill;
 import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
@@ -92,6 +93,7 @@ public final class Main extends JavaPlugin {
         new Command("checkloottables", new checkLootTableCommand());
         new Command("getloot", new getLootCommand());
         new Command("getdrill", new getDrillCommand(), new getDrillTabCompleter());
+        new Command("addmaterial", new addMaterialCommand(), new materialTabCompleter());
 
         //ticker all
         /*

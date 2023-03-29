@@ -178,41 +178,56 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
         this.correctHologramPosition();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Double kgMined = miningPerSecond / 20;
-                for (Map.Entry<Resource, Double> entry : resources.entrySet()){
-                    Resource resource = entry.getKey();
-                    Double kgLeft = entry.getValue();
-                    if (kgMined > kgLeft){
+        PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
+        packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
+        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+        long totalDelay = 0;
+        for (Map.Entry<Resource, Double> entry : resources.entrySet()){
+
+            Resource resource = entry.getKey();
+            double kgLeft = entry.getValue();
+            long totalSeconds = (long) Math.ceil(kgLeft / miningPerSecond);
+            final int[] stage = {0};
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                    Double kgMined = miningPerSecond / 20;
+                    if (kgMined > kgLeft) {
                         kgMined = kgLeft;
                     }
                     resources.replace(resource, kgLeft - kgMined);
                     mined.replace(resource, mined.get(resource) + kgMined);
 
                     int j = drill.getHologram().getLines().size();
-                    for (Map.Entry<Resource, Double> entry2 : mined.entrySet()){
+                    for (Map.Entry<Resource, Double> entry2 : mined.entrySet()) {
                         Resource resource2 = entry2.getKey();
                         Double kgMined2 = entry2.getValue();
-                        for (int i = 0; i < j; i++){
+                        for (int i = 0; i < j; i++) {
                             HologramLine hologramLine = drill.getHologram().getLines().get(i);
-                            if (hologramLine instanceof TextHologramLine){
+                            if (hologramLine instanceof TextHologramLine) {
                                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
-                                if (textHologramLine.getText().contains(resource2.getName())){
+                                if (textHologramLine.getText().contains(resource2.getName())) {
                                     textHologramLine.setText(" - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
                                 }
                             }
                         }
                     }
                     drill.addResource(resource, kgMined);
-                    if (kgMined == kgLeft){
+                    if (kgMined == kgLeft) {
+                        packetContainer.getIntegers().write(1, 0);
                         drill.scheduleLootFinding(p);
                         this.cancel();
                     }
+                    packetContainer.getIntegers().write(1, stage[0]);
+                    protocolManager.broadcastServerPacket(packetContainer);
+                    stage[0]++;
                 }
-            }
-        }.runTaskTimer(plugin, 1l, 1l);
+            }.runTaskTimer(plugin, totalDelay + (totalSeconds / 10), (totalSeconds / 10));
+            totalDelay += totalSeconds;
+        }
+
     }
 
     @Override

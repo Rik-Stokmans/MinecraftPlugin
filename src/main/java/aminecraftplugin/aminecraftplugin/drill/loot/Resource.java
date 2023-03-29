@@ -310,7 +310,7 @@ public class Resource implements Listener {
                 resourceFile.set("data." + "." + id + ".name", resource.getName());
                 resourceFile.set("data." + "." + id + ".value", resource.getValue());
                 resourceFile.set("data." + "." + id + ".id", resource.getKey());
-                resourceFile.set("data." + "." + id + ".material", resource.getBlock());
+                resourceFile.set("data." + "." + id + ".material", resource.getBlock().name());
             }
         }
         saveFile(resourceFile, "resources.yml");
@@ -332,7 +332,9 @@ public class Resource implements Listener {
             Double value = resourceFile.getDouble("data." + key + ".value");
             int ID = resourceFile.getInt("data." + key + ".id");
             String materialName = resourceFile.getString("data." + key + ".material");
-            resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID, Material.getMaterial(materialName)));
+            if (materialName != null) {
+                resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID, Material.getMaterial(materialName)));
+            }
         });
 
         return resourceHashMap;

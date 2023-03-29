@@ -183,21 +183,23 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
         long totalDelay = 0;
         for (Map.Entry<Resource, Double> entry : resources.entrySet()){
-
             Resource resource = entry.getKey();
-            double kgLeft = entry.getValue();
-            long totalSeconds = (long) Math.ceil(kgLeft / miningPerSecond);
+            final double[] kgLeft = {entry.getValue()};
+
+            this.getLocation().clone().add(0,-1,0).getBlock().setType(resource.getBlock());
+
+            long totalSeconds = (long) Math.ceil(kgLeft[0] / miningPerSecond);
             final int[] stage = {0};
 
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
-                    Double kgMined = miningPerSecond / 20;
-                    if (kgMined > kgLeft) {
-                        kgMined = kgLeft;
+                    Double kgMined = miningPerSecond * (totalSeconds / 10);
+                    kgLeft[0] -= kgMined;
+                    if (kgMined > kgLeft[0]) {
+                        kgMined = kgLeft[0];
                     }
-                    resources.replace(resource, kgLeft - kgMined);
                     mined.replace(resource, mined.get(resource) + kgMined);
 
                     int j = drill.getHologram().getLines().size();
@@ -215,9 +217,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         }
                     }
                     drill.addResource(resource, kgMined);
-                    if (kgMined == kgLeft) {
+                    if (kgMined == kgLeft[0]) {
                         packetContainer.getIntegers().write(1, 0);
                         drill.scheduleLootFinding(p);
+                        drill.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
                         this.cancel();
                     }
                     packetContainer.getIntegers().write(1, stage[0]);
@@ -225,7 +228,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     stage[0]++;
                 }
             }.runTaskTimer(plugin, (totalDelay + (totalSeconds / 10)) * 20, ((totalSeconds / 10)) * 20);
-            totalDelay += totalSeconds;
+            totalDelay += totalSeconds + 0.05;
         }
 
     }

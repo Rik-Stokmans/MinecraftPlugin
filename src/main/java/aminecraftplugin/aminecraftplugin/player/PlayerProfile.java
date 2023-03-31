@@ -170,9 +170,11 @@ public class PlayerProfile implements Listener {
             double space = 5.0;
             if (playerFile.contains("backpack")) {
                 playerFile.getConfigurationSection("backpack").getKeys(false).forEach(key -> {
-                    if (Integer.valueOf(key) != null) {
+                    try {
+                        int i = Integer.parseInt(key);
                         double kg = playerFile.getDouble("backpack." + key);
-                        backpack.put(Integer.valueOf(key), kg);
+                        backpack.put(i, kg);
+                    } catch (NumberFormatException nfe) {
                     }
                 });
                 if (playerFile.contains("backpack.space")) {

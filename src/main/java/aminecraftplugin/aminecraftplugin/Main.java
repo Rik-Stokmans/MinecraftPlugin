@@ -134,6 +134,9 @@ public final class Main extends JavaPlugin {
         //resource save
         Resource.save();
 
+        //market save
+        Market.saveMarketsToFile();
+
 
     }
 

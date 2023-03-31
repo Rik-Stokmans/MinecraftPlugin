@@ -14,7 +14,6 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Trade {
 
-    Material material;
     String name;
     int itemKey;
 
@@ -27,12 +26,21 @@ public class Trade {
 
     public Trade(int _itemKey, int _strength) {
         stock = 0;
-        Resource resource = resources.get(_itemKey);
         strength = _strength;
-        material = resource.getItemStack().getType();
-        name = resource.getName();
-        baseValue = resource.getValue();
         itemKey = _itemKey;
+        Resource resource = resources.get(itemKey);
+        baseValue = resource.getValue();
+        tick(false);
+    }
+
+
+    //method that gets called when loading from file
+    public Trade(int _itemKey, int _strength, double _stock) {
+        stock = _stock;
+        itemKey = _itemKey;
+        strength = _strength;
+        Resource resource = resources.get(itemKey);
+        baseValue = resource.getValue();
         tick(false);
     }
 
@@ -61,7 +69,7 @@ public class Trade {
 
     public ItemStack generateTradeItem() {
         tick(false);
-        ItemStack tradeItem = new ItemStack(material);
+        ItemStack tradeItem = resources.get(itemKey).getItemStack().clone();
         ItemMeta meta = tradeItem.getItemMeta();
         meta.setDisplayName(resources.get(itemKey).getName());
         ArrayList<String> lore = new ArrayList<>();
@@ -116,5 +124,10 @@ public class Trade {
     public void setStock(double stock) {
         this.stock = stock;
     }
-
+    public int getStrength() {
+        return strength;
+    }
+    public void setStrength(int strength) {
+        this.strength = strength;
+    }
 }

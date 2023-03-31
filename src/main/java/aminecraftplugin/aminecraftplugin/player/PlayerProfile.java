@@ -175,7 +175,9 @@ public class PlayerProfile implements Listener {
                         backpack.put(Integer.valueOf(key), kg);
                     }
                 });
-                space = playerFile.getDouble("backpack.space");
+                if (playerFile.contains("backpack.space")) {
+                    space = playerFile.getDouble("backpack.space");
+                }
             }
 
             PlayerProfile playerProfile = new PlayerProfile();

@@ -55,6 +55,13 @@ public class Resource implements Listener {
         this.value = value;
         this.key = key;
         this.block = block;
+
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(this.getItemStack());
+        NBTTagCompound nbt = nmsItem.u();
+        if (nbt == null) nbt = new NBTTagCompound();
+        nbt.a("id", this.getKey());
+        nmsItem.c(nbt);
+        this.setItemStack(CraftItemStack.asBukkitCopy(nmsItem));
     }
 
 
@@ -402,6 +409,10 @@ public class Resource implements Listener {
 
     public Material getBlock() {
         return block;
+    }
+
+    public void setItemStack(ItemStack itemStack) {
+        this.itemStack = itemStack;
     }
 
     @Override

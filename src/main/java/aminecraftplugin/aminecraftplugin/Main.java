@@ -18,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,15 +87,12 @@ public final class Main extends JavaPlugin {
         new Command("getdrill", new getDrillCommand(), new getDrillTabCompleter());
 
         //ticker all
-        /*
         BukkitScheduler scheduler = getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             for (Market m : Market.markets.values()) {
-                m.tick();
+                m.tickTrades();
             }
         }, 0L, 20L);
-
-        */
         for (Player p : Bukkit.getOnlinePlayers()){
             p.sendMessage(format("&aUpdating complete"));
         }

@@ -311,6 +311,11 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             }
 
         }
+        PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
+        packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
+        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+        packetContainer.getIntegers().write(1, 0);
+        protocolManager.broadcastServerPacket(packetContainer);
 
         ItemStack drill = new ItemStack(Material.HOPPER);
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);

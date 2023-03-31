@@ -449,9 +449,14 @@ public class Resource implements Listener {
     public static int getKeyFromItemstack(ItemStack item) {
         int key = -1;
 
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(item);
+        NBTTagCompound nbt = nmsItem.u();
+        int id = nbt.h("id");
         for (Resource r : resources.values()) {
-            if (r.getName().equals(item.getItemMeta().getDisplayName())) key = r.getKey();
-            Bukkit.broadcastMessage(r.getName() + "," + item.getItemMeta().getDisplayName());
+            net.minecraft.world.item.ItemStack nmsResource = CraftItemStack.asNMSCopy(r.getItemStack());
+            NBTTagCompound nbt2 = nmsItem.u();
+            int id2 = nbt2.h("id");
+            if (id2 == id) key = r.getKey();
         }
 
         return key;

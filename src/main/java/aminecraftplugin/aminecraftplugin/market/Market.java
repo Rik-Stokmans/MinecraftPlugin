@@ -19,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
@@ -320,6 +321,7 @@ public class Market implements Listener {
         else if (invName.equals(format("&eAdd item"))) {
             e.setCancelled(true);
             if (p.isOp()) {
+                if (getKeyFromItemstack(clickedItem) == -1) return;
                 latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
                 p.openInventory(marketCategoryGuiMenu);
                 latestMarketOpen.get(p).updateTrades();
@@ -341,7 +343,6 @@ public class Market implements Listener {
                 double worth = market.trades.get(key).getBaseValue();
 
                 double amountBought = orderSize;
-                //todo check if the player has enough space in backpack
                 double price = 0;
 
                 double x1 = stock - amountBought;
@@ -365,7 +366,7 @@ public class Market implements Listener {
                 stock -= amountBought;
                 price = price * 1.05;
                 market.trades.get(key).setStock(stock);
-                market.trades.get(key).tick();
+                market.trades.get(key).tick(false);
                 e.setCurrentItem(market.trades.get(key).generateTradeItem());
                 p.sendMessage("price: " + price);
             }
@@ -399,7 +400,7 @@ public class Market implements Listener {
                 }
                 stock += amountSold;
                 market.trades.get(key).setStock(stock);
-                market.trades.get(key).tick();
+                market.trades.get(key).tick(false);
                 e.setCurrentItem(market.trades.get(key).generateTradeItem());
                 p.sendMessage("value: " + value);
             }
@@ -534,11 +535,12 @@ public class Market implements Listener {
         for (Resource r : resources.values()) {
             boolean alreadyInMarket = false;
             for (Trade trade : latestMarketOpen.get(p).trades.values()) {
-                if (trade.getItem().isSimilar(r.getItemStack())) alreadyInMarket = true;
+                if (trade.getItemKey() == r.getKey()) alreadyInMarket = true;
             }
             if (!alreadyInMarket) {
-                ItemStack item = r.getItemStack();
+                ItemStack item = new ItemStack(r.getItemStack().getType());
                 ItemMeta imeta = item.getItemMeta();
+                imeta.setDisplayName(r.getName());
                 List<String> lore = new ArrayList<>();
                 lore.add("");
                 resourceCategory category = getCategoryFromResourceKey(r.getKey());
@@ -566,6 +568,17 @@ public class Market implements Listener {
         marketCategoryGuiMenu.setItem(14, gemstonesCategoryButton);
         marketCategoryGuiMenu.setItem(16, otherCategoryButton);
         marketCategoryGuiMenu.setItem(22, addItemToMenu);
+    }
+
+
+
+    public static void tickTrades() {
+        for (Market m : markets.values()) {
+            for (Trade t : m.trades.values()) {
+                t.tick(true);
+            }
+            m.updateTrades();
+        }
     }
 
 

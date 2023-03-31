@@ -303,7 +303,7 @@ public class Resource implements Listener {
 
 
     private static void sortCategory(resourceCategory resourceCategory){
-        Collections.sort(categories.get(resourceCategory));
+        if (!categories.isEmpty() && !categories.get(resourceCategory).isEmpty())  Collections.sort(categories.get(resourceCategory));
     }
 
     private static void saveResources() throws IOException {
@@ -450,7 +450,8 @@ public class Resource implements Listener {
         int key = -1;
 
         for (Resource r : resources.values()) {
-            if (r.itemStack.isSimilar(item)) key = r.getKey();
+            if (r.getName().equals(item.getItemMeta().getDisplayName())) key = r.getKey();
+            Bukkit.broadcastMessage(r.getName() + "," + item.getItemMeta().getDisplayName());
         }
 
         return key;

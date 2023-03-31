@@ -28,6 +28,9 @@ public class PlayerProfile implements Listener {
     private Backpack backPack;
     private ArrayList<ItemStack> offlineItems = new ArrayList<>();
 
+    //money
+    private double money;
+
     @EventHandler
     private void joinEvent(PlayerJoinEvent e){
         Player p = e.getPlayer();
@@ -44,48 +47,46 @@ public class PlayerProfile implements Listener {
     public PlayerProfile(Player p){
         this.miningSkill = 1;
         this.prospectingSkill = 1;
-        this.backPack = new Backpack(p);
+        this.backPack = new Backpack();
+        this.money = 0;
         playerProfiles.put(p.getUniqueId(), this);
     }
 
     public static PlayerProfile getPlayerProfile(Player p){
         return playerProfiles.get(p.getUniqueId());
     }
-
     public void addOfflineItem(ItemStack itemStack){
         this.getOfflineItems().add(itemStack);
     }
-
     public ArrayList<ItemStack> getOfflineItems() {
         return offlineItems;
     }
-
     public void setOfflineItems(ArrayList<ItemStack> offlineItems) {
         this.offlineItems = offlineItems;
     }
-
     public int getMiningSkill() {
         return miningSkill;
     }
-
     public void setMiningSkill(int miningSkill) {
         this.miningSkill = miningSkill;
     }
-
     public int getProspectingSkill() {
         return prospectingSkill;
     }
-
     public void setProspectingSkill(int prospectingSkill) {
         this.prospectingSkill = prospectingSkill;
     }
-
     public Backpack getBackPack() {
         return backPack;
     }
-
     public void setBackPack(Backpack backPack) {
         this.backPack = backPack;
+    }
+    public double getMoney() {
+        return money;
+    }
+    public void setMoney(double money) {
+        this.money = money;
     }
 
     public static void init(){
@@ -113,6 +114,7 @@ public class PlayerProfile implements Listener {
 
             playerFile.set("skills.mining", playerProfile.getMiningSkill());
             playerFile.set("skills.prospecting", playerProfile.getProspectingSkill());
+            playerFile.set("money", playerProfile.getMoney());
 
             int index = 1;
             for (ItemStack item : playerProfile.getOfflineItems()) {
@@ -147,6 +149,7 @@ public class PlayerProfile implements Listener {
 
             int miningSkill = playerFile.getInt("skills.mining");
             int prospectingSkill = playerFile.getInt("skills.prospecting");
+            double money = playerFile.getDouble("money");
 
             ArrayList<ItemStack> offlineItems = new ArrayList<>();
             if (playerFile.contains("offlineitems")){
@@ -169,6 +172,7 @@ public class PlayerProfile implements Listener {
             playerProfile.setProspectingSkill(prospectingSkill);
             playerProfile.setBackPack(new Backpack(backpack));
             playerProfile.setOfflineItems(offlineItems);
+            playerProfile.setMoney(money);
 
             playerProfiles.put(uuid, playerProfile);
         }

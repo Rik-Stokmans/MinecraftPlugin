@@ -1,50 +1,69 @@
 package aminecraftplugin.aminecraftplugin.market;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
+import java.util.Random;
 
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.resources;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Trade {
 
-    ItemStack item;
+    Material material;
     String name;
-    double baseValue;
-    double buyPrice;
-    double sellPrice;
     int itemKey;
-    int strength;
 
     //trade logic
     double stock;
+    int strength;
+    double baseValue;
+    double buyPrice;
+    double sellPrice;
 
     public Trade(int _itemKey, int _strength) {
         stock = 0;
-        Resource resource = Resource.resources.get(_itemKey);
+        Resource resource = resources.get(_itemKey);
         strength = _strength;
-        item = resource.getItemStack();
+        material = resource.getItemStack().getType();
         name = resource.getName();
         baseValue = resource.getValue();
         itemKey = _itemKey;
-        tick();
+        tick(false);
     }
 
 
 
     //tick method to update this trade
-    public void tick() {
+    public void tick(boolean updateStock) {
+        Random rand = new Random();
+        double chance = (strength * Math.pow(Math.abs(stock), 1.6)) / 1000000;
+
+        if (updateStock && chance > rand.nextDouble() * 100) {
+            if ((stock < 0 && stock > -1) || (stock > 0 && stock < 1)) {
+                stock = 0;
+            }
+            else if (stock > 0) {
+                stock--;
+            }
+            else if (stock < 0) {
+                stock++;
+            }
+        }
         if (stock > 0) sellPrice = (strength * baseValue)/(stock + strength);
         else sellPrice = (2 * baseValue + ((strength * baseValue)/(stock - strength)));
         buyPrice = sellPrice * 1.05;
     }
 
     public ItemStack generateTradeItem() {
-        tick();
-        ItemStack tradeItem = item;
+        tick(false);
+        ItemStack tradeItem = new ItemStack(material);
         ItemMeta meta = tradeItem.getItemMeta();
+        meta.setDisplayName(resources.get(itemKey).getName());
         ArrayList<String> lore = new ArrayList<>();
         lore.add(" ");
         lore.add(format("&aBuy: &f" + String.format("%.2f",buyPrice) + " &e$/Kg"));
@@ -61,12 +80,6 @@ public class Trade {
     }
 
     //gettters and setters
-    public ItemStack getItem() {
-        return item;
-    }
-    public void setItem(ItemStack item) {
-        this.item = item;
-    }
     public String getName() {
         return name;
     }

@@ -99,6 +99,9 @@ public class Backpack {
         return emptySpace;
     }
 
+    public double getSpace() {
+        return space;
+    }
 
     public HashMap<Integer, Double> getBackpack() {
         return backpack;

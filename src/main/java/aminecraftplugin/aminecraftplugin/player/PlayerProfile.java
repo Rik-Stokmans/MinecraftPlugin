@@ -131,6 +131,7 @@ public class PlayerProfile implements Listener {
             for (Map.Entry<Integer, Double> resource : playerProfile.getBackPack().getBackpack().entrySet()){
                 playerFile.set("backpack." + resource.getKey(), resource.getValue());
             }
+            playerFile.set("backpack.space", playerProfile.getBackPack().getSpace());
 
             saveFile(playerFile, "playerdata/" + uuid.toString() + ".yml");
         }
@@ -166,17 +167,25 @@ public class PlayerProfile implements Listener {
             }
 
             HashMap<Integer, Double> backpack = new HashMap<>();
+            double space = 5.0;
             if (playerFile.contains("backpack")) {
                 playerFile.getConfigurationSection("backpack").getKeys(false).forEach(key -> {
-                    double kg = playerFile.getDouble("backpack." + key);
-                    backpack.put(Integer.valueOf(key), kg);
+                    try {
+                        int i = Integer.parseInt(key);
+                        double kg = playerFile.getDouble("backpack." + key);
+                        backpack.put(i, kg);
+                    } catch (NumberFormatException nfe) {
+                    }
                 });
+                if (playerFile.contains("backpack.space")) {
+                    space = playerFile.getDouble("backpack.space");
+                }
             }
 
             PlayerProfile playerProfile = new PlayerProfile();
             playerProfile.setMiningSkill(miningSkill);
             playerProfile.setProspectingSkill(prospectingSkill);
-            playerProfile.setBackPack(new Backpack());
+            playerProfile.setBackPack(new Backpack(backpack, space));
             playerProfile.setOfflineItems(offlineItems);
             playerProfile.setMoney(money);
 

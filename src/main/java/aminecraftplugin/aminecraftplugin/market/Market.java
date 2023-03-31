@@ -343,7 +343,6 @@ public class Market implements Listener {
                 double worth = market.trades.get(key).getBaseValue();
 
                 double amountBought = orderSize;
-                //todo check if the player has enough space in backpack
                 double price = 0;
 
                 double x1 = stock - amountBought;

@@ -9,7 +9,6 @@ import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import me.filoghost.holographicdisplays.api.hologram.line.HologramLine;
 import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -21,18 +20,14 @@ import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.structure.Structure;
 
-import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -189,6 +184,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             this.getLocation().clone().add(0,-1,0).getBlock().setType(resource.getBlock());
 
             long totalSeconds = (long) Math.ceil(kgLeft[0] / miningPerSecond);
+            for (Player p1 : Bukkit.getOnlinePlayers()){
+                p1.sendMessage(String.valueOf(kgLeft[0]));
+                //p1.sendMessage();
+            }
             final int[] stage = {0};
 
             new BukkitRunnable() {

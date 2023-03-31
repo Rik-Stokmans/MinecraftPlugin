@@ -2,6 +2,7 @@ package aminecraftplugin.aminecraftplugin.market;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -23,32 +24,33 @@ import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
+import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Market implements Listener {
 
     //ui/ux
-    public static ItemStack backButton;
-    public static ItemStack previousPageButton;
-    public static ItemStack nextPageButton;
-    public static ItemStack addItemButton;
-    public static ItemStack removeItemButton;
-    public static ItemStack darkDivider;
-    public static ItemStack lightDivider;
-    public static ItemStack metalsCategoryButton;
-    public static ItemStack energyCategoryButton;
-    public static ItemStack gemstonesCategoryButton;
-    public static ItemStack otherCategoryButton;
-    public static ItemStack sellAllButton;
-    public static ItemStack changeOrderAmountButton;
-    public static ItemStack resetOrderSizeButton;
-    public static ItemStack orderAddHundered;
-    public static ItemStack orderAddTen;
-    public static ItemStack orderAddOne;
-    public static ItemStack orderRemoveHundered;
-    public static ItemStack orderRemoveTen;
-    public static ItemStack orderRemoveOne;
-    public static ItemStack addItemToMenu;
+    private static ItemStack backButton;
+    private static ItemStack previousPageButton;
+    private static ItemStack nextPageButton;
+    private static ItemStack addItemButton;
+    private static ItemStack removeItemButton;
+    private static ItemStack darkDivider;
+    private static ItemStack lightDivider;
+    private static ItemStack metalsCategoryButton;
+    private static ItemStack energyCategoryButton;
+    private static ItemStack gemstonesCategoryButton;
+    private static ItemStack otherCategoryButton;
+    private static ItemStack sellAllButton;
+    private static ItemStack changeOrderAmountButton;
+    private static ItemStack resetOrderSizeButton;
+    private static ItemStack orderAddHundered;
+    private static ItemStack orderAddTen;
+    private static ItemStack orderAddOne;
+    private static ItemStack orderRemoveHundered;
+    private static ItemStack orderRemoveTen;
+    private static ItemStack orderRemoveOne;
+    private static ItemStack addItemToMenu;
 
     public static Inventory marketCategoryGuiMenu;
     public static Inventory marketOrderSizeMenu;
@@ -58,6 +60,8 @@ public class Market implements Listener {
 
     //Hashmap loaded from file containing all markets
     public static HashMap<Integer, Market> markets = new HashMap<>();
+
+    public static double marketBuyTax = 1.05;
 
     //all market attributes
     private String name;
@@ -246,12 +250,6 @@ public class Market implements Listener {
         Player p = (Player) e.getWhoClicked();
         String invName = e.getView().getTitle();
 
-        //opened the change order menu
-        if (clickedItem.isSimilar(changeOrderAmountButton)) {
-            openOrderSizeEditorGui(p);
-            e.setCancelled(true);
-            return;
-        }
         boolean buySellOrder = false;
         if (invName.equals(format("&eCategory Selector"))) {
 
@@ -283,24 +281,52 @@ public class Market implements Listener {
             if (clickedItem.isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
+
+            //opened the change order menu
+            if (clickedItem.isSimilar(changeOrderAmountButton)) {
+                openOrderSizeEditorGui(p);
+                e.setCancelled(true);
+                return;
+            }
         }
         else if (invName.equals(format("&eEnergy"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
+
+            //opened the change order menu
+            if (clickedItem.isSimilar(changeOrderAmountButton)) {
+                openOrderSizeEditorGui(p);
+                e.setCancelled(true);
+                return;
+            }
         }
         else if (invName.equals(format("&eGemstones"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
+
+            //opened the change order menu
+            if (clickedItem.isSimilar(changeOrderAmountButton)) {
+                openOrderSizeEditorGui(p);
+                e.setCancelled(true);
+                return;
+            }
         }
         else if (invName.equals(format("&eOther"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
+
+            //opened the change order menu
+            if (clickedItem.isSimilar(changeOrderAmountButton)) {
+                openOrderSizeEditorGui(p);
+                e.setCancelled(true);
+                return;
+            }
         }
         else if (invName.equals(format("&eChange Order Size"))) {
             e.setCancelled(true);
@@ -337,18 +363,22 @@ public class Market implements Listener {
             int key = getKeyFromItemstack(clickedItem);
             int orderSize = playerOrderSize.get(p);
             double itemAmountInBackpack = getPlayerProfile(p).getBackPack().getItemAmountInBackpack(key);
+            PlayerProfile playerProfile = playerProfiles.get(p.getUniqueId());
+            double playerMoney = playerProfile.getMoney();
+            double backpackEmptySpace = playerProfile.getBackPack().getEmptySpace();
             //buy
             if (e.getClick().isLeftClick()) {
                 double stock = market.trades.get(key).getStock();
                 double worth = market.trades.get(key).getBaseValue();
 
                 double amountBought = orderSize;
+                if (backpackEmptySpace < amountBought) amountBought = backpackEmptySpace;
+                if (amountBought == 0.0) return;
                 double price = 0;
 
+                //calculates the price of the oder size
                 double x1 = stock - amountBought;
                 double x2 = stock;
-
-                p.sendMessage(strength + ", " + stock + ", " + x2 + ", " + x1);
 
                 if (x1 >= 0) {
                     if (x1 == 0) x1 += Double.MIN_VALUE;
@@ -362,9 +392,13 @@ public class Market implements Listener {
                     price = ((worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
-                //todo check if player has enough money to buy the items
+
+                price = price * marketBuyTax;
+                if (!playerProfiles.containsKey(p.getUniqueId())) return;
+                if (playerMoney < price) return;
+
+                playerProfile.getBackPack().addResource(key, amountBought);
                 stock -= amountBought;
-                price = price * 1.05;
                 market.trades.get(key).setStock(stock);
                 market.trades.get(key).tick(false);
                 e.setCurrentItem(market.trades.get(key).generateTradeItem());
@@ -376,13 +410,12 @@ public class Market implements Listener {
                 double worth = market.trades.get(key).getBaseValue();
 
                 double amountSold = orderSize;
-                if (orderSize > itemAmountInBackpack) {
-                    amountSold = itemAmountInBackpack;
-                    p.sendMessage(format("&cYou don't have enough items in your backpack"));
-                }
-
+                if (orderSize > itemAmountInBackpack) amountSold = itemAmountInBackpack;
+                if (orderSize == 0.0) return;
                 double value = 0;
 
+
+                //calculates the value of the sold amount of items
                 double x1 = stock;
                 double x2 = stock + amountSold;
 
@@ -398,11 +431,12 @@ public class Market implements Listener {
                     value = ((worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
+
                 stock += amountSold;
                 market.trades.get(key).setStock(stock);
                 market.trades.get(key).tick(false);
                 e.setCurrentItem(market.trades.get(key).generateTradeItem());
-                p.sendMessage("value: " + value);
+                playerProfile.addMoney(value);
             }
         }
     }
@@ -457,7 +491,7 @@ public class Market implements Listener {
         ArrayList<String> otherCategoryButtonLore = new ArrayList<>();
         otherCategoryButtonLore.add(format("&7Open the &eother &7items tab"));
         otherCategoryButton = createGuiItem("&eOther", otherCategoryButtonLore, Material.SUNFLOWER);
-        //new
+
         ArrayList<String> sellAllButtonLore = new ArrayList<>();
         sellAllButtonLore.add(format("&7Sell all items of this category"));
         sellAllButton = createGuiItem("&6Sellall", sellAllButtonLore, Material.GOLD_INGOT);

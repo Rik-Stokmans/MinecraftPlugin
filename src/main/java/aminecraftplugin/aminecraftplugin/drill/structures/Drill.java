@@ -340,9 +340,13 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     public void structurePlace(BlockPlaceEvent e){
         if (e.getBlock().getType().equals(Material.HOPPER)) {
             Player p = e.getPlayer();
+            e.setCancelled(true);
+            if (!e.getBlockReplacedState().getType().equals(Material.AIR)){
+                p.sendMessage(format("&cYou can't place that here"));
+                return;
+            }
             ItemStack itemPlaced = e.getItemInHand();
             if (CraftItemStack.asNMSCopy(itemPlaced).u() == null) return;
-            e.setCancelled(true);
             Location placedLoc = e.getBlock().getLocation();
 
             net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemPlaced);
@@ -437,17 +441,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         return locations;
     }
 
-
-
-    //todo: GUI to display loot
-    //oven/hopper GUI for collecting
-    public void drill(Player p){
-        LootFinder loot = new LootFinder(this.getLocation());
-        for (Map.Entry<Resource, Double> resource : loot.findLoot(p).entrySet()){
-            //todo: add to backpack
-            p.sendMessage(resource.getKey().getName() + ": " + resource.getValue() + "kg");
-        }
-    }
 
     public Inventory getInventory() {
         return inventory;

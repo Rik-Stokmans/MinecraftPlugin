@@ -38,6 +38,8 @@ public class PlayerProfile implements Listener {
             PlayerProfile playerProfile = new PlayerProfile(p);
             playerProfiles.put(p.getUniqueId(), playerProfile);
         }
+        PlayerProfile playerProfile = getPlayerProfile(p);
+        playerProfile.getBackPack().updateBackpackInPlayerInventory();
     }
 
     public PlayerProfile(){
@@ -185,7 +187,7 @@ public class PlayerProfile implements Listener {
             PlayerProfile playerProfile = new PlayerProfile();
             playerProfile.setMiningSkill(miningSkill);
             playerProfile.setProspectingSkill(prospectingSkill);
-            playerProfile.setBackPack(new Backpack(backpack, space));
+            playerProfile.setBackPack(new Backpack(backpack, space, uuid));
             playerProfile.setOfflineItems(offlineItems);
             playerProfile.setMoney(money);
 

@@ -181,7 +181,7 @@ public interface Structure {
         locations.add(location.clone().add(0,-1,0));
         int length = (int) structure.getSize().getZ();
         int width = (int) structure.getSize().getX();
-        int height = (int) structure.getSize().getY();
+        int height = (int) structure.getSize().getY() + 1;
 
         int lengthFloor = (int) -Math.ceil(((length + 2) - 1) / 2);
         int lengthCeiling = (int) Math.ceil((length + 2) / 2);

@@ -2,6 +2,7 @@ package aminecraftplugin.aminecraftplugin.drill.structures;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,6 +21,7 @@ import static aminecraftplugin.aminecraftplugin.Main.plugin;
 import static aminecraftplugin.aminecraftplugin.drill.structures.Structure.scheduleRemoveStructures;
 import static aminecraftplugin.aminecraftplugin.drill.structures.Structure.structures;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
+import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class StructureEvent implements Listener {
 

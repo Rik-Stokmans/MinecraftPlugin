@@ -39,9 +39,6 @@ commands:
     permission: drilz.operator
     description: check loot tables
     usage: /checkloottables
-  getloot:
-    permission: drilz.operator
-    description: get random piece of loot
   getDrill:
     permission: drilz.operator
     description: get drill with command

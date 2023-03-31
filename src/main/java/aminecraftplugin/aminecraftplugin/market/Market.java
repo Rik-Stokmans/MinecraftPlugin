@@ -18,9 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.potion.Potion;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -419,7 +417,7 @@ public class Market implements Listener {
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
 
-                playerProfile.getBackPack().removeItemFromBackpack(key, amountSold);
+                playerProfile.getBackPack().removeResource(key, amountSold);
                 stock += amountSold;
                 market.trades.get(key).setStock(stock);
                 market.trades.get(key).tick(false);

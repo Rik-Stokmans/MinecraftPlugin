@@ -168,6 +168,7 @@ public class Backpack implements Listener {
             ItemStack item = p.getInventory().getItemInMainHand();
             ItemMeta meta = item.getItemMeta();
             if (meta.getDisplayName().equals(bundleName)){
+                e.setCancelled(true);
                 PlayerProfile playerProfile = getPlayerProfile(p);
                 playerProfile.getBackPack().open(p, p.getUniqueId());
             }

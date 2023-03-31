@@ -183,10 +183,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
             this.getLocation().clone().add(0,-1,0).getBlock().setType(resource.getBlock());
 
-            long totalSeconds = (long) Math.ceil(kgLeft[0] / miningPerSecond);
+            double totalSeconds = (long) Math.ceil(kgLeft[0] / miningPerSecond);
             for (Player p1 : Bukkit.getOnlinePlayers()){
                 p1.sendMessage(String.valueOf(kgLeft[0]));
-                //p1.sendMessage();
+                p1.sendMessage(String.valueOf(totalSeconds));
             }
             final int[] stage = {0};
 
@@ -194,7 +194,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 @Override
                 public void run() {
                     drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
-                    Double kgMined = miningPerSecond * (totalSeconds / 10);
+                    double kgMined = miningPerSecond * (totalSeconds / 10);
                     kgLeft[0] -= kgMined;
                     if (kgMined > kgLeft[0]) {
                         kgMined = kgLeft[0];
@@ -226,7 +226,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     protocolManager.broadcastServerPacket(packetContainer);
                     stage[0]++;
                 }
-            }.runTaskTimer(plugin, (totalDelay + (totalSeconds / 10)) * 20, ((totalSeconds / 10)) * 20);
+            }.runTaskTimer(plugin, (long) ((totalDelay + (totalSeconds / 10)) * 20), (long) (((totalSeconds / 10)) * 20));
             totalDelay += totalSeconds + 0.05;
         }
 

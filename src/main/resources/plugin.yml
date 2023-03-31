@@ -19,10 +19,14 @@ commands:
     permission: drilz.operator
     description: add material
     usage: /addmaterial
+  addmoney:
+    permission: drilz.operator
+    description: add money
+    usage: /addmoney <double>
   createmarket:
     permission: drilz.operator
     description: create a market
-    usage: /createmarket (name)
+    usage: /createmarket <name>
   removemarket:
     permission: drilz.operator
     description: removes a market
@@ -41,6 +45,10 @@ commands:
   getDrill:
     permission: drilz.operator
     description: get drill with command
+    usage: /getdrill <tier> <structurename>
+  backpack:
+    description: open your backpack
+    usage: /backpack
 
 permissions:
   drilz.operator:

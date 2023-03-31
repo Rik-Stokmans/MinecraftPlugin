@@ -88,6 +88,12 @@ public class PlayerProfile implements Listener {
     public void setMoney(double money) {
         this.money = money;
     }
+    public void addMoney(double money){
+        this.money += money;
+        if (this.getMoney() < 0){
+            this.money = 0;
+        }
+    }
 
     public static void init(){
         try {
@@ -170,7 +176,7 @@ public class PlayerProfile implements Listener {
             PlayerProfile playerProfile = new PlayerProfile();
             playerProfile.setMiningSkill(miningSkill);
             playerProfile.setProspectingSkill(prospectingSkill);
-            playerProfile.setBackPack(new Backpack(backpack));
+            playerProfile.setBackPack(new Backpack());
             playerProfile.setOfflineItems(offlineItems);
             playerProfile.setMoney(money);
 

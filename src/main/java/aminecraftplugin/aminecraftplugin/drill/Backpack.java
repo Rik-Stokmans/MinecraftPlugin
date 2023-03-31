@@ -65,10 +65,11 @@ public class Backpack {
             ArrayList<String> lore = new ArrayList<>();
             lore.add(format("&7amount: &f" + kg));
             meta.setLore(lore);
+            item.setItemMeta(meta);
             inventory.setItem(index, item);
             index++;
         }
-        p.openInventory(inventory)
+        p.openInventory(inventory);
     }
 
     public double addResource(int key, double amount) {

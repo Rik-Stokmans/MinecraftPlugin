@@ -84,13 +84,13 @@ public class Market implements Listener {
 
     //market init
     public static void init() {
+        initialiseGuiButtons();
+        initialiseMarketCategoryGuiMenu();
         try {
             loadMarketsFromFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        initialiseGuiButtons();
-        initialiseMarketCategoryGuiMenu();
     }
 
 
@@ -258,6 +258,13 @@ public class Market implements Listener {
         Player p = (Player) e.getWhoClicked();
         String invName = e.getView().getTitle();
 
+        //opened the change order menu
+        if (clickedItem.isSimilar(changeOrderAmountButton)) {
+            openOrderSizeEditorGui(p);
+            e.setCancelled(true);
+            return;
+        }
+
         boolean buySellOrder = false;
         if (invName.equals(format("&eCategory Selector"))) {
 
@@ -289,52 +296,24 @@ public class Market implements Listener {
             if (clickedItem.isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
-
-            //opened the change order menu
-            if (clickedItem.isSimilar(changeOrderAmountButton)) {
-                openOrderSizeEditorGui(p);
-                e.setCancelled(true);
-                return;
-            }
         }
         else if (invName.equals(format("&eEnergy"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
-
-            //opened the change order menu
-            if (clickedItem.isSimilar(changeOrderAmountButton)) {
-                openOrderSizeEditorGui(p);
-                e.setCancelled(true);
-                return;
-            }
         }
         else if (invName.equals(format("&eGemstones"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
-
-            //opened the change order menu
-            if (clickedItem.isSimilar(changeOrderAmountButton)) {
-                openOrderSizeEditorGui(p);
-                e.setCancelled(true);
-                return;
-            }
         }
         else if (invName.equals(format("&eOther"))) {
             e.setCancelled(true);
             if (e.getCurrentItem().isSimilar(backButton)) p.openInventory(marketCategoryGuiMenu);
 
             if (e.getSlot() <= 35) buySellOrder = true;
-
-            //opened the change order menu
-            if (clickedItem.isSimilar(changeOrderAmountButton)) {
-                openOrderSizeEditorGui(p);
-                e.setCancelled(true);
-                return;
-            }
         }
         else if (invName.equals(format("&eChange Order Size"))) {
             e.setCancelled(true);

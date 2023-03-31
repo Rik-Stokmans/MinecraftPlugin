@@ -454,7 +454,7 @@ public class Resource implements Listener {
         int id = nbt.h("id");
         for (Resource r : resources.values()) {
             net.minecraft.world.item.ItemStack nmsResource = CraftItemStack.asNMSCopy(r.getItemStack());
-            NBTTagCompound nbt2 = nmsItem.u();
+            NBTTagCompound nbt2 = nmsResource.u();
             int id2 = nbt2.h("id");
             if (id2 == id) key = r.getKey();
         }

@@ -177,6 +177,8 @@ public interface Structure {
 
         ArrayList<Location> locations = new ArrayList<>();
         ArrayList<Location> ignoredLocations = new ArrayList<>();
+        //add block below drill
+        locations.add(location.clone().add(0,-1,0));
         int length = (int) structure.getSize().getZ();
         int width = (int) structure.getSize().getX();
         int height = (int) structure.getSize().getY();

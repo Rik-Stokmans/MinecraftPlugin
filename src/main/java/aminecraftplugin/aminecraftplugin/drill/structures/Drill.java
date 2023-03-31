@@ -51,6 +51,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private Structure structure;
     private HashMap<Resource, Double> resources = new HashMap<>();
     private ArrayList<BlockState> destroyedBlocks = new ArrayList<>();
+    private int packetKey;
 
     private static DecimalFormat df = new DecimalFormat("#.##");
 
@@ -103,7 +104,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         final int[] stage = {0};
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
-        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+        this.setPacketKey(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+        packetContainer.getIntegers().write(0, this.getPacketKey());
 
 
         new BukkitRunnable() {
@@ -122,7 +124,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 }
                 textHologramLine.setText(newLine);
                 if (stage[0] == 10){
-                    packetContainer.getIntegers().write(1, 0);
+                    packetContainer.getIntegers().write(1, -1);
+                    protocolManager.broadcastServerPacket(packetContainer);
 
                     //30% chance to find resource
                     if (ThreadLocalRandom.current().nextDouble(100.0) <= 70) {
@@ -151,7 +154,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 protocolManager.broadcastServerPacket(packetContainer);
                 stage[0]++;
             }
-        }.runTaskTimer(plugin, (long) Math.ceil((oneStoneDuration / 10) * 20), (long) Math.ceil((oneStoneDuration / 10) * 20));
+        }.runTaskTimer(plugin, (long) Math.ceil((oneStoneDuration / 11) * 20), (long) Math.ceil((oneStoneDuration / 11) * 20));
     }
 
     private void scheduleLootMining(HashMap<Resource, Double> resources, OfflinePlayer p){
@@ -175,7 +178,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
-        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+        packetContainer.getIntegers().write(0, this.getPacketKey());
         long totalDelay = 0;
         for (Map.Entry<Resource, Double> entry : resources.entrySet()){
             Resource resource = entry.getKey();
@@ -194,7 +197,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 @Override
                 public void run() {
                     drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
-                    double kgMined = miningPerSecond * (totalSeconds / 10);
+                    double kgMined = miningPerSecond * (totalSeconds / 11);
                     kgLeft[0] -= kgMined;
                     if (kgMined > kgLeft[0]) {
                         kgMined = kgLeft[0];
@@ -216,8 +219,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         }
                     }
                     drill.addResource(resource, kgMined);
-                    if (kgMined == kgLeft[0]) {
-                        packetContainer.getIntegers().write(1, 0);
+                    if (stage[0] == 10) {
+                        packetContainer.getIntegers().write(1, -1);
+                        protocolManager.broadcastServerPacket(packetContainer);
                         drill.scheduleLootFinding(p);
                         drill.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
                         this.cancel();
@@ -226,7 +230,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     protocolManager.broadcastServerPacket(packetContainer);
                     stage[0]++;
                 }
-            }.runTaskTimer(plugin, (long) ((totalDelay + (totalSeconds / 10)) * 20), (long) (((totalSeconds / 10)) * 20));
+            }.runTaskTimer(plugin, (long) ((totalDelay + (totalSeconds / 11)) * 20), (long) (((totalSeconds / 11)) * 20));
             totalDelay += totalSeconds + 0.05;
         }
 
@@ -254,6 +258,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             destroyedBlocks.add(block.getState());
             block.setType(Material.AIR);
         }
+
+        this.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
 
 
         //placing structure with correct rotation
@@ -313,8 +319,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
-        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
-        packetContainer.getIntegers().write(1, 0);
+        packetContainer.getIntegers().write(0, this.getPacketKey());
+        packetContainer.getIntegers().write(1, -1);
         protocolManager.broadcastServerPacket(packetContainer);
 
         ItemStack drill = new ItemStack(Material.HOPPER);
@@ -477,5 +483,13 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     public Structure getThisStructure() {
         return structure;
+    }
+
+    public int getPacketKey() {
+        return packetKey;
+    }
+
+    public void setPacketKey(int packetKey) {
+        this.packetKey = packetKey;
     }
 }

@@ -68,7 +68,7 @@ public class Backpack {
             inventory.setItem(index, item);
             index++;
         }
-        p.openInventory(inventory)
+        p.openInventory(inventory);
     }
 
     public double addResource(int key, double amount) {

@@ -611,9 +611,8 @@ public class Market implements Listener {
                 if (trade.getItemKey() == r.getKey()) alreadyInMarket = true;
             }
             if (!alreadyInMarket) {
-                ItemStack item = new ItemStack(r.getItemStack().getType());
+                ItemStack item = r.getItemStack().clone();
                 ItemMeta imeta = item.getItemMeta();
-                imeta.setDisplayName(r.getName());
                 List<String> lore = new ArrayList<>();
                 lore.add("");
                 resourceCategory category = getCategoryFromResourceKey(r.getKey());

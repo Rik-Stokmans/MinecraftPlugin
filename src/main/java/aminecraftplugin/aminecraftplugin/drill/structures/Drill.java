@@ -183,7 +183,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
             this.getLocation().clone().add(0,-1,0).getBlock().setType(resource.getBlock());
 
-            double totalSeconds = (long) Math.ceil(kgLeft[0] / miningPerSecond);
+            double totalSeconds = kgLeft[0] / miningPerSecond;
             for (Player p1 : Bukkit.getOnlinePlayers()){
                 p1.sendMessage(String.valueOf(kgLeft[0]));
                 p1.sendMessage(String.valueOf(totalSeconds));

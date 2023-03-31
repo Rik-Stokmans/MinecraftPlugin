@@ -41,6 +41,7 @@ public class Resource implements Listener {
     private String name;
     private Double value;
     private int key;
+    private Material block;
 
 
 
@@ -48,11 +49,12 @@ public class Resource implements Listener {
 
     }
 
-    public Resource(ItemStack item, String name, Double value, int key){
+    public Resource(ItemStack item, String name, Double value, int key, Material block){
         this.itemStack = item;
         this.name = name;
         this.value = value;
         this.key = key;
+        this.block = block;
     }
 
 
@@ -148,7 +150,7 @@ public class Resource implements Listener {
                     net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(e.getCurrentItem());
                     NBTTagCompound nbt = nmsItem.u();
                     int ID = findEmptyID();
-                    Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"), ID);
+                    Resource resource = new Resource(e.getCurrentItem(), e.getCurrentItem().getItemMeta().getDisplayName(), nbt.k("value"), ID, Material.getMaterial(nbt.l("material")));
                     resources.put(ID, resource);
                     if (categories.get(browsingCategory.get(p)) == null){
                         categories.put(browsingCategory.get(p), new ArrayList<>());
@@ -308,6 +310,7 @@ public class Resource implements Listener {
                 resourceFile.set("data." + "." + id + ".name", resource.getName());
                 resourceFile.set("data." + "." + id + ".value", resource.getValue());
                 resourceFile.set("data." + "." + id + ".id", resource.getKey());
+                resourceFile.set("data." + "." + id + ".material", resource.getBlock().name());
             }
         }
         saveFile(resourceFile, "resources.yml");
@@ -328,7 +331,10 @@ public class Resource implements Listener {
             String name = resourceFile.getString("data." + key + ".name");
             Double value = resourceFile.getDouble("data." + key + ".value");
             int ID = resourceFile.getInt("data." + key + ".id");
-            resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID));
+            String materialName = resourceFile.getString("data." + key + ".material");
+            if (materialName != null) {
+                resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID, Material.getMaterial(materialName)));
+            }
         });
 
         return resourceHashMap;
@@ -392,6 +398,10 @@ public class Resource implements Listener {
 
     public int getKey() {
         return key;
+    }
+
+    public Material getBlock() {
+        return block;
     }
 
     @Override

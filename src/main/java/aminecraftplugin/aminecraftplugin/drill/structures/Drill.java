@@ -2,10 +2,14 @@ package aminecraftplugin.aminecraftplugin.drill.structures;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.LootFinder;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.BlockPosition;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import me.filoghost.holographicdisplays.api.hologram.line.HologramLine;
 import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.protocol.game.PacketPlayOutBlockBreakAnimation;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -31,9 +35,9 @@ import org.bukkit.structure.Structure;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
-import static aminecraftplugin.aminecraftplugin.Main.api;
-import static aminecraftplugin.aminecraftplugin.Main.plugin;
+import static aminecraftplugin.aminecraftplugin.Main.*;
 import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
@@ -57,7 +61,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
 
     public Drill(){
-        df.setRoundingMode(RoundingMode.FLOOR);
     }
 
     public Drill(Location location, OfflinePlayer owner, ItemStack drill){
@@ -92,27 +95,74 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     private void scheduleLootFinding(OfflinePlayer p){
 
+        int totalDuration = 25;
+        double oneStoneDuration = (totalDuration / (3 * Math.pow(Math.log(Math.E + this.getDrillTier()), 0.5)));
+
         this.clearHologram();
-        this.getHologram().getLines().appendText("Searching for resources...");
+        this.getHologram().getLines().appendText("Searching for resources");
         this.correctHologramPosition();
         LootFinder lootFinder = this.getLootFinder();
         Drill drill = this;
-        BukkitTask task = new BukkitRunnable() {
+
+        this.getLocation().getWorld().playSound(this.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+        final int[] stage = {0};
+        PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
+        packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
+        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+
+
+        new BukkitRunnable() {
             @Override
             public void run() {
-                HashMap<Resource, Double> foundResources = lootFinder.findLoot(p);
-                if (foundResources.isEmpty()){
-                    scheduleLootFinding(p);
-                } else {
-                    drill.scheduleLootMining(foundResources, p);
+                drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                HologramLine hologramLine = drill.getHologram().getLines().get(0);
+                TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
+                String currentLine = textHologramLine.getText();
+                int dotCount = currentLine.length() - currentLine.replaceAll("\\.","").length();
+                int newDotCount = dotCount + 1;
+                if (newDotCount == 4) newDotCount = 0;
+                String newLine = "Searching for resources";
+                for (int i = 0; i < newDotCount; i++){
+                    newLine += ".";
                 }
+                textHologramLine.setText(newLine);
+                if (stage[0] == 10){
+                    packetContainer.getIntegers().write(1, 0);
+
+                    //30% chance to find resource
+                    if (ThreadLocalRandom.current().nextDouble(100.0) <= 70) {
+                        scheduleLootFinding(p);
+                        this.cancel();
+                    } else {
+                        int safeIndex = 0;
+                        HashMap<Resource, Double> foundResources = lootFinder.findLoot(p);
+                        while (foundResources.isEmpty()) {
+                            foundResources = lootFinder.findLoot(p);
+                            safeIndex++;
+                            if (safeIndex > 5000) {
+                                System.out.println("ERROR NO LOOT FOUND IN 5000 TRIES");
+                                break;
+                            }
+                        }
+                        if (foundResources.isEmpty()) {
+                            scheduleLootFinding(p);
+                        } else {
+                            drill.scheduleLootMining(foundResources, p);
+                        }
+                        this.cancel();
+                    }
+                }
+                packetContainer.getIntegers().write(1, stage[0]);
+                protocolManager.broadcastServerPacket(packetContainer);
+                stage[0]++;
             }
-        }.runTaskLater(plugin, 30 * 20l);
+        }.runTaskTimer(plugin, (long) Math.ceil((oneStoneDuration / 10) * 20), (long) Math.ceil((oneStoneDuration / 10) * 20));
     }
 
     private void scheduleLootMining(HashMap<Resource, Double> resources, OfflinePlayer p){
         Drill drill = this;
-        Double miningPerSecond = 0.02 * Math.log(drill.getDrillTier() + (Math.E - 1));
+
+        Double miningPerSecond = 0.01 * Math.pow(Math.log(Math.E + drill.getDrillTier()), 0.5);
 
         HashMap<Resource, Double> mined = new HashMap<>();
         for (Resource resource : resources.keySet()){
@@ -128,47 +178,59 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
         this.correctHologramPosition();
 
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Double kgMined = miningPerSecond / 20;
-                for (Map.Entry<Resource, Double> entry : resources.entrySet()){
-                    Resource resource = entry.getKey();
-                    Double kgLeft = entry.getValue();
-                    if (kgMined > kgLeft){
-                        kgMined = kgLeft;
-                    }
-                    resources.put(resource, kgLeft - kgMined);
-                    mined.put(resource, mined.get(resource) + kgMined);
+        PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
+        packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
+        packetContainer.getIntegers().write(0, ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+        long totalDelay = 0;
+        for (Map.Entry<Resource, Double> entry : resources.entrySet()){
+            Resource resource = entry.getKey();
+            final double[] kgLeft = {entry.getValue()};
 
-                    for (Map.Entry<Resource, Double> entry2 : mined.entrySet()){
+            this.getLocation().clone().add(0,-1,0).getBlock().setType(resource.getBlock());
+
+            long totalSeconds = (long) Math.ceil(kgLeft[0] / miningPerSecond);
+            final int[] stage = {0};
+
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                    Double kgMined = miningPerSecond * (totalSeconds / 10);
+                    kgLeft[0] -= kgMined;
+                    if (kgMined > kgLeft[0]) {
+                        kgMined = kgLeft[0];
+                    }
+                    mined.replace(resource, mined.get(resource) + kgMined);
+
+                    int j = drill.getHologram().getLines().size();
+                    for (Map.Entry<Resource, Double> entry2 : mined.entrySet()) {
                         Resource resource2 = entry2.getKey();
                         Double kgMined2 = entry2.getValue();
-                        boolean found = false;
-                        for (int i = 0; i < drill.getHologram().getLines().size(); i++){
+                        for (int i = 0; i < j; i++) {
                             HologramLine hologramLine = drill.getHologram().getLines().get(i);
-                            if (hologramLine instanceof TextHologramLine){
+                            if (hologramLine instanceof TextHologramLine) {
                                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
-                                if (textHologramLine.getText().contains(resource2.getName())){
-                                    found = true;
-                                    drill.getHologram().getLines().insertText(i, " - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
-                                    drill.getHologram().getLines().remove(i + 1);
-                                    break;
+                                if (textHologramLine.getText().contains(resource2.getName())) {
+                                    textHologramLine.setText(" - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
                                 }
                             }
                         }
-                        if (!found){
-                            drill.getHologram().getLines().appendText(" - " + resource2.getName() + ": " + kgMined2 + "Kg");
-                        }
                     }
                     drill.addResource(resource, kgMined);
-                    if (kgMined == kgLeft){
+                    if (kgMined == kgLeft[0]) {
+                        packetContainer.getIntegers().write(1, 0);
                         drill.scheduleLootFinding(p);
+                        drill.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
                         this.cancel();
                     }
+                    packetContainer.getIntegers().write(1, stage[0]);
+                    protocolManager.broadcastServerPacket(packetContainer);
+                    stage[0]++;
                 }
-            }
-        }.runTaskTimer(plugin, 1l, 1l);
+            }.runTaskTimer(plugin, (totalDelay + (totalSeconds / 10)) * 20, ((totalSeconds / 10)) * 20);
+            totalDelay += totalSeconds + 0.05;
+        }
+
     }
 
     @Override

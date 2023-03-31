@@ -3,6 +3,7 @@ version: '${project.version}'
 main: aminecraftplugin.aminecraftplugin.Main
 api-version: 1.19
 authors: [ Duffie13, Vermulst ]
+softdepend: [HolographicDisplays, ProtocolLib]
 commands:
   addresource:
     permission: drilz.operator
@@ -14,6 +15,10 @@ commands:
     permission: drilz.operator
     description: add value to item in hand
     usage: /addvalue
+  addmaterial:
+    permission: drilz.operator
+    description: add material
+    usage: /addmaterial
   createmarket:
     permission: drilz.operator
     description: create a market

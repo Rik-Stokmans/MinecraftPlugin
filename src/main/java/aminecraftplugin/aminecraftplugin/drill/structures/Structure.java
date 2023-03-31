@@ -160,29 +160,8 @@ public interface Structure {
                 org.bukkit.structure.Structure structureComparing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structure.getStructureName());
                 org.bukkit.structure.Structure structurePlacing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structureName);
 
-                double biggest1 = 0.0;
-                BlockVector vector1 = structureComparing.getSize();
-                if (vector1.getX() > biggest1){
-                    biggest1 = vector1.getX() + 2;
-                }
-                if (vector1.getY() > biggest1){
-                    biggest1 = vector1.getY() + 1;
-                }
-                if (vector1.getZ() > biggest1){
-                    biggest1 = vector1.getZ() + 2;
-                }
-
-                double biggest2 = 0.0;
-                BlockVector vector2 = structurePlacing.getSize();
-                if (vector2.getX() > biggest2){
-                    biggest2 = vector2.getX() + 2;
-                }
-                if (vector2.getY() > biggest2){
-                    biggest2 = vector2.getY() + 1;
-                }
-                if (vector1.getZ() > biggest2){
-                    biggest2 = vector2.getZ() + 2;
-                }
+                double biggest1 = biggestFromVector(structureComparing.getSize());
+                double biggest2 = biggestFromVector(structurePlacing.getSize());
 
                 double minDistance = (biggest1 + biggest2) / 2;
                 if (placedLoc.distance(structure.getLocation()) < minDistance) {

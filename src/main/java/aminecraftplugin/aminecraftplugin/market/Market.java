@@ -433,6 +433,7 @@ public class Market implements Listener {
                             + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
                 }
 
+                playerProfile.getBackPack().addResource(key, amountSold * -1);
                 stock += amountSold;
                 market.trades.get(key).setStock(stock);
                 market.trades.get(key).tick(false);

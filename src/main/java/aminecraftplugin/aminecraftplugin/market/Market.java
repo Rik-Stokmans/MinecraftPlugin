@@ -578,6 +578,7 @@ public class Market implements Listener {
             for (Trade t : m.trades.values()) {
                 t.tick(true);
             }
+            m.updateTrades();
         }
     }
 

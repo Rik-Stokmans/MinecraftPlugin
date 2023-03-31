@@ -1,9 +1,6 @@
 package aminecraftplugin.aminecraftplugin.drill;
 
-import org.bukkit.entity.Player;
-
 import java.util.HashMap;
-import java.util.UUID;
 
 public class Backpack {
 
@@ -12,9 +9,7 @@ public class Backpack {
     //value is the amount of the item the player has in Kg
     private HashMap<Integer, Double> backpack;
 
-    private Player player;
-    public Backpack(Player p) {
-        player = p;
+    public Backpack() {
         backpack = new HashMap<>();
     }
 

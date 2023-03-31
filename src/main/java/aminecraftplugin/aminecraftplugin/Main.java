@@ -99,9 +99,7 @@ public final class Main extends JavaPlugin {
         //ticker all
         BukkitScheduler scheduler = getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, () -> {
-            for (Market m : Market.markets.values()) {
-                m.tickTrades();
-            }
+            Market.tickTrades();
         }, 0L, 20L);
         for (Player p : Bukkit.getOnlinePlayers()){
             p.sendMessage(format("&aUpdating complete"));

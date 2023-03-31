@@ -42,10 +42,8 @@ public class Trade {
     public void tick(boolean updateStock) {
         Random rand = new Random();
         double chance = (strength * Math.pow(Math.abs(stock), 1.6)) / 1000000;
-        Bukkit.broadcastMessage(chance + ", " + Math.pow(Math.abs(stock), 1.6));
 
-
-        if (updateStock && chance > rand.nextDouble()) {
+        if (updateStock && chance > rand.nextDouble() * 100) {
             if ((stock < 0 && stock > -1) || (stock > 0 && stock < 1)) {
                 stock = 0;
             }

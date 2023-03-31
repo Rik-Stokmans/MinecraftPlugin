@@ -397,12 +397,13 @@ public class Market implements Listener {
                 if (!playerProfiles.containsKey(p.getUniqueId())) return;
                 if (playerMoney < price) return;
 
+                playerProfile.addMoney(price * -1);
                 playerProfile.getBackPack().addResource(key, amountBought);
                 stock -= amountBought;
                 market.trades.get(key).setStock(stock);
                 market.trades.get(key).tick(false);
                 e.setCurrentItem(market.trades.get(key).generateTradeItem());
-                p.sendMessage("price: " + price);
+
             }
             //sell
             else if (e.getClick().isRightClick()) {

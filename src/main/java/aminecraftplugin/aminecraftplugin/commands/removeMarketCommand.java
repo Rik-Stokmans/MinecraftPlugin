@@ -28,6 +28,7 @@ public class removeMarketCommand implements CommandExecutor {
                 if (m.getLocation().equals(targetBlock.getLocation())) {
                     marketToRemove = m.getKey();
                     marketLocation = m.getLocation();
+                    m.getHologram().delete();
                 }
             }
             if (marketToRemove != -1) {

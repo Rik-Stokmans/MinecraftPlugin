@@ -3,9 +3,11 @@ package aminecraftplugin.aminecraftplugin.market;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,11 +18,16 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.Potion;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static aminecraftplugin.aminecraftplugin.Main.*;
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
@@ -70,12 +77,18 @@ public class Market implements Listener {
     private Inventory energyGuiMenu;
     private Inventory gemstonesGuiMenu;
     private Inventory otherItemsGuiMenu;
+    private Hologram hologram;
     private int strength = 1000;
     private int key;
 
 
     //market init
     public static void init() {
+        try {
+            loadMarketsFromFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         initialiseGuiButtons();
         initialiseMarketCategoryGuiMenu();
     }
@@ -95,29 +108,25 @@ public class Market implements Listener {
         strength = _strength;
         trades = new HashMap<>();
         generateMarketMenus();
+        generateHologram();
     }
 
     //when loading from file
-    public Market(String _name, Location _location, ArrayList<Integer> _tradeItemKeys, int _key) {
+    public Market(String _name, Location _location, int _strength, int _key, HashMap<Integer, Trade> _trades) {
         name = _name;
         location = _location;
-        //trades = generateTrades(_tradeItemKeys);
         key = _key;
+        trades = _trades;
+        strength = _strength;
         generateMarketMenus();
+        generateHologram();
     }
 
 
 
-    //method to generate all the trade items from a list of keys
-    private ArrayList<Trade> generateTrades(ArrayList<Integer> tradeItemKeys) {
-        ArrayList<Trade> trades = new ArrayList<>();
-        for(int key : tradeItemKeys) {
-            if (Resource.resources.containsKey(key)) {
-                Trade trade = new Trade(key, strength);
-                trades.add(trade);
-            }
-        }
-        return trades;
+    public void generateHologram() {
+        this.hologram = api.createHologram(this.getLocation().clone().add(0.5, 1.8, 0.5));
+        hologram.getLines().appendText(format(name));
     }
 
 
@@ -355,8 +364,7 @@ public class Market implements Listener {
             }
 
         }
-
-        //todo
+        //when a player wants to buy or sell a item
         if (buySellOrder) {
             Market market = latestMarketOpen.get(p);
             int key = getKeyFromItemstack(clickedItem);
@@ -445,12 +453,42 @@ public class Market implements Listener {
 
 
     //methods to load and save the markets
-    public void saveMarketsToFile() {
+    public static void saveMarketsToFile() {
+        YamlConfiguration marketsFile = new YamlConfiguration();
 
+        for (Map.Entry<Integer, Market> market : markets.entrySet()) {
+            marketsFile.set("markets." + market.getKey() + ".name", market.getValue().getName());
+            marketsFile.set("markets." + market.getKey() + ".strength", market.getValue().getStrength());
+            marketsFile.set("markets." + market.getKey() + ".location", market.getValue().getLocation());
+
+            for (Map.Entry<Integer, Trade> trade : market.getValue().getTrades().entrySet()) {
+                marketsFile.set("markets." + market.getKey() + ".trades." + trade.getKey() + ".stock", trade.getValue().getStock());
+                marketsFile.set("markets." + market.getKey() + ".trades." + trade.getKey() + ".strength", trade.getValue().getStrength());
+            }
+
+        }
+        try { saveFile(marketsFile,"markets.yml"); } catch (IOException e) {throw new RuntimeException(e);}
     }
 
-    public void loadMarketsFromFile() {
+    public static void loadMarketsFromFile() throws IOException {
+        YamlConfiguration marketsFile = loadFile("markets.yml");
 
+        if (!marketsFile.contains("markets")) return;
+
+        marketsFile.getConfigurationSection("markets").getKeys(false).forEach(marketKey -> {
+            String name = marketsFile.getString("markets." + marketKey + ".name");
+            Location location = marketsFile.getLocation("markets." + marketKey + ".location");
+            int strength = marketsFile.getInt("markets." + marketKey + ".strength");
+
+            HashMap<Integer, Trade> trades = new HashMap<>();
+            marketsFile.getConfigurationSection("markets." + marketKey + ".trades").getKeys(false).forEach(tradeKey -> {
+                double stock = marketsFile.getDouble("markets." + marketKey + ".trades." + tradeKey + ".stock");
+                int tradeStrength = marketsFile.getInt("markets." + marketKey + ".trades." + tradeKey + ".strength");
+                trades.put(Integer.parseInt(tradeKey), new Trade(Integer.parseInt(tradeKey), tradeStrength, stock));
+            });
+            //adds the market to the global var.
+            markets.put(Integer.parseInt(marketKey), new Market(name, location, strength, Integer.parseInt(marketKey), trades));
+        });
     }
 
 
@@ -753,5 +791,17 @@ public class Market implements Listener {
     }
     public void setKey(int key) {
         this.key = key;
+    }
+    public Hologram getHologram() {
+        return hologram;
+    }
+    public void setHologram(Hologram hologram) {
+        this.hologram = hologram;
+    }
+    public int getStrength() {
+        return strength;
+    }
+    public void setStrength(int strength) {
+        this.strength = strength;
     }
 }

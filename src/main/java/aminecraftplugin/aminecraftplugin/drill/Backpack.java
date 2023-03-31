@@ -11,12 +11,13 @@ public class Backpack {
     private HashMap<Integer, Double> backpack;
 
     public Backpack() {
-        space = 10;
-        backpack = new HashMap<>();
+        this.space = 5.0;
+        this.backpack = new HashMap<>();
     }
 
     public Backpack(HashMap<Integer, Double> backpack, double space){
         this.backpack = backpack;
+        this.space = space;
     }
 
     public double getItemAmountInBackpack(int key) {
@@ -35,6 +36,34 @@ public class Backpack {
 
         }
     }
+
+    public double addResource(int key, double amount) {
+        double leftOver = 0.0;
+
+        double emptySpace = getEmptySpace();
+
+        //not enough room in backpack
+        if (emptySpace < amount) {
+            leftOver = amount - emptySpace;
+            if (backpack.containsKey(key)) backpack.put(key, backpack.get(key) + emptySpace);
+            else backpack.put(key, emptySpace);
+        } //has enough room
+        else {
+            if (backpack.containsKey(key)) backpack.put(key, backpack.get(key) + amount);
+            else backpack.put(key, amount);
+        }
+        //returns the amount of items it was unable to put in the backpack
+        return leftOver;
+    }
+
+    public double getEmptySpace() {
+        double emptySpace = space;
+        for (double itemAmount : backpack.values()) {
+            emptySpace -= itemAmount;
+        }
+        return emptySpace;
+    }
+
 
     public HashMap<Integer, Double> getBackpack() {
         return backpack;

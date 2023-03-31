@@ -20,7 +20,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
@@ -44,10 +43,10 @@ public class Market implements Listener {
     private static ItemStack sellAllButton;
     private static ItemStack changeOrderAmountButton;
     private static ItemStack resetOrderSizeButton;
-    private static ItemStack orderAddHundered;
+    private static ItemStack orderAddHundred;
     private static ItemStack orderAddTen;
     private static ItemStack orderAddOne;
-    private static ItemStack orderRemoveHundered;
+    private static ItemStack orderRemoveHundred;
     private static ItemStack orderRemoveTen;
     private static ItemStack orderRemoveOne;
     private static ItemStack addItemToMenu;
@@ -335,12 +334,12 @@ public class Market implements Listener {
                 p.openInventory(marketCategoryGuiMenu);
                 return;
             }
-            if (clickedItem.isSimilar(orderAddHundered) && orderSize <= 9900) orderSize += 100;
+            if (clickedItem.isSimilar(orderAddHundred) && orderSize <= 9900) orderSize += 100;
             else if (clickedItem.isSimilar(orderAddTen) && orderSize <= 9990) orderSize += 10;
             else if (clickedItem.isSimilar(orderAddOne) && orderSize <= 9999) orderSize += 1;
             else if (clickedItem.isSimilar(orderRemoveOne) && orderSize > 1) orderSize -= 1;
             else if (clickedItem.isSimilar(orderRemoveTen) && orderSize > 10) orderSize -= 10;
-            else if (clickedItem.isSimilar(orderRemoveHundered) && orderSize > 100) orderSize -= 100;
+            else if (clickedItem.isSimilar(orderRemoveHundred) && orderSize > 100) orderSize -= 100;
             playerOrderSize.put(p, orderSize);
             p.getOpenInventory().setItem(22, generateOrderInfoItem(orderSize));
         }
@@ -508,7 +507,7 @@ public class Market implements Listener {
 
         ArrayList<String> orderAddHunderedLore = new ArrayList<>();
         orderAddHunderedLore.add(format("&7Add &e100Kg &7to your order size"));
-        orderAddHundered = createGuiItem("&eAdd 100Kg", orderAddHunderedLore, Material.GREEN_GLAZED_TERRACOTTA);
+        orderAddHundred = createGuiItem("&eAdd 100Kg", orderAddHunderedLore, Material.GREEN_GLAZED_TERRACOTTA);
 
         ArrayList<String> orderAddTenLore = new ArrayList<>();
         orderAddTenLore.add(format("&7Add &e10Kg &7to your order size"));
@@ -520,7 +519,7 @@ public class Market implements Listener {
 
         ArrayList<String> orderRemoveHunderedLore = new ArrayList<>();
         orderRemoveHunderedLore.add(format("&7Remove &e100Kg &7from your order size"));
-        orderRemoveHundered = createGuiItem("&eRemove 100Kg", orderRemoveHunderedLore, Material.RED_GLAZED_TERRACOTTA);
+        orderRemoveHundred = createGuiItem("&eRemove 100Kg", orderRemoveHunderedLore, Material.RED_GLAZED_TERRACOTTA);
 
         ArrayList<String> orderRemoveTenLore = new ArrayList<>();
         orderRemoveTenLore.add(format("&7Remove &e10Kg &7from your order size"));
@@ -545,13 +544,13 @@ public class Market implements Listener {
         int orderSize = playerOrderSize.get(p);
         marketOrderSizeMenu = Bukkit.createInventory(null, 27, format("&eChange Order Size"));
 
-        marketOrderSizeMenu.setItem(10, orderAddHundered);
+        marketOrderSizeMenu.setItem(10, orderAddHundred);
         marketOrderSizeMenu.setItem(11, orderAddTen);
         marketOrderSizeMenu.setItem(12, orderAddOne);
         marketOrderSizeMenu.setItem(13, resetOrderSizeButton);
         marketOrderSizeMenu.setItem(14, orderRemoveOne);
         marketOrderSizeMenu.setItem(15, orderRemoveTen);
-        marketOrderSizeMenu.setItem(16, orderRemoveHundered);
+        marketOrderSizeMenu.setItem(16, orderRemoveHundred);
 
         marketOrderSizeMenu.setItem(18, backButton);
         marketOrderSizeMenu.setItem(22, generateOrderInfoItem(orderSize));

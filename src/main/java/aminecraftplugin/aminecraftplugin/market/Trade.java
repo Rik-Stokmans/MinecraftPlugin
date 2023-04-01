@@ -1,8 +1,9 @@
 package aminecraftplugin.aminecraftplugin.market;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -10,6 +11,9 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.resources;
+import static aminecraftplugin.aminecraftplugin.market.Market.*;
+import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
+import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class Trade {
@@ -66,6 +70,94 @@ public class Trade {
         else sellPrice = (2 * baseValue + ((strength * baseValue)/(stock - strength)));
         buyPrice = sellPrice * 1.05;
     }
+
+
+
+    public void executeBuyOrder(double orderSize, Player p, InventoryClickEvent e) {
+
+        double amountBought = orderSize;
+
+        PlayerProfile playerProfile = playerProfiles.get(p.getUniqueId());
+        double playerMoney = playerProfile.getMoney();
+        double backpackEmptySpace = playerProfile.getBackPack().getEmptySpace();
+
+
+        if (backpackEmptySpace < amountBought) amountBought = backpackEmptySpace;
+        if (amountBought == 0.0) {
+            p.sendMessage(format("&cInsufficient space in your &ebackpack"));
+            return;
+        }
+        double price = 0;
+
+        //calculates the price of the oder size
+        double x1 = stock - amountBought;
+        double x2 = stock;
+
+        if (x1 >= 0) {
+            if (x1 == 0) x1 += Double.MIN_VALUE;
+            price = (baseValue * strength * Math.log(Math.abs(baseValue * x2 + baseValue * strength))) - (baseValue * strength * Math.log(baseValue * x1 + baseValue * strength));
+        }
+        else if (x2 <= 0) {
+            if (x2 == 0) x2 -= Double.MIN_VALUE;
+            price = (baseValue * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (baseValue * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
+        }
+        else if (x1 < 0 && x2 > 0) {
+            price = ((baseValue * strength * Math.log(Math.abs(baseValue * x2 + baseValue * strength))) - (baseValue * strength * Math.log(Math.abs(baseValue * strength))))
+                    + (baseValue * (strength * Math.log(Math.abs(strength))) - (baseValue * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
+        }
+
+        price = price * marketBuyTax;
+
+        if (playerMoney < price) {
+            p.sendMessage(format("&cInsufficient &efunds"));
+            return;
+        }
+
+        playerProfile.addMoney(price * -1);
+        playerProfile.getBackPack().addResource(itemKey, amountBought);
+        stock -= amountBought;
+        tick(false);
+        e.setCurrentItem(generateTradeItem());
+    }
+
+    public void executeSellOrder(double orderSize, Player p, InventoryClickEvent e) {
+
+        double amountSold = orderSize;
+
+        PlayerProfile playerProfile = playerProfiles.get(p.getUniqueId());
+        double itemAmountInBackpack = playerProfile.getBackPack().getItemAmountInBackpack(itemKey);
+        double backpackEmptySpace = playerProfile.getBackPack().getEmptySpace();
+
+
+
+        if (amountSold > itemAmountInBackpack) amountSold = itemAmountInBackpack;
+        if (amountSold == 0.0) return;
+        double value = 0;
+
+        //calculates the value of the sold amount of items
+        double x1 = stock;
+        double x2 = stock + amountSold;
+
+        if (x1 >= 0) {
+            if (x1 == 0) x1 += Double.MIN_VALUE;
+            value = (baseValue * strength * Math.log(Math.abs(baseValue * x2 + baseValue * strength))) - (baseValue * strength * Math.log(baseValue * x1 + baseValue * strength));
+        }
+        else if (x2 <= 0) {
+            if (x2 == 0) x2 -= Double.MIN_VALUE;
+            value = (baseValue * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (baseValue * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
+        }
+        else if (x1 < 0 && x2 > 0) {
+            value = ((baseValue * strength * Math.log(Math.abs(baseValue * x2 + baseValue * strength))) - (baseValue * strength * Math.log(Math.abs(baseValue * strength))))
+                    + (baseValue * (strength * Math.log(Math.abs(strength))) - (baseValue * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
+        }
+
+        playerProfile.getBackPack().removeResource(itemKey, amountSold);
+        stock += amountSold;
+        tick(false);
+        e.setCurrentItem(generateTradeItem());
+        playerProfile.addMoney(value);
+    }
+
 
     public ItemStack generateTradeItem() {
         tick(false);

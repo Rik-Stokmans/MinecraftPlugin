@@ -343,86 +343,26 @@ public class Market implements Listener {
         }
         //when a player wants to buy or sell a item
         if (buySellOrder) {
+
+            if (!latestMarketOpen.containsKey(p)) return;
             Market market = latestMarketOpen.get(p);
-            int key = getKeyFromItemstack(clickedItem);
-            int orderSize = playerOrderSize.get(p);
-            double itemAmountInBackpack = getPlayerProfile(p).getBackPack().getItemAmountInBackpack(key);
-            PlayerProfile playerProfile = playerProfiles.get(p.getUniqueId());
-            double playerMoney = playerProfile.getMoney();
-            double backpackEmptySpace = playerProfile.getBackPack().getEmptySpace();
-            //buy
+
             if (e.getClick().isLeftClick()) {
-                double stock = market.trades.get(key).getStock();
-                double worth = market.trades.get(key).getBaseValue();
+                int key = getKeyFromItemstack(clickedItem);
+                int orderSize = playerOrderSize.get(p);
 
-                double amountBought = orderSize;
-                if (backpackEmptySpace < amountBought) amountBought = backpackEmptySpace;
-                if (amountBought == 0.0) return;
-                double price = 0;
-
-                //calculates the price of the oder size
-                double x1 = stock - amountBought;
-                double x2 = stock;
-
-                if (x1 >= 0) {
-                    if (x1 == 0) x1 += Double.MIN_VALUE;
-                    price = (worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(worth * x1 + worth * strength));
-                }
-                else if (x2 <= 0) {
-                    if (x2 == 0) x2 -= Double.MIN_VALUE;
-                    price = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
-                }
-                else if (x1 < 0 && x2 > 0) {
-                    price = ((worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
-                            + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
-                }
-
-                price = price * marketBuyTax;
-                if (!playerProfiles.containsKey(p.getUniqueId())) return;
-                if (playerMoney < price) return;
-
-                playerProfile.addMoney(price * -1);
-                playerProfile.getBackPack().addResource(key, amountBought);
-                stock -= amountBought;
-                market.trades.get(key).setStock(stock);
-                market.trades.get(key).tick(false);
-                e.setCurrentItem(market.trades.get(key).generateTradeItem());
-
+                if (market.getTrades().containsKey(key)) market.getTrades().get(key).executeBuyOrder(orderSize, p, e);
             }
+
+
             //sell
             else if (e.getClick().isRightClick()) {
-                double stock = market.trades.get(key).getStock();
-                double worth = market.trades.get(key).getBaseValue();
 
-                double amountSold = orderSize;
-                if (orderSize > itemAmountInBackpack) amountSold = itemAmountInBackpack;
-                if (orderSize == 0.0) return;
-                double value = 0;
+                int key = getKeyFromItemstack(clickedItem);
+                int orderSize = playerOrderSize.get(p);
 
+                if (market.getTrades().containsKey(key)) market.getTrades().get(key).executeSellOrder(orderSize, p, e);
 
-                //calculates the value of the sold amount of items
-                double x1 = stock;
-                double x2 = stock + amountSold;
-
-                if (x1 >= 0) {
-                    if (x1 == 0) x1 += Double.MIN_VALUE;
-                    value = (worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(worth * x1 + worth * strength));
-                }
-                else if (x2 <= 0) {
-                    if (x2 == 0) x2 -= Double.MIN_VALUE;
-                    value = (worth * (2 * x2 + strength * Math.log(Math.abs(x2 - strength)))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength))));
-                }
-                else if (x1 < 0 && x2 > 0) {
-                    value = ((worth * strength * Math.log(Math.abs(worth * x2 + worth * strength))) - (worth * strength * Math.log(Math.abs(worth * strength))))
-                            + (worth * (strength * Math.log(Math.abs(strength))) - (worth * (2 * x1 + strength * Math.log(Math.abs(x1 - strength)))));
-                }
-
-                playerProfile.getBackPack().removeResource(key, amountSold);
-                stock += amountSold;
-                market.trades.get(key).setStock(stock);
-                market.trades.get(key).tick(false);
-                e.setCurrentItem(market.trades.get(key).generateTradeItem());
-                playerProfile.addMoney(value);
             }
         }
     }

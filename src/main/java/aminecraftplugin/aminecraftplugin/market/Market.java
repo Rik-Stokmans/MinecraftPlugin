@@ -217,7 +217,7 @@ public class Market implements Listener {
     //gui methods
     private void openMarket(Player p) {
         p.openInventory(marketCategoryGuiMenu);
-        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 0.1);
+        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 1.0);
     }
 
 

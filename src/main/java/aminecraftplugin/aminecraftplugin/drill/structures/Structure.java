@@ -40,7 +40,7 @@ public interface Structure {
     public String getStructureName();
     public Location getLocation();
     public ArrayList<Location> getLocations();
-    public void openStructureMenu(Player p);
+    public void openStructureMenu(Player p, int page);
 
     @EventHandler public void structurePlace(BlockPlaceEvent e);
 

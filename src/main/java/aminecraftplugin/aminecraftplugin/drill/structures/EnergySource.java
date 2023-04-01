@@ -39,7 +39,7 @@ public class EnergySource implements Structure, Listener {
     }
 
     @Override
-    public void openStructureMenu(Player p) {
+    public void openStructureMenu(Player p, int page) {
 
     }
 

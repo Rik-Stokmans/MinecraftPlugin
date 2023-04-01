@@ -52,17 +52,19 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     public static HashMap<Player, Drill> openedDrillInventory = new HashMap<>();
 
+
     private OfflinePlayer owner;
     private Location location;
     private LootFinder lootFinder;
     private DrillType drillType;
-    private Inventory inventory;
+    private ArrayList<Inventory> pages = new ArrayList<>();
     private int drillTier;
     private Hologram hologram;
     private Structure structure;
     private HashMap<Integer, Double> resources = new HashMap<>();
     private ArrayList<BlockState> destroyedBlocks = new ArrayList<>();
     private int packetKey;
+    private boolean muted;
 
 
     private static DecimalFormat df = new DecimalFormat("#.##");
@@ -73,6 +75,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     public Drill(Location location, OfflinePlayer owner, ItemStack drill){
 
+        this.muted = false;
         this.location = location;
         this.owner = owner;
 
@@ -92,7 +95,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.correctHologramPosition();
         this.lootFinder = new LootFinder(this.getLocation());
         this.scheduleLootFinding(this.getOwner());
-        this.initStructureInventory();
+        this.initStructureInventories();
     }
 
     private void clearHologram(){
@@ -113,7 +116,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         LootFinder lootFinder = this.getLootFinder();
         Drill drill = this;
 
-        this.getLocation().getWorld().playSound(this.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+        if (!drill.isMuted()) {
+            this.getLocation().getWorld().playSound(this.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+        }
         final int[] stage = {0};
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
@@ -124,7 +129,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         new BukkitRunnable() {
             @Override
             public void run() {
-                drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                if (!drill.isMuted()) {
+                    drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                }
                 HologramLine hologramLine = drill.getHologram().getLines().get(0);
                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
                 String currentLine = textHologramLine.getText();
@@ -205,7 +212,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                    if (!drill.isMuted()) {
+                        drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
+                    }
                     double kgMined = miningPerSecond * (totalSeconds / 11);
                     kgLeft[0] -= kgMined;
                     if (kgMined > kgLeft[0]) {
@@ -385,51 +394,116 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         } else {
             this.getResources().put(key, this.getResources().get(key) + kg);
         }
-        this.updateStructureInventory();
+        this.updateInventories();
     }
 
-    public void initStructureInventory(){
+    public int getMaxAmountOfPages(resourceCategory filterCategory){
+        List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+        int size = resourceList.size();
+        int amountOfPages = (int) Math.ceil(size / 36);
+        if (amountOfPages == 0) return 1;
+        return amountOfPages;
+    }
+
+    public ItemStack getMuteButton(){
+        ItemStack muteButton = new ItemStack(Material.JUKEBOX);
+        ItemMeta metaMuteButton = muteButton.getItemMeta();
+        if (this.isMuted()) {
+            metaMuteButton.setDisplayName(format("&aClick to unmute"));
+        } else {
+            metaMuteButton.setDisplayName(format("&cClick to mute"));
+        }
+        muteButton.setItemMeta(metaMuteButton);
+        return muteButton;
+    }
+
+    public Inventory createNewInventory(int page, int maxPages){
         PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
-        this.setInventory(getDefaultScrollableInventory(this.getDrillType().getDisplayName() + " level " + this.getDrillTier(), false));
-        ItemStack sorter = getSortItem(owner.getSortingIndex());
-        ItemStack filter = getFilterItem(owner.getFilterCategory());
-        this.getInventory().setItem(51, sorter);
-        this.getInventory().setItem(52, filter);
+        String inventoryName = this.getDrillType().getDisplayName() + " tier " + this.getDrillTier() + " page " + page + "/" + maxPages;
+        Inventory inventory = getDefaultScrollableInventory(inventoryName, false);
+        inventory.setItem(51, getSortItem(owner.getSortingIndex()));
+        inventory.setItem(52, getFilterItem(owner.getFilterCategory()));
+        inventory.setItem(46, this.getMuteButton());
+        return inventory;
     }
 
-    public void updateStructureInventory(){
-        int index = 0;
+    public void initStructureInventories(){
+        PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
+        int maxAmountOfPages = getMaxAmountOfPages(owner.getFilterCategory());
+        ArrayList<Inventory> inventories = new ArrayList<>();
+        for (int i = 0; i < maxAmountOfPages; i++){
+            inventories.add(createNewInventory(i + 1, maxAmountOfPages));
+        }
+        this.setPages(inventories);
+    }
+
+    public void updateMuteButton(){
+        ArrayList<Inventory> inventories = this.getPages();
+        for (Inventory inventory : inventories) {
+            inventory.setItem(46, this.getMuteButton());
+        }
+    }
+
+    public void updateInventories(){
+
 
         PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
         int sortingIndex = owner.getSortingIndex();
         resourceCategory filterCategory = owner.getFilterCategory();
 
+        ItemStack sorter = getSortItem(sortingIndex);
+        ItemStack filter = getFilterItem(filterCategory);
+
+        int maxAmountOfPages = getMaxAmountOfPages(owner.getFilterCategory());
+        ArrayList<Inventory> inventories = this.getPages();
+        int amountOfPages = inventories.size();
+
+        for (int i = 0; i < maxAmountOfPages - amountOfPages; i++){
+            inventories.add(createNewInventory(amountOfPages + i + 1, maxAmountOfPages));
+        }
+        for (int i = amountOfPages - maxAmountOfPages; i > 0; i--){
+            inventories.remove(amountOfPages - i + 1);
+        }
+
         List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
         Collections.sort(resourceList, resourceComparators[sortingIndex]);
 
+        int inventoryIndex = 0;
+        int slotIndex = 0;
+
+        for (Inventory inventory : inventories){
+            for (int i = 0; i < 36; i++){
+                inventory.setItem(i, null);
+            }
+            inventory.setItem(51, sorter);
+            inventory.setItem(52, filter);
+        }
+
         for (Map.Entry<Integer, Double> entry : resourceList){
+            if (slotIndex >= 36){
+                slotIndex = 0;
+                inventoryIndex++;
+            }
             Resource resource = getResourceFromKey(entry.getKey());
             double weight = entry.getValue();
             ItemStack item = resource.getItemStack();
             ItemMeta itemMeta = item.getItemMeta();
+            itemMeta.setDisplayName(format("&f" + itemMeta.getDisplayName()));
             ArrayList<String> lore = new ArrayList<>();
-            lore.add(format("&7kg: &f" + df.format(weight)));
+            lore.add(format("&7Weight: &f" + df.format(weight) + "kg"));
+            lore.add("");
+            lore.add(format("&a&nClick to collect"));
             itemMeta.setLore(lore);
             item.setItemMeta(itemMeta);
-            this.getInventory().setItem(index, item);
-
-            index++;
+            inventories.get(inventoryIndex).setItem(slotIndex, item);
+            slotIndex++;
         }
 
-        ItemStack sorter = getSortItem(sortingIndex);
-        ItemStack filter = getFilterItem(filterCategory);
-        this.getInventory().setItem(51, sorter);
-        this.getInventory().setItem(52, filter);
     }
 
     @Override
-    public void openStructureMenu(Player p) {
-        Inventory inventory = this.getInventory();
+    public void openStructureMenu(Player p, int page) {
+        Inventory inventory = this.getPages().get(page - 1);
         p.openInventory(inventory);
         openedDrillInventory.put(p, this);
     }
@@ -445,49 +519,88 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             Drill drill = openedDrillInventory.get(p);
             int sortingIndex = playerProfile.getSortingIndex();
             resourceCategory filterCategory = playerProfile.getFilterCategory();
-            switch (e.getRawSlot()){
-                case 51:
-                    int sortingIndex1 = sortingIndex;
-                    if (e.getClick().equals(ClickType.LEFT)){
-                        if (sortingIndex1 == resourceComparators.length - 1){
-                            sortingIndex1 = 0;
+            int maxAmountOfPages = getMaxAmountOfPages(filterCategory);
+            int currentPage = Integer.parseInt(name.split("page ")[1].split("/")[0]);
+            if (e.getRawSlot() < 36){
+                List<Map.Entry<Integer, Double>> resourceList = drill.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+                Collections.sort(resourceList, resourceComparators[sortingIndex]);
+                int index = e.getRawSlot() + (35 * (currentPage - 1));
+                Map.Entry<Integer, Double> entry = resourceList.get(index);
+                int key = entry.getKey();
+                double leftOver = playerProfile.getBackPack().addResource(key, entry.getValue());
+                resourceList.remove(index);
+                if (leftOver > 0) {
+                    resourceList.add(index, new AbstractMap.SimpleEntry<>(key, leftOver));
+                }
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+                drill.updateInventories();
+            } else {
+                switch (e.getRawSlot()) {
+                    case 46:
+                        if (drill.isMuted()) {
+                            drill.setMuted(false);
                         } else {
-                            sortingIndex1++;
+                            drill.setMuted(true);
                         }
-                    } else if (e.getClick().equals(ClickType.RIGHT)){
-                        if (sortingIndex1 == 0){
-                            sortingIndex1 = resourceComparators.length - 1;
-                        } else {
-                            sortingIndex1--;
+                        drill.updateMuteButton();
+                        break;
+                    case 45:
+                        if (currentPage > 1) {
+                            drill.openStructureMenu(p, currentPage - 1);
                         }
-                    }
-                    playerProfile.setSortingIndex(sortingIndex1);
-                    break;
-                case 52:
-                    int listIndex = 0;
-                    int index = 0;
-                    for (resourceCategory resourceCategory : resourceCategory.values()){
-                        if (filterCategory.equals(resourceCategory)){
-                            listIndex = index;
+                        break;
+                    case 53:
+                        if (currentPage + 1 <= maxAmountOfPages) {
+                            drill.openStructureMenu(p, currentPage + 1);
                         }
-                        index++;
-                    }
-                    if (e.getClick().equals(ClickType.LEFT)){
-                        if (listIndex == resourceCategory.values().length - 1){
-                            listIndex = 0;
-                        } else {
-                            listIndex++;
+                        break;
+                    case 51:
+                        int sortingIndex1 = sortingIndex;
+                        if (e.getClick().equals(ClickType.LEFT)) {
+                            if (sortingIndex1 == resourceComparators.length - 1) {
+                                sortingIndex1 = 0;
+                            } else {
+                                sortingIndex1++;
+                            }
+                        } else if (e.getClick().equals(ClickType.RIGHT)) {
+                            if (sortingIndex1 == 0) {
+                                sortingIndex1 = resourceComparators.length - 1;
+                            } else {
+                                sortingIndex1--;
+                            }
                         }
-                    } else if (e.getClick().equals(ClickType.RIGHT)){
-                        if (listIndex == 0){
-                            listIndex = resourceCategory.values().length - 1;
-                        } else {
-                            listIndex--;
+                        playerProfile.setSortingIndex(sortingIndex1);
+                        drill.updateInventories();
+                        drill.openStructureMenu(p, 1);
+                        break;
+                    case 52:
+                        int listIndex = 0;
+                        int index = 0;
+                        for (resourceCategory resourceCategory : resourceCategory.values()) {
+                            if (filterCategory.equals(resourceCategory)) {
+                                listIndex = index;
+                            }
+                            index++;
                         }
-                    }
-                    playerProfile.setFilterCategory(resourceCategory.values()[listIndex]);
+                        if (e.getClick().equals(ClickType.LEFT)) {
+                            if (listIndex == resourceCategory.values().length - 1) {
+                                listIndex = 0;
+                            } else {
+                                listIndex++;
+                            }
+                        } else if (e.getClick().equals(ClickType.RIGHT)) {
+                            if (listIndex == 0) {
+                                listIndex = resourceCategory.values().length - 1;
+                            } else {
+                                listIndex--;
+                            }
+                        }
+                        playerProfile.setFilterCategory(resourceCategory.values()[listIndex]);
+                        drill.updateInventories();
+                        drill.openStructureMenu(p, 1);
+                        break;
+                }
             }
-            drill.updateStructureInventory();
         }
 
     }
@@ -512,12 +625,12 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     }
 
 
-    public Inventory getInventory() {
-        return inventory;
+    public ArrayList<Inventory> getPages() {
+        return this.pages;
     }
 
-    public void setInventory(Inventory inventory) {
-        this.inventory = inventory;
+    public void setPages(ArrayList<Inventory> pages) {
+        this.pages = pages;
     }
 
     public OfflinePlayer getOwner() {
@@ -560,4 +673,11 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.packetKey = packetKey;
     }
 
+    public boolean isMuted() {
+        return muted;
+    }
+
+    public void setMuted(boolean muted) {
+        this.muted = muted;
+    }
 }

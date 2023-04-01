@@ -161,6 +161,7 @@ public class Backpack implements Listener {
 
     @EventHandler
     private void inventoryClickEvent(InventoryClickEvent e){
+        if (e.getClickedInventory() == null) return;
         Player p = (Player) e.getWhoClicked();
         if (e.getClickedInventory().equals(p.getInventory())){
             if (e.getSlot() == 8 && e.getCurrentItem().getType().equals(Material.BUNDLE) && e.getCurrentItem().getItemMeta().getDisplayName().equals(bundleName)){

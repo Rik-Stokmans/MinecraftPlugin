@@ -71,7 +71,7 @@ public class StructureEvent implements Listener {
                     for (Location loc1 : structure.getLocations()) {
                         if (loc.equals(loc1)) {
                             e.setCancelled(true);
-                            structure.openStructureMenu(p);
+                            structure.openStructureMenu(p, 1);
                         }
                     }
                 }

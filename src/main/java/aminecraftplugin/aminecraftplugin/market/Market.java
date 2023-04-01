@@ -398,11 +398,13 @@ public class Market implements Listener {
             int strength = marketsFile.getInt("markets." + marketKey + ".strength");
 
             HashMap<Integer, Trade> trades = new HashMap<>();
-            marketsFile.getConfigurationSection("markets." + marketKey + ".trades").getKeys(false).forEach(tradeKey -> {
-                double stock = marketsFile.getDouble("markets." + marketKey + ".trades." + tradeKey + ".stock");
-                int tradeStrength = marketsFile.getInt("markets." + marketKey + ".trades." + tradeKey + ".strength");
-                trades.put(Integer.parseInt(tradeKey), new Trade(Integer.parseInt(tradeKey), tradeStrength, stock));
-            });
+            if (marketsFile.contains("trades")) {
+                marketsFile.getConfigurationSection("markets." + marketKey + ".trades").getKeys(false).forEach(tradeKey -> {
+                    double stock = marketsFile.getDouble("markets." + marketKey + ".trades." + tradeKey + ".stock");
+                    int tradeStrength = marketsFile.getInt("markets." + marketKey + ".trades." + tradeKey + ".strength");
+                    trades.put(Integer.parseInt(tradeKey), new Trade(Integer.parseInt(tradeKey), tradeStrength, stock));
+                });
+            }
             //adds the market to the global var.
             markets.put(Integer.parseInt(marketKey), new Market(name, location, strength, Integer.parseInt(marketKey), trades));
         });

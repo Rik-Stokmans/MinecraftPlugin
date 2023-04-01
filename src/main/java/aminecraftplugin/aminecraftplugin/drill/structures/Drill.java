@@ -417,6 +417,14 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         return muteButton;
     }
 
+    public ItemStack getSellAllButton(){
+        ItemStack collectAllButton = new ItemStack(Material.CHEST);
+        ItemMeta metaCollectAllButton = collectAllButton.getItemMeta();
+        metaCollectAllButton.setDisplayName(format("&aClick to collect all"));
+        collectAllButton.setItemMeta(metaCollectAllButton);
+        return collectAllButton;
+    }
+
     public Inventory createNewInventory(int page, int maxPages){
         PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
         String inventoryName = this.getDrillType().getDisplayName() + " tier " + this.getDrillTier() + " page " + page + "/" + maxPages;
@@ -424,6 +432,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         inventory.setItem(51, getSortItem(owner.getSortingIndex()));
         inventory.setItem(52, getFilterItem(owner.getFilterCategory()));
         inventory.setItem(46, this.getMuteButton());
+        inventory.setItem(49, this.getSellAllButton());
         return inventory;
     }
 
@@ -508,6 +517,37 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         openedDrillInventory.put(p, this);
     }
 
+    public int getAmountOfResources(int sortingIndex, resourceCategory filterCategory){
+        List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+        Collections.sort(resourceList, resourceComparators[sortingIndex]);
+        return resourceList.size();
+    }
+
+    public void collectResources(Player p, ArrayList<Integer> indexes, boolean silent){
+        PlayerProfile playerProfile = getPlayerProfile(p);
+        int sortingIndex = playerProfile.getSortingIndex();
+        resourceCategory filterCategory = playerProfile.getFilterCategory();
+        List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+        Collections.sort(resourceList, resourceComparators[sortingIndex]);
+        for (int index : indexes) {
+            Map.Entry<Integer, Double> entry = resourceList.get(index);
+            int key = entry.getKey();
+            double leftOver = playerProfile.getBackPack().addResource(key, entry.getValue());
+            this.getResources().remove(key);
+            if (leftOver > 0) {
+                this.getResources().put(key, leftOver);
+                break;
+            }
+            if (!silent) {
+                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+            }
+        }
+        if (silent){
+            p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
+        }
+        this.updateInventories();
+    }
+
     @EventHandler
     private void drillClick(InventoryClickEvent e){
         if (e.getView() == null) return;
@@ -522,20 +562,20 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             int maxAmountOfPages = getMaxAmountOfPages(filterCategory);
             int currentPage = Integer.parseInt(name.split("page ")[1].split("/")[0]);
             if (e.getRawSlot() < 36){
-                List<Map.Entry<Integer, Double>> resourceList = drill.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
-                Collections.sort(resourceList, resourceComparators[sortingIndex]);
                 int index = e.getRawSlot() + (35 * (currentPage - 1));
-                Map.Entry<Integer, Double> entry = resourceList.get(index);
-                int key = entry.getKey();
-                double leftOver = playerProfile.getBackPack().addResource(key, entry.getValue());
-                drill.getResources().remove(key);
-                if (leftOver > 0) {
-                    drill.getResources().put(key, leftOver);
-                }
-                p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
-                drill.updateInventories();
+                ArrayList<Integer> indexes = new ArrayList<>();
+                indexes.add(index);
+                drill.collectResources(p, indexes, false);
             } else {
                 switch (e.getRawSlot()) {
+                    case 49:
+                        int amountOfItems = drill.getAmountOfResources(sortingIndex, filterCategory);
+                        ArrayList<Integer> indexes = new ArrayList<>();
+                        for (int i = 0; i < amountOfItems; i++){
+                            indexes.add(i);
+                        }
+                        drill.collectResources(p, indexes, true);
+                        break;
                     case 46:
                         if (drill.isMuted()) {
                             drill.setMuted(false);

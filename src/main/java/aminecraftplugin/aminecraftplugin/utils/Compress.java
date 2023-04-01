@@ -12,6 +12,11 @@ public class Compress {
 
     public static DecimalFormat df = new DecimalFormat("#");
 
+    public static double roundAvoid(double value, int places) {
+        double scale = Math.pow(10, places);
+        return Math.round(value * scale) / scale;
+    }
+
     public static String returnCompressed(Double number, int decimals){
         ArrayList<String> symbols = new ArrayList<>();
         Integer element = -1;

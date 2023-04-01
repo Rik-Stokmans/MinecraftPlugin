@@ -20,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 
 public class Market implements Listener {
 
@@ -327,7 +329,7 @@ public class Market implements Listener {
             else if (clickedItem.isSimilar(orderRemoveTen) && orderSize > 10) orderSize -= 10.0;
             else if (clickedItem.isSimilar(orderRemoveHundred) && orderSize > 0.1) orderSize -= 0.1;
             else if (clickedItem.isSimilar(resetOrderSizeButton)) orderSize = 0.1;
-
+            orderSize = roundAvoid(orderSize, 1);
             playerOrderSize.put(p, orderSize);
             p.getOpenInventory().setItem(22, generateOrderInfoItem(orderSize));
         }

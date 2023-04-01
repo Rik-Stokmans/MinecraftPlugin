@@ -398,7 +398,7 @@ public class Market implements Listener {
             int strength = marketsFile.getInt("markets." + marketKey + ".strength");
 
             HashMap<Integer, Trade> trades = new HashMap<>();
-            if (marketsFile.contains("trades")) {
+            if (marketsFile.getConfigurationSection("markets." + marketKey + ".trades") != null) {
                 marketsFile.getConfigurationSection("markets." + marketKey + ".trades").getKeys(false).forEach(tradeKey -> {
                     double stock = marketsFile.getDouble("markets." + marketKey + ".trades." + tradeKey + ".stock");
                     int tradeStrength = marketsFile.getInt("markets." + marketKey + ".trades." + tradeKey + ".strength");

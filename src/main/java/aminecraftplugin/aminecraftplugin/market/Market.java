@@ -60,7 +60,7 @@ public class Market implements Listener {
     public static Inventory marketOrderSizeMenu;
 
     public static HashMap<Player, Market> latestMarketOpen = new HashMap<>();
-    public static HashMap<Player, Integer> playerOrderSize = new HashMap<>();
+    public static HashMap<Player, Double> playerOrderSize = new HashMap<>();
 
     //Hashmap loaded from file containing all markets
     public static HashMap<Integer, Market> markets = new HashMap<>();
@@ -215,7 +215,7 @@ public class Market implements Listener {
     //gui methods
     private void openMarket(Player p) {
         p.openInventory(marketCategoryGuiMenu);
-        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 1);
+        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 0.1);
     }
 
 
@@ -315,17 +315,19 @@ public class Market implements Listener {
         }
         else if (invName.equals(format("&eChange Order Size"))) {
             e.setCancelled(true);
-            int orderSize = playerOrderSize.get(p);
+            double orderSize = playerOrderSize.get(p);
             if (clickedItem.isSimilar(backButton)) {
                 p.openInventory(marketCategoryGuiMenu);
                 return;
             }
-            if (clickedItem.isSimilar(orderAddHundred) && orderSize <= 9900) orderSize += 100;
-            else if (clickedItem.isSimilar(orderAddTen) && orderSize <= 9990) orderSize += 10;
-            else if (clickedItem.isSimilar(orderAddOne) && orderSize <= 9999) orderSize += 1;
-            else if (clickedItem.isSimilar(orderRemoveOne) && orderSize > 1) orderSize -= 1;
-            else if (clickedItem.isSimilar(orderRemoveTen) && orderSize > 10) orderSize -= 10;
-            else if (clickedItem.isSimilar(orderRemoveHundred) && orderSize > 100) orderSize -= 100;
+            if (clickedItem.isSimilar(orderAddHundred) && orderSize <= 999.9) orderSize += 0.1;
+            else if (clickedItem.isSimilar(orderAddTen) && orderSize <= 990) orderSize += 10.0;
+            else if (clickedItem.isSimilar(orderAddOne) && orderSize <= 999) orderSize += 1.0;
+            else if (clickedItem.isSimilar(orderRemoveOne) && orderSize > 1) orderSize -= 1.0;
+            else if (clickedItem.isSimilar(orderRemoveTen) && orderSize > 10) orderSize -= 10.0;
+            else if (clickedItem.isSimilar(orderRemoveHundred) && orderSize > 0.1) orderSize -= 0.1;
+            else if (clickedItem.isSimilar(resetOrderSizeButton)) orderSize = 0.1;
+
             playerOrderSize.put(p, orderSize);
             p.getOpenInventory().setItem(22, generateOrderInfoItem(orderSize));
         }
@@ -349,7 +351,7 @@ public class Market implements Listener {
 
             if (e.getClick().isLeftClick()) {
                 int key = getKeyFromItemstack(clickedItem);
-                int orderSize = playerOrderSize.get(p);
+                double orderSize = playerOrderSize.get(p);
 
                 if (market.getTrades().containsKey(key)) market.getTrades().get(key).executeBuyOrder(orderSize, p, e);
             }
@@ -359,7 +361,7 @@ public class Market implements Listener {
             else if (e.getClick().isRightClick()) {
 
                 int key = getKeyFromItemstack(clickedItem);
-                int orderSize = playerOrderSize.get(p);
+                double orderSize = playerOrderSize.get(p);
 
                 if (market.getTrades().containsKey(key)) market.getTrades().get(key).executeSellOrder(orderSize, p, e);
 
@@ -452,7 +454,7 @@ public class Market implements Listener {
 
         ArrayList<String> sellAllButtonLore = new ArrayList<>();
         sellAllButtonLore.add(format("&7Sell all items of this category"));
-        sellAllButton = createGuiItem("&6Sellall", sellAllButtonLore, Material.GOLD_INGOT);
+        sellAllButton = createGuiItem("&6Sell all", sellAllButtonLore, Material.GOLD_INGOT);
 
         ArrayList<String> changeOrderSizeLore = new ArrayList<>();
         changeOrderSizeLore.add(format("&7Change your &eorder &7size"));
@@ -463,28 +465,28 @@ public class Market implements Listener {
         resetOrderSizeButton = createGuiItem("&eReset order size", resetOrderSizeLore, Material.BLACK_CONCRETE);
 
         ArrayList<String> orderAddHunderedLore = new ArrayList<>();
-        orderAddHunderedLore.add(format("&7Add &e100Kg &7to your order size"));
-        orderAddHundred = createGuiItem("&eAdd 100Kg", orderAddHunderedLore, Material.GREEN_GLAZED_TERRACOTTA);
+        orderAddHunderedLore.add(format("&7Add &e100g &7to your order size"));
+        orderAddHundred = createGuiItem("&eAdd 100g", orderAddHunderedLore, Material.GREEN_TERRACOTTA);
 
         ArrayList<String> orderAddTenLore = new ArrayList<>();
         orderAddTenLore.add(format("&7Add &e10Kg &7to your order size"));
-        orderAddTen = createGuiItem("&eAdd 10Kg", orderAddTenLore, Material.GREEN_CONCRETE);
+        orderAddTen = createGuiItem("&eAdd 10Kg", orderAddTenLore, Material.GREEN_GLAZED_TERRACOTTA);
 
         ArrayList<String> orderAddOneLore = new ArrayList<>();
-        orderAddOneLore.add(format("&7Add &e100Kg &7to your order size"));
-        orderAddOne = createGuiItem("&eAdd 1Kg", orderAddOneLore, Material.GREEN_TERRACOTTA);
+        orderAddOneLore.add(format("&7Add &e1Kg &7to your order size"));
+        orderAddOne = createGuiItem("&eAdd 1Kg", orderAddOneLore, Material.GREEN_CONCRETE);
 
         ArrayList<String> orderRemoveHunderedLore = new ArrayList<>();
-        orderRemoveHunderedLore.add(format("&7Remove &e100Kg &7from your order size"));
-        orderRemoveHundred = createGuiItem("&eRemove 100Kg", orderRemoveHunderedLore, Material.RED_GLAZED_TERRACOTTA);
+        orderRemoveHunderedLore.add(format("&7Remove &e100g &7from your order size"));
+        orderRemoveHundred = createGuiItem("&eRemove 100g", orderRemoveHunderedLore, Material.RED_TERRACOTTA);
 
         ArrayList<String> orderRemoveTenLore = new ArrayList<>();
         orderRemoveTenLore.add(format("&7Remove &e10Kg &7from your order size"));
-        orderRemoveTen = createGuiItem("&eRemove 10Kg", orderRemoveTenLore, Material.RED_CONCRETE);
+        orderRemoveTen = createGuiItem("&eRemove 10Kg", orderRemoveTenLore, Material.RED_GLAZED_TERRACOTTA);
 
         ArrayList<String> orderRemoveOneLore = new ArrayList<>();
         orderRemoveOneLore.add(format("&7Remove &e1Kg &7from your order size"));
-        orderRemoveOne = createGuiItem("&eRemove 1Kg", orderRemoveOneLore, Material.RED_TERRACOTTA);
+        orderRemoveOne = createGuiItem("&eRemove 1Kg", orderRemoveOneLore, Material.RED_CONCRETE);
 
         ArrayList<String> addItemToMenuLore = new ArrayList<>();
         addItemToMenuLore.add(format("&7Add a &eitem &7to this market"));
@@ -498,16 +500,16 @@ public class Market implements Listener {
 
     //method to make the order size editor
     private void openOrderSizeEditorGui(Player p) {
-        int orderSize = playerOrderSize.get(p);
+        double orderSize = playerOrderSize.get(p);
         marketOrderSizeMenu = Bukkit.createInventory(null, 27, format("&eChange Order Size"));
 
-        marketOrderSizeMenu.setItem(10, orderAddHundred);
-        marketOrderSizeMenu.setItem(11, orderAddTen);
-        marketOrderSizeMenu.setItem(12, orderAddOne);
+        marketOrderSizeMenu.setItem(10, orderAddTen);
+        marketOrderSizeMenu.setItem(11, orderAddOne);
+        marketOrderSizeMenu.setItem(12, orderAddHundred);
         marketOrderSizeMenu.setItem(13, resetOrderSizeButton);
-        marketOrderSizeMenu.setItem(14, orderRemoveOne);
-        marketOrderSizeMenu.setItem(15, orderRemoveTen);
-        marketOrderSizeMenu.setItem(16, orderRemoveHundred);
+        marketOrderSizeMenu.setItem(14, orderRemoveHundred);
+        marketOrderSizeMenu.setItem(15, orderRemoveOne);
+        marketOrderSizeMenu.setItem(16, orderRemoveTen);
 
         marketOrderSizeMenu.setItem(18, backButton);
         marketOrderSizeMenu.setItem(22, generateOrderInfoItem(orderSize));
@@ -515,7 +517,7 @@ public class Market implements Listener {
         p.openInventory(marketOrderSizeMenu);
     }
 
-    private ItemStack generateOrderInfoItem(int orderSize) {
+    private ItemStack generateOrderInfoItem(double orderSize) {
         ArrayList<String> orderInfoItemLore = new ArrayList<>();
         orderInfoItemLore.add(format("&b" + orderSize + "&7Kg"));
         return createGuiItem("&eOrder Size", orderInfoItemLore, Material.BOOK);

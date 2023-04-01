@@ -67,8 +67,8 @@ public class Resource implements Listener {
 
     public static void init(){
         try {
-            resources = loadResources();
             categories = loadCategories();
+            resources = loadResources();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -341,9 +341,9 @@ public class Resource implements Listener {
             String materialName = resourceFile.getString("data." + key + ".material");
             if (materialName != null) {
                 resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID, Material.getMaterial(materialName)));
+                categories.get(resourceCategory.ALL).add(ID);
             }
         });
-
         return resourceHashMap;
     }
 
@@ -380,7 +380,7 @@ public class Resource implements Listener {
             categories.put(resourceCategory, intList);
         });
 
-        resourceCategory[] resourceCategories = {resourceCategory.METALS, resourceCategory.ENERGY, resourceCategory.GEMSTONES
+        resourceCategory[] resourceCategories = {resourceCategory.ALL, resourceCategory.METALS, resourceCategory.ENERGY, resourceCategory.GEMSTONES
         , resourceCategory.ARCHEOLOGY, resourceCategory.OTHER};
         for (resourceCategory resourceCategory : resourceCategories){
             if (!categories.containsKey(resourceCategory)){
@@ -443,7 +443,7 @@ public class Resource implements Listener {
                 return resourceCategory.OTHER;
             }
         }
-        return resourceCategory.NULL;
+        return resourceCategory.ALL;
     }
 
     public static int getKeyFromItemstack(ItemStack item) {

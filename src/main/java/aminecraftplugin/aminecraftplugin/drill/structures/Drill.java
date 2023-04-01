@@ -2,6 +2,8 @@ package aminecraftplugin.aminecraftplugin.drill.structures;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.LootFinder;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.BlockPosition;
@@ -21,6 +23,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -31,15 +34,23 @@ import org.bukkit.structure.Structure;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static aminecraftplugin.aminecraftplugin.Main.*;
+import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.*;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.categories;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
 import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
+import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
 import static aminecraftplugin.aminecraftplugin.utils.RemoveHandItem.removeHandItem;
+import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
 public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.structures.Structure {
+
+    public static HashMap<Player, Drill> openedDrillInventory = new HashMap<>();
 
     private OfflinePlayer owner;
     private Location location;
@@ -49,9 +60,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private int drillTier;
     private Hologram hologram;
     private Structure structure;
-    private HashMap<Resource, Double> resources = new HashMap<>();
+    private HashMap<Integer, Double> resources = new HashMap<>();
     private ArrayList<BlockState> destroyedBlocks = new ArrayList<>();
     private int packetKey;
+
 
     private static DecimalFormat df = new DecimalFormat("#.##");
 
@@ -60,9 +72,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     }
 
     public Drill(Location location, OfflinePlayer owner, ItemStack drill){
+
         this.location = location;
         this.owner = owner;
-        this.inventory = Bukkit.createInventory(null, 54, "Drill");
 
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
         NBTTagCompound nbt = nmsItem.u();
@@ -80,6 +92,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.correctHologramPosition();
         this.lootFinder = new LootFinder(this.getLocation());
         this.scheduleLootFinding(this.getOwner());
+        this.initStructureInventory();
     }
 
     private void clearHologram(){
@@ -187,10 +200,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             this.getLocation().clone().add(0,-1,0).getBlock().setType(resource.getBlock());
 
             double totalSeconds = kgLeft[0] / miningPerSecond;
-            for (Player p1 : Bukkit.getOnlinePlayers()){
-                p1.sendMessage(String.valueOf(kgLeft[0]));
-                p1.sendMessage(String.valueOf(totalSeconds));
-            }
             final int[] stage = {0};
 
             new BukkitRunnable() {
@@ -218,7 +227,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                             }
                         }
                     }
-                    drill.addResource(resource, kgMined);
+                    drill.addResource(resource.getKey(), kgMined);
                     if (stage[0] == 10) {
                         packetContainer.getIntegers().write(1, -1);
                         protocolManager.broadcastServerPacket(packetContainer);
@@ -370,54 +379,115 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
     }
 
-    public void addResource(Resource resource, Double kg){
-        if (!this.getResources().containsKey(resource)){
-            this.getResources().put(resource, kg);
+    public void addResource(Integer key, Double kg){
+        if (!this.getResources().containsKey(key)){
+            this.getResources().put(key, kg);
         } else {
-            this.getResources().put(resource, this.getResources().get(resource) + kg);
+            this.getResources().put(key, this.getResources().get(key) + kg);
         }
         this.updateStructureInventory();
     }
 
+    public void initStructureInventory(){
+        PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
+        this.setInventory(getDefaultScrollableInventory(this.getDrillType().getDisplayName() + " level " + this.getDrillTier(), false));
+        ItemStack sorter = getSortItem(owner.getSortingIndex());
+        ItemStack filter = getFilterItem(owner.getFilterCategory());
+        this.getInventory().setItem(51, sorter);
+        this.getInventory().setItem(52, filter);
+    }
+
     public void updateStructureInventory(){
         int index = 0;
-        for (Map.Entry<Resource, Double> resource : this.getResources().entrySet()){
-            ItemStack item = resource.getKey().getItemStack();
+
+        PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
+        int sortingIndex = owner.getSortingIndex();
+        resourceCategory filterCategory = owner.getFilterCategory();
+
+        List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+        Collections.sort(resourceList, resourceComparators[sortingIndex]);
+
+        for (Map.Entry<Integer, Double> entry : resourceList){
+            Resource resource = getResourceFromKey(entry.getKey());
+            double weight = entry.getValue();
+            ItemStack item = resource.getItemStack();
             ItemMeta itemMeta = item.getItemMeta();
             ArrayList<String> lore = new ArrayList<>();
-            lore.add(format("&7kg: &f" + df.format(resource.getValue())));
+            lore.add(format("&7kg: &f" + df.format(weight)));
             itemMeta.setLore(lore);
             item.setItemMeta(itemMeta);
-            inventory.setItem(index, item);
+            this.getInventory().setItem(index, item);
 
             index++;
         }
+
+        ItemStack sorter = getSortItem(sortingIndex);
+        ItemStack filter = getFilterItem(filterCategory);
+        this.getInventory().setItem(51, sorter);
+        this.getInventory().setItem(52, filter);
     }
 
     @Override
     public void openStructureMenu(Player p) {
         Inventory inventory = this.getInventory();
-        int index = 0;
-        for (Map.Entry<Resource, Double> resource : this.getResources().entrySet()){
-            ItemStack item = resource.getKey().getItemStack();
-            ItemMeta itemMeta = item.getItemMeta();
-            ArrayList<String> lore = new ArrayList<>();
-            lore.add(format("&7kg: &f" + df.format(resource.getValue())));
-            itemMeta.setLore(lore);
-            item.setItemMeta(itemMeta);
-            inventory.setItem(index, item);
-
-            index++;
-        }
         p.openInventory(inventory);
+        openedDrillInventory.put(p, this);
     }
 
     @EventHandler
     private void drillClick(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
-        if (name.contains("Drill")) {
+        if (name.contains("drill")) {
             e.setCancelled(true);
+            Player p = (Player) e.getWhoClicked();
+            PlayerProfile playerProfile = getPlayerProfile(p);
+            Drill drill = openedDrillInventory.get(p);
+            int sortingIndex = playerProfile.getSortingIndex();
+            resourceCategory filterCategory = playerProfile.getFilterCategory();
+            switch (e.getRawSlot()){
+                case 51:
+                    int sortingIndex1 = sortingIndex;
+                    if (e.getClick().equals(ClickType.LEFT)){
+                        if (sortingIndex1 == resourceComparators.length - 1){
+                            sortingIndex1 = 0;
+                        } else {
+                            sortingIndex1++;
+                        }
+                    } else if (e.getClick().equals(ClickType.RIGHT)){
+                        if (sortingIndex1 == 0){
+                            sortingIndex1 = resourceComparators.length - 1;
+                        } else {
+                            sortingIndex1--;
+                        }
+                    }
+                    playerProfile.setSortingIndex(sortingIndex1);
+                    break;
+                case 52:
+                    int listIndex = 0;
+                    int index = 0;
+                    for (resourceCategory resourceCategory : resourceCategory.values()){
+                        if (filterCategory.equals(resourceCategory)){
+                            listIndex = index;
+                        }
+                        index++;
+                    }
+                    if (e.getClick().equals(ClickType.LEFT)){
+                        if (listIndex == resourceCategory.values().length - 1){
+                            listIndex = 0;
+                        } else {
+                            listIndex++;
+                        }
+                    } else if (e.getClick().equals(ClickType.RIGHT)){
+                        if (listIndex == 0){
+                            listIndex = resourceCategory.values().length - 1;
+                        } else {
+                            listIndex--;
+                        }
+                    }
+                    playerProfile.setFilterCategory(resourceCategory.values()[listIndex]);
+            }
+            drill.updateStructureInventory();
         }
 
     }
@@ -446,6 +516,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         return inventory;
     }
 
+    public void setInventory(Inventory inventory) {
+        this.inventory = inventory;
+    }
+
     public OfflinePlayer getOwner() {
         return owner;
     }
@@ -466,7 +540,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         return lootFinder;
     }
 
-    public HashMap<Resource, Double> getResources() {
+    public HashMap<Integer, Double> getResources() {
         return resources;
     }
 
@@ -485,4 +559,5 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     public void setPacketKey(int packetKey) {
         this.packetKey = packetKey;
     }
+
 }

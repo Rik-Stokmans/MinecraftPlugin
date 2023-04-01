@@ -5,6 +5,13 @@ public enum DrillType {
     starterDrill,
     NULL;
 
+    public String getDisplayName(){
+        switch (this){
+            case starterDrill:
+                return "Starter drill";
+        }
+        return "";
+    }
 
     public String getNameFromDrillType(){
         switch (this){

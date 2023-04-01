@@ -1,6 +1,7 @@
 package aminecraftplugin.aminecraftplugin.drill;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -17,11 +18,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.resourceComparators;
+import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.returnSortedList;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.categories;
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
@@ -35,6 +37,7 @@ public class Backpack implements Listener {
     private double space;
     private HashMap<Integer, Double> backpack;
     private UUID owner;
+
 
     public Backpack() {
         this.space = 5.0;
@@ -90,8 +93,15 @@ public class Backpack implements Listener {
     public void open(Player p, UUID owner){
         OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(owner);
         Inventory inventory = Bukkit.createInventory(null, 54, offlinePlayer.getName() + "'s backpack");
+        PlayerProfile playerProfile = getPlayerProfile(p);
+        int sortingIndex = playerProfile.getSortingIndex();
+        resourceCategory filterCategory = playerProfile.getFilterCategory();
+
+        List<Map.Entry<Integer, Double>> resourceList = this.getBackpack().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+        Collections.sort(resourceList, resourceComparators[sortingIndex]);
+
         int index = 0;
-        for (Map.Entry<Integer, Double> entry : this.getBackpack().entrySet()){
+        for (Map.Entry<Integer, Double> entry : resourceList){
             int key = entry.getKey();
             double kg = entry.getValue();
             Resource resource = getResourceFromKey(key);
@@ -183,6 +193,7 @@ public class Backpack implements Listener {
         }
         return emptySpace;
     }
+
 
     public double getSpace() {
         return space;

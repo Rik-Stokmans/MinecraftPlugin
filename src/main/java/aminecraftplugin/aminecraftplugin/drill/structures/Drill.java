@@ -528,9 +528,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 Map.Entry<Integer, Double> entry = resourceList.get(index);
                 int key = entry.getKey();
                 double leftOver = playerProfile.getBackPack().addResource(key, entry.getValue());
-                resourceList.remove(index);
+                drill.getResources().remove(key);
                 if (leftOver > 0) {
-                    resourceList.add(index, new AbstractMap.SimpleEntry<>(key, leftOver));
+                    drill.getResources().put(key, leftOver);
                 }
                 p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
                 drill.updateInventories();

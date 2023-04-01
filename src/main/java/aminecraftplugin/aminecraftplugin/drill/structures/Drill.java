@@ -425,6 +425,14 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         return collectAllButton;
     }
 
+    public ItemStack getPickupButton(){
+        ItemStack pickupButton = new ItemStack(Material.BARRIER);
+        ItemMeta metaPickupButton = pickupButton.getItemMeta();
+        metaPickupButton.setDisplayName(format("&c&nClick to pick up drill"));
+        pickupButton.setItemMeta(metaPickupButton);
+        return pickupButton;
+    }
+
     public Inventory createNewInventory(int page, int maxPages){
         PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
         String inventoryName = this.getDrillType().getDisplayName() + " tier " + this.getDrillTier() + " page " + page + "/" + maxPages;
@@ -433,6 +441,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         inventory.setItem(52, getFilterItem(owner.getFilterCategory()));
         inventory.setItem(46, this.getMuteButton());
         inventory.setItem(49, this.getSellAllButton());
+        inventory.setItem(47, this.getPickupButton());
         return inventory;
     }
 
@@ -568,6 +577,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 drill.collectResources(p, indexes, false);
             } else {
                 switch (e.getRawSlot()) {
+                    case 47:
+                        drill.destroy(false);
+                        break;
                     case 49:
                         int amountOfItems = drill.getAmountOfResources(sortingIndex, filterCategory);
                         ArrayList<Integer> indexes = new ArrayList<>();

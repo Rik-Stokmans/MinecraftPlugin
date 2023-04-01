@@ -17,7 +17,7 @@ public class addMoneyCommand implements CommandExecutor {
             Player p = (Player) commandSender;
             PlayerProfile profile = getPlayerProfile(p);
             profile.addMoney(Double.parseDouble(strings[0]));
-            p.sendMessage("New balance: " + returnCompressed(profile.getMoney()));
+            p.sendMessage("New balance: " + returnCompressed(profile.getMoney(), 2));
             return true;
         }
         return false;

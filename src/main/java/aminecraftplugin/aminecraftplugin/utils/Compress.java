@@ -12,7 +12,7 @@ public class Compress {
 
     public static DecimalFormat df = new DecimalFormat("#");
 
-    public static String returnCompressed(Double number){
+    public static String returnCompressed(Double number, int decimals){
         ArrayList<String> symbols = new ArrayList<>();
         Integer element = -1;
         symbols.add("K"); symbols.add("M");  symbols.add("B"); symbols.add("T"); symbols.add("Qa"); symbols.add("Qi");  symbols.add("Sx");  symbols.add("Sp");  symbols.add("Oc");  symbols.add("No");  symbols.add("Dc");
@@ -20,18 +20,18 @@ public class Compress {
             number = number / 1000;
             element++;
         }
+        String pattern = "#.";
+        for (int i = 0; i < decimals; i++){
+            pattern += "#";
+        }
         if (element >= 0){
-            DecimalFormat df2 = new DecimalFormat("#.##");
+            DecimalFormat df2 = new DecimalFormat(pattern);
             df2.setRoundingMode(RoundingMode.FLOOR);
             return df2.format(number) + symbols.get(element);
         }
-        if (number % 1 == 0) {
-            return df.format(number);
-        } else {
-            DecimalFormat df3 = new DecimalFormat("#.#");
-            df3.setRoundingMode(RoundingMode.FLOOR);
-            return df3.format(number);
-        }
+        DecimalFormat df3 = new DecimalFormat(pattern);
+        df3.setRoundingMode(RoundingMode.FLOOR);
+        return df3.format(number);
     }
 
     public static Double returnDecompressed(String s){

@@ -3,9 +3,11 @@ package aminecraftplugin.aminecraftplugin.drill;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,6 +29,7 @@ import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.categories;
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 
 public class Backpack implements Listener {
 
@@ -108,7 +111,9 @@ public class Backpack implements Listener {
             ItemStack item = resource.getItemStack();
             ItemMeta meta = item.getItemMeta();
             ArrayList<String> lore = new ArrayList<>();
-            lore.add(format("&7amount: &f" + kg));
+            lore.add(format("&7Weight: &f" + returnCompressed(kg, 2) + "kg"));
+            double totalValue = kg * resource.getValue();
+            lore.add(format("&7Estimated price: &f" + returnCompressed(totalValue, 2)));
             meta.setLore(lore);
             item.setItemMeta(meta);
             inventory.setItem(index, item);
@@ -141,6 +146,14 @@ public class Backpack implements Listener {
             meta.setDisplayName(bundleName);
             bundle.setItemMeta(meta);
         }
+
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(bundle);
+        NBTTagCompound nbt = nmsItem.u();
+        if (nbt == null) nbt = new NBTTagCompound();
+        nbt.a("CustomModelData", 1);
+        nmsItem.c(nbt);
+        bundle = CraftItemStack.asBukkitCopy(nmsItem);
+
         ItemMeta itemMeta = bundle.getItemMeta();
 
         itemMeta.setDisplayName(bundleName);
@@ -149,7 +162,8 @@ public class Backpack implements Listener {
         itemMeta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 
         ArrayList<String> lore = new ArrayList<>();
-        lore.add(format("&7Weight: &f" + (this.getSpace() - this.getEmptySpace()) + " / " + this.getSpace() + " KG"));
+        double amount = this.getSpace() - this.getEmptySpace();
+        lore.add(format(returnCompressed(amount, 2) + " / " + this.getSpace() + " kg"));
         itemMeta.setLore(lore);
 
         BundleMeta bundleMeta = (BundleMeta) itemMeta;

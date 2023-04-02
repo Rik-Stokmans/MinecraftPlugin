@@ -15,7 +15,7 @@ public class openBackPackCommand implements CommandExecutor {
         if (commandSender instanceof Player){
             Player p = (Player) commandSender;
             PlayerProfile playerProfile = getPlayerProfile(p);
-            playerProfile.getBackPack().open(p, p.getUniqueId());
+            playerProfile.getBackPack().open(p, 1);
             return true;
         }
         return false;

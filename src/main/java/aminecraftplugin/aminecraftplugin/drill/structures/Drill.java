@@ -144,13 +144,38 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.setPacketKey(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
         packetContainer.getIntegers().write(0, this.getPacketKey());
 
+        //particles
+        final ArrayList<BukkitTask>[] bukkitTasks = new ArrayList[]{new ArrayList<>()};
+        BlockData stone = Material.STONE.createBlockData();
 
         BukkitTask task = new BukkitRunnable() {
             @Override
             public void run() {
+
+                //particles
+                BukkitTask task1 = new BukkitRunnable(){
+                    @Override
+                    public void run() {
+                        double randomX = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                        while (randomX > -0.05 && randomX < 0.05) {
+                            randomX = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                        }
+                        double randomZ = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                        while (randomZ > -0.05 && randomZ < 0.05) {
+                            randomZ = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                        }
+                        drill.getLocation().getWorld().spawnParticle(Particle.BLOCK_CRACK, drill.getLocation().clone().add(0.5 + randomX, 0.2, 0.5 + randomZ), 1, stone);
+                    }
+                }.runTaskTimer(plugin, 0l, (long) Math.ceil((oneStoneDuration / 11) * 20)  / 3);
+                bukkitTasks[0].add(task1);
+                drill.getTasks().add(task1.getTaskId());
+
+                //sound
                 if (!drill.isMuted()) {
                     drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
                 }
+
+                //hologram
                 HologramLine hologramLine = drill.getHologram().getLines().get(0);
                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
                 String currentLine = textHologramLine.getText();
@@ -162,10 +187,16 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     newLine += ".";
                 }
                 textHologramLine.setText(newLine);
+
+                //block stages
                 if (stage[0] == 10){
                     packetContainer.getIntegers().write(1, -1);
                     protocolManager.broadcastServerPacket(packetContainer);
 
+                    for (BukkitTask bukkitTask : bukkitTasks[0]){
+                        Bukkit.getScheduler().cancelTask(bukkitTask.getTaskId());
+                    }
+                    bukkitTasks[0] = new ArrayList<>();
                     //30% chance to find resource
                     if (ThreadLocalRandom.current().nextDouble(100.0) <= 70) {
                         scheduleLootFinding(p);
@@ -231,9 +262,31 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             double totalSeconds = kgLeft[0] / miningPerSecond;
             final int[] stage = {0};
 
+
+            //particles
+            final ArrayList<BukkitTask>[] bukkitTasks = new ArrayList[]{new ArrayList<>()};
+            BlockData blockType = resource.getBlock().createBlockData();
             BukkitTask task = new BukkitRunnable() {
                 @Override
                 public void run() {
+
+                    BukkitTask task1 = new BukkitRunnable(){
+                        @Override
+                        public void run() {
+                            double randomX = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                            while (randomX > -0.05 && randomX < 0.05) {
+                                randomX = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                            }
+                            double randomZ = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                            while (randomZ > -0.05 && randomZ < 0.05) {
+                                randomZ = ThreadLocalRandom.current().nextDouble(-0.3, 0.3);
+                            }
+                            drill.getLocation().getWorld().spawnParticle(Particle.BLOCK_CRACK, drill.getLocation().clone().add(0.5 + randomX, 0.2, 0.5 + randomZ), 1, blockType);
+                        }
+                    }.runTaskTimer(plugin, 0l, (long) (((totalSeconds / 11)) * 20) / 3);
+                    bukkitTasks[0].add(task1);
+                    drill.getTasks().add(task1.getTaskId());
+
                     if (!drill.isMuted()) {
                         drill.getLocation().getWorld().playSound(drill.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
                     }
@@ -260,6 +313,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     }
                     drill.addResource(resource.getKey(), kgMined);
                     if (stage[0] == 10) {
+                        for (BukkitTask bukkitTask : bukkitTasks[0]){
+                            Bukkit.getScheduler().cancelTask(bukkitTask.getTaskId());
+                        }
+                        bukkitTasks[0] = new ArrayList<>();
                         packetContainer.getIntegers().write(1, -1);
                         protocolManager.broadcastServerPacket(packetContainer);
                         drill.scheduleLootFinding(p);
@@ -578,10 +635,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
         Collections.sort(resourceList, resourceComparators[sortingIndex]);
         for (int index : indexes) {
-            double kg = this.getResources().get(index);
+            double kg = this.getResources().get(Integer.valueOf(index));
             int key = index;
             double leftOver = playerProfile.getBackPack().addResource(key, kg);
-            this.getResources().remove(key);
+            this.getResources().remove(Integer.valueOf(key));
             if (leftOver > 0) {
                 this.getResources().put(key, leftOver);
                 break;
@@ -612,9 +669,11 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             int maxAmountOfPages = getMaxAmountOfPages(filterCategory);
             int currentPage = Integer.parseInt(name.split("page ")[1].split("/")[0]);
             if (e.getRawSlot() < 36 && e.getRawSlot() >= 0){
+                List<Map.Entry<Integer, Double>> resourceList = drill.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+                Collections.sort(resourceList, resourceComparators[sortingIndex]);
                 int index = e.getRawSlot() + (35 * (currentPage - 1));
                 ArrayList<Integer> indexes = new ArrayList<>();
-                indexes.add(index);
+                indexes.add(resourceList.get(index).getKey());
                 drill.collectResources(p.getUniqueId(), indexes, false);
             } else {
                 switch (e.getRawSlot()) {
@@ -623,10 +682,12 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         p.getInventory().addItem(drill.destroy(p.getUniqueId(), false));
                         break;
                     case 49:
+                        List<Map.Entry<Integer, Double>> resourceList = drill.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
+                        Collections.sort(resourceList, resourceComparators[sortingIndex]);
                         int amountOfItems = drill.getAmountOfResources(sortingIndex, filterCategory);
                         ArrayList<Integer> indexes = new ArrayList<>();
                         for (int i = 0; i < amountOfItems; i++){
-                            indexes.add(i);
+                            indexes.add(resourceList.get(i).getKey());
                         }
                         drill.collectResources(p.getUniqueId(), indexes, true);
                         break;

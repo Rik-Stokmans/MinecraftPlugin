@@ -3,7 +3,7 @@ version: '${project.version}'
 main: aminecraftplugin.aminecraftplugin.Main
 api-version: 1.19
 authors: [ Duffie13, Vermulst ]
-softdepend: [HolographicDisplays, ProtocolLib]
+softdepend: [HolographicDisplays, ProtocolLib, Citizens]
 commands:
   addresource:
     permission: drilz.operator

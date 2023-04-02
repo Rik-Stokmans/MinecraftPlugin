@@ -57,6 +57,7 @@ public class PlayerProfile implements Listener {
         this.filterCategory = resourceCategory.ALL;
         this.sortingIndex = 0;
         playerProfiles.put(p.getUniqueId(), this);
+        this.backPack.updateAllPlages(p.getUniqueId());
     }
 
     public PlayerProfile(UUID uuid, int miningSkill, int prospectingSkill, Backpack backpack, double money, ArrayList<ItemStack> offlineItems, int sortingIndex, resourceCategory filterCategory) {
@@ -68,6 +69,7 @@ public class PlayerProfile implements Listener {
         this.sortingIndex = sortingIndex;
         this.filterCategory = filterCategory;
         playerProfiles.put(uuid, this);
+        this.backPack.updateAllPlages(uuid);
     }
 
 

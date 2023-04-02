@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public class EnergySource implements Structure, Listener {
 
@@ -19,7 +20,7 @@ public class EnergySource implements Structure, Listener {
     }
 
     @Override
-    public ItemStack destroy(boolean offline) {
+    public ItemStack destroy(UUID uuid, boolean offline) {
         return null;
     }
 

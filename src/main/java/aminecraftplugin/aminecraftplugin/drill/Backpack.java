@@ -163,7 +163,7 @@ public class Backpack implements Listener {
 
         ArrayList<String> lore = new ArrayList<>();
         double amount = this.getSpace() - this.getEmptySpace();
-        lore.add(format(returnCompressed(amount, 2) + " / " + this.getSpace() + " kg"));
+        lore.add(format("&7" + returnCompressed(amount, 2) + " / " + this.getSpace() + " kg"));
         itemMeta.setLore(lore);
 
         BundleMeta bundleMeta = (BundleMeta) itemMeta;

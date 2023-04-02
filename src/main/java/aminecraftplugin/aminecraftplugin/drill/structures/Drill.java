@@ -29,9 +29,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.structure.Structure;
 
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -43,6 +43,7 @@ import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceF
 import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
 import static aminecraftplugin.aminecraftplugin.utils.RemoveHandItem.removeHandItem;
@@ -65,10 +66,27 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private ArrayList<BlockState> destroyedBlocks = new ArrayList<>();
     private int packetKey;
     private boolean muted;
+    private ArrayList<Integer> tasks = new ArrayList<>();
 
 
-    private static DecimalFormat df = new DecimalFormat("#.##");
-
+    public static ItemStack getDrill(int tier, String structureName){
+        ItemStack drill = new ItemStack(Material.HOPPER);
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
+        NBTTagCompound nbt = nmsItem.u();
+        if (nbt == null) nbt = new NBTTagCompound();
+        nbt.a("drilltier", tier);
+        nbt.a("drilltype", structureName);
+        nmsItem.c(nbt);
+        drill = CraftItemStack.asBukkitCopy(nmsItem);
+        ItemMeta drillMeta = drill.getItemMeta();
+        DrillType drillType = getDrillTypeFromName(structureName);
+        drillMeta.setDisplayName(format("&7" + drillType.getDisplayName()));
+        ArrayList<String> lore = new ArrayList<>();
+        lore.add(format("&7Tier&f: " + tier));
+        drillMeta.setLore(lore);
+        drill.setItemMeta(drillMeta);
+        return drill;
+    }
 
     public Drill(){
     }
@@ -98,6 +116,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.initStructureInventories();
     }
 
+
     private void clearHologram(){
         this.getHologram().getLines().clear();
     }
@@ -126,7 +145,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         packetContainer.getIntegers().write(0, this.getPacketKey());
 
 
-        new BukkitRunnable() {
+        BukkitTask task = new BukkitRunnable() {
             @Override
             public void run() {
                 if (!drill.isMuted()) {
@@ -167,6 +186,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         } else {
                             drill.scheduleLootMining(foundResources, p);
                         }
+                        drill.getTasks().remove(Integer.valueOf(this.getTaskId()));
                         this.cancel();
                     }
                 }
@@ -175,6 +195,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                 stage[0]++;
             }
         }.runTaskTimer(plugin, (long) Math.ceil((oneStoneDuration / 11) * 20), (long) Math.ceil((oneStoneDuration / 11) * 20));
+
+        this.getTasks().add(task.getTaskId());
     }
 
     private void scheduleLootMining(HashMap<Resource, Double> resources, OfflinePlayer p){
@@ -192,7 +214,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         for (Map.Entry<Resource, Double> entry : mined.entrySet()){
             Resource resource = entry.getKey();
             Double kgMined = entry.getValue();
-            this.getHologram().getLines().appendText(" - " + resource.getName() + ": " + df.format(kgMined) + "Kg");
+            this.getHologram().getLines().appendText(" - " + resource.getName() + ": " + returnCompressed(kgMined, 2) + "Kg");
         }
         this.correctHologramPosition();
 
@@ -209,7 +231,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             double totalSeconds = kgLeft[0] / miningPerSecond;
             final int[] stage = {0};
 
-            new BukkitRunnable() {
+            BukkitTask task = new BukkitRunnable() {
                 @Override
                 public void run() {
                     if (!drill.isMuted()) {
@@ -231,7 +253,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                             if (hologramLine instanceof TextHologramLine) {
                                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
                                 if (textHologramLine.getText().contains(resource2.getName())) {
-                                    textHologramLine.setText(" - " + resource2.getName() + ": " + df.format(kgMined2) + "Kg");
+                                    textHologramLine.setText(" - " + resource2.getName() + ": " + returnCompressed(kgMined2, 2) + "Kg");
                                 }
                             }
                         }
@@ -242,6 +264,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         protocolManager.broadcastServerPacket(packetContainer);
                         drill.scheduleLootFinding(p);
                         drill.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
+                        drill.getTasks().remove(Integer.valueOf(this.getTaskId()));
                         this.cancel();
                     }
                     packetContainer.getIntegers().write(1, stage[0]);
@@ -249,6 +272,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                     stage[0]++;
                 }
             }.runTaskTimer(plugin, (long) ((totalDelay + (totalSeconds / 11)) * 20), (long) (((totalSeconds / 11)) * 20));
+            this.getTasks().add(task.getTaskId());
+
             totalDelay += totalSeconds + 0.05;
         }
 
@@ -274,6 +299,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         for (Location loc : locations){
             Block block = loc.getBlock();
             destroyedBlocks.add(block.getState());
+        }
+        for (Location loc : locations){
+            Block block = loc.getBlock();
             block.setType(Material.AIR);
         }
 
@@ -302,38 +330,48 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
 
     @Override
-    public ItemStack destroy(boolean offline){
-        for (BlockState destroyedBlock : destroyedBlocks){
-            destroyedBlock.update(true);
-            if (destroyedBlock.getBlockData().getAsString().contains("half=")) {
-                if (!offline) {
-                    if (destroyedBlock.getBlockData().getAsString().contains("half=upper")) {
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                destroyedBlock.getBlock().setType(destroyedBlock.getType());
-                                Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
-                                BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=lower]");
-                                locUp.getBlock().setBlockData(blockData2);
-                            }
-                        }.runTaskLater(plugin, 1l);
-                    } else if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                destroyedBlock.getBlock().setType(destroyedBlock.getType());
-                                Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
-                                BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
-                                locUp.getBlock().setBlockData(blockData2);
-                            }
-                        }.runTaskLater(plugin, 1l);
+    public ItemStack destroy(UUID uuid, boolean offline){
+        this.collectResources(uuid, new ArrayList<>(this.getResources().keySet()), true);
+        this.getHologram().delete();
+        for (Integer taskID : this.getTasks()){
+            Bukkit.getScheduler().cancelTask(taskID);
+        }
+        for (int i = 0; i < 2; i++) {
+            for (BlockState destroyedBlock : destroyedBlocks) {
+                destroyedBlock.update(true);
+                if (destroyedBlock.getBlockData().getAsString().contains("half=")
+                        && !destroyedBlock.getType().toString().contains("STAIRS")
+                        && !destroyedBlock.getType().toString().contains("TRAPDOOR")) {
+                    if (!offline) {
+                        if (destroyedBlock.getBlockData().getAsString().contains("half=upper")) {
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    destroyedBlock.getBlock().setType(destroyedBlock.getType());
+                                    Location locDown = destroyedBlock.getLocation().clone().add(0, -1, 0);
+                                    BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=lower]");
+                                    locDown.getBlock().setBlockData(blockData2);
+                                }
+                            }.runTaskLater(plugin, 2l);
+                        } else if (destroyedBlock.getBlockData().getAsString().contains("half=lower")) {
+                            new BukkitRunnable() {
+                                @Override
+                                public void run() {
+                                    destroyedBlock.getBlock().setType(destroyedBlock.getType());
+                                    Location locUp = destroyedBlock.getLocation().clone().add(0, 1, 0);
+                                    BlockData blockData2 = Bukkit.createBlockData(destroyedBlock.getType(), "[half=upper]");
+                                    locUp.getBlock().setBlockData(blockData2);
+                                }
+                            }.runTaskLater(plugin, 2l);
+                        }
+                    } else {
+                        if (!savedBlocks.containsKey(destroyedBlock.getLocation())) {
+                            savedBlocks.put(destroyedBlock.getLocation(), destroyedBlock.getBlockData());
+                        }
                     }
-                } else {
-                    savedBlocks.put(destroyedBlock.getLocation(), destroyedBlock.getBlockData());
+
                 }
-
             }
-
         }
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
@@ -348,6 +386,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         nbt.a("drilltier", this.getDrillTier());
         nbt.a("drilltype", this.getDrillType().getNameFromDrillType());
         nmsItem.c(nbt);
+        structures.get(uuid).remove(this);
         return CraftItemStack.asBukkitCopy(nmsItem);
 
     }
@@ -508,7 +547,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             ItemMeta itemMeta = item.getItemMeta();
             itemMeta.setDisplayName(format("&f" + itemMeta.getDisplayName()));
             ArrayList<String> lore = new ArrayList<>();
-            lore.add(format("&7Weight: &f" + df.format(weight) + "kg"));
+            lore.add(format("&7Weight: &f" + returnCompressed(weight, 2) + "kg"));
             lore.add("");
             lore.add(format("&a&nClick to collect"));
             itemMeta.setLore(lore);
@@ -532,26 +571,28 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         return resourceList.size();
     }
 
-    public void collectResources(Player p, ArrayList<Integer> indexes, boolean silent){
-        PlayerProfile playerProfile = getPlayerProfile(p);
+    public void collectResources(UUID uuid, ArrayList<Integer> indexes, boolean silent){
+        PlayerProfile playerProfile = getPlayerProfile(uuid);
         int sortingIndex = playerProfile.getSortingIndex();
         resourceCategory filterCategory = playerProfile.getFilterCategory();
         List<Map.Entry<Integer, Double>> resourceList = this.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
         Collections.sort(resourceList, resourceComparators[sortingIndex]);
         for (int index : indexes) {
-            Map.Entry<Integer, Double> entry = resourceList.get(index);
-            int key = entry.getKey();
-            double leftOver = playerProfile.getBackPack().addResource(key, entry.getValue());
+            double kg = this.getResources().get(index);
+            int key = index;
+            double leftOver = playerProfile.getBackPack().addResource(key, kg);
             this.getResources().remove(key);
             if (leftOver > 0) {
                 this.getResources().put(key, leftOver);
                 break;
             }
-            if (!silent) {
+            if (Bukkit.getOfflinePlayer(uuid).isOnline() && !silent){
+                Player p = Bukkit.getPlayer(uuid);
                 p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
             }
         }
-        if (silent){
+        if (Bukkit.getOfflinePlayer(uuid).isOnline() && silent){
+            Player p = Bukkit.getPlayer(uuid);
             p.playSound(p, Sound.BLOCK_NOTE_BLOCK_PLING, 1, 1);
         }
         this.updateInventories();
@@ -570,15 +611,16 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             resourceCategory filterCategory = playerProfile.getFilterCategory();
             int maxAmountOfPages = getMaxAmountOfPages(filterCategory);
             int currentPage = Integer.parseInt(name.split("page ")[1].split("/")[0]);
-            if (e.getRawSlot() < 36){
+            if (e.getRawSlot() < 36 && e.getRawSlot() >= 0){
                 int index = e.getRawSlot() + (35 * (currentPage - 1));
                 ArrayList<Integer> indexes = new ArrayList<>();
                 indexes.add(index);
-                drill.collectResources(p, indexes, false);
+                drill.collectResources(p.getUniqueId(), indexes, false);
             } else {
                 switch (e.getRawSlot()) {
                     case 47:
-                        drill.destroy(false);
+                        p.closeInventory();
+                        p.getInventory().addItem(drill.destroy(p.getUniqueId(), false));
                         break;
                     case 49:
                         int amountOfItems = drill.getAmountOfResources(sortingIndex, filterCategory);
@@ -586,7 +628,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         for (int i = 0; i < amountOfItems; i++){
                             indexes.add(i);
                         }
-                        drill.collectResources(p, indexes, true);
+                        drill.collectResources(p.getUniqueId(), indexes, true);
                         break;
                     case 46:
                         if (drill.isMuted()) {
@@ -731,5 +773,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
     public void setMuted(boolean muted) {
         this.muted = muted;
+    }
+
+    public ArrayList<Integer> getTasks() {
+        return tasks;
     }
 }

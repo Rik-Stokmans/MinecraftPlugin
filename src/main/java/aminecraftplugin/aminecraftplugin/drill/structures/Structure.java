@@ -36,7 +36,7 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 public interface Structure {
 
     public void place(Player p);
-    public ItemStack destroy(boolean offline);
+    public ItemStack destroy(UUID uuid, boolean offline);
     public String getStructureName();
     public Location getLocation();
     public ArrayList<Location> getLocations();
@@ -44,6 +44,9 @@ public interface Structure {
 
     @EventHandler public void structurePlace(BlockPlaceEvent e);
 
+    public static final String[] destroyableMaterials = {"BANNER", "BUTTON", "SIGN", "DRIPLEAF", "CACTUS", "BAMBOO", "VINES", "LICHEN", "LILY_PAD",
+    "REDSTONE", "RAIL", "STRING", "LANTERN", "DRIPSTONE", "FROGSPAWN", "AMETHYST", "TRIPWIRE_HOOK", "LEVER", "SPORE_BLOSSOM", "NETHER_SPROUTS", "CRIMSON_ROOTS",
+    "CRIMSON_FUNGUS", "WARPED_ROOTS", "WARPED_FUNGUS", "HANGING_ROOTS", "SEA_PICKLE", "AZALEA", "FARMLAND", "SCULK VEIN"};
 
     HashMap<UUID, ArrayList<Structure>> structures = new HashMap<>();
     HashMap<UUID, Integer> scheduleRemoveStructures = new HashMap<>();
@@ -62,16 +65,34 @@ public interface Structure {
     }
 
     static void destroyAll(){
+        HashMap<UUID, ArrayList<Structure>> offline = new HashMap<>();
+        HashMap<UUID, ArrayList<Structure>> online = new HashMap<>();
+
         for (Map.Entry<UUID, ArrayList<Structure>> entry : structures.entrySet()){
             UUID uuid = entry.getKey();
+            offline.put(uuid, new ArrayList<>());
+            online.put(uuid, new ArrayList<>());
             for (Structure structure : entry.getValue()) {
                 if (scheduleRemoveStructures.containsKey(uuid)) {
-                    playerProfiles.get(uuid).addOfflineItem(structure.destroy(true));
+                    offline.get(uuid).add(structure);
                 } else {
-                    Bukkit.getPlayer(uuid).getInventory().addItem(structure.destroy(true));
+                    online.get(uuid).add(structure);
                 }
             }
         }
+        for (Map.Entry<UUID, ArrayList<Structure>> entry : offline.entrySet()){
+            UUID uuid = entry.getKey();
+            for (Structure structure : entry.getValue()) {
+                playerProfiles.get(uuid).addOfflineItem(structure.destroy(uuid, true));
+            }
+        }
+        for (Map.Entry<UUID, ArrayList<Structure>> entry : online.entrySet()){
+            UUID uuid = entry.getKey();
+            for (Structure structure : entry.getValue()) {
+                Bukkit.getPlayer(uuid).getInventory().addItem(structure.destroy(uuid, true));
+            }
+        }
+
     }
 
     static void saveLongGrass(){
@@ -190,7 +211,7 @@ public interface Structure {
             int widthCeiling = (int) Math.ceil(((width + 2) - 1) / 2);
             for (int w = widthFloor; w <= widthCeiling; w++){
 
-                for (int h = 1; h <= height; h++){
+                for (int h = 1; h <= height + 1; h++){
                     Location loc = location.clone().add(
                             (l * pair.getKey() + w * pair.getValue()),
                             h - 1,
@@ -219,6 +240,60 @@ public interface Structure {
                             locations.add(locUp);
                         }
                         locUp = locUp.clone().add(0,1,0);
+                    }
+
+                    ArrayList<Location> allLocationsAround = new ArrayList<>();
+                    ArrayList<Location> locationsAround = new ArrayList<>();
+                    locationsAround.add(loc.clone());
+                    while (true) {
+                        ArrayList<Location> locationsNotToBeRemoved = new ArrayList<>();
+                        ArrayList<Location> locationsToBeAddedToLocationsAround = new ArrayList<>();
+                        for (Location loc1 : locationsAround) {
+                            allLocationsAround.add(loc1);
+                            for (double x = loc1.getX() - 1; x < loc1.getX() + 1.01; x++) {
+                                for (double y = loc1.getY() - 1; y < loc1.getY() + 1.01; y++) {
+                                    for (double z = loc1.getZ() - 1; z < loc1.getZ() + 1.01; z++) {
+                                        Location location1 = new Location(loc.getWorld(), x, y, z);
+                                        boolean con = true;
+                                        for (Location location2 : allLocationsAround){
+                                            if (location2.equals(location1)){
+                                                con = false;
+                                            }
+                                        }
+                                        if (!con) continue;
+                                        locationsToBeAddedToLocationsAround.add(location1);
+                                        for (String s : destroyableMaterials) {
+                                            if (location1.getBlock().getType().toString().contains(s)) {
+                                                locationsNotToBeRemoved.add(location1);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        for (Location loc1 : locationsToBeAddedToLocationsAround){
+                            locationsAround.add(loc1);
+                        }
+                        ArrayList<Location> locationsToBeRemoved = new ArrayList<>();
+                        for (Location loc1 : locationsAround){
+                            if (!locationsNotToBeRemoved.contains(loc1)){
+                                locationsToBeRemoved.add(loc1);
+                            }
+                        }
+                        for (Location loc1 : locationsToBeRemoved){
+                            locationsAround.remove(loc1);
+                        }
+                        if (locationsNotToBeRemoved.isEmpty()){
+                            for (Location loc1 : locationsAround) {
+                                allLocationsAround.add(loc1);
+                            }
+                            break;
+                        }
+                    }
+                    for (Location loc1 : allLocationsAround){
+                        if (!locations.contains(loc1) && !ignoredLocations.contains(loc1)){
+                            locations.add(loc1);
+                        }
                     }
 
                     if (!locations.contains(loc) && !ignoredLocations.contains(loc)) {

@@ -217,7 +217,7 @@ public class Market implements Listener {
     //gui methods
     private void openMarket(Player p) {
         p.openInventory(marketCategoryGuiMenu);
-        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 0.1);
+        if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 1.0);
     }
 
 
@@ -269,7 +269,11 @@ public class Market implements Listener {
         if (invName.equals(format("&eCategory Selector"))) {
 
             if (clickedItem.isSimilar(addItemToMenu)) {
-                openAddItemMenu(p);
+                if (p.isOp()) {
+                    openAddItemMenu(p);
+                } else {
+                    p.sendMessage(format("&cOnly operators can edit markets"));
+                }
             }
 
             e.setCancelled(true);
@@ -335,15 +339,10 @@ public class Market implements Listener {
         }
         else if (invName.equals(format("&eAdd item"))) {
             e.setCancelled(true);
-            if (p.isOp()) {
-                if (getKeyFromItemstack(clickedItem) == -1) return;
-                latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
-                p.openInventory(marketCategoryGuiMenu);
-                latestMarketOpen.get(p).updateTrades();
-            } else {
-                p.sendMessage(format("&cOnly operators can edit markets"));
-            }
-
+            if (getKeyFromItemstack(clickedItem) == -1) return;
+            latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
+            p.openInventory(marketCategoryGuiMenu);
+            latestMarketOpen.get(p).updateTrades();
         }
         //when a player wants to buy or sell a item
         if (buySellOrder) {

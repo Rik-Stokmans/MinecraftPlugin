@@ -69,14 +69,14 @@ public final class Main extends JavaPlugin {
             getServer().getPluginManager().registerEvents(l, this);
         }
 
+        //resource loading data
+        Resource.init();
+
         //playerprofiles loading data
         PlayerProfile.init();
 
         //loottable loading data
         LootTable.init();
-
-        //resource loading data
-        Resource.init();
 
         //market things
         Market.init();

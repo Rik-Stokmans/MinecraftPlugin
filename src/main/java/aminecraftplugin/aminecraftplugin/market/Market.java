@@ -125,7 +125,7 @@ public class Market implements Listener {
 
 
     public void generateHologram() {
-        this.hologram = api.createHologram(this.getLocation().clone().add(0.5, 1.8, 0.5));
+        this.hologram = api.createHologram(this.getLocation().clone().add(0.5, 3.1875, 0.5));
         hologram.getLines().appendText(format(name));
     }
 
@@ -220,19 +220,16 @@ public class Market implements Listener {
         if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 1.0);
     }
 
-
-
-    //function that detects if a player clicks on a market block
     @EventHandler
-    public void marketClick(PlayerInteractEvent e) {
-        Player player = e.getPlayer();
-        if (!e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
-        Location clickLocation = e.getClickedBlock().getLocation();
-
+    public void click(net.citizensnpcs.api.event.NPCRightClickEvent e){
+        //Handle a click on a NPC. The event has a getNPC() method.
+        //Be sure to check event.getNPC() == this.getNPC() so you only handle clicks on this NPC!
+        Player p = e.getClicker();
+        Location location = e.getNPC().getStoredLocation();
         for (Market m : markets.values()) {
-            if (m.location.equals(clickLocation)) {
-                latestMarketOpen.put(player, m);
-                openMarket(player);
+            if (m.location.distance(location) < 1.5) {
+                latestMarketOpen.put(p, m);
+                openMarket(p);
             }
         }
     }

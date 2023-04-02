@@ -553,6 +553,25 @@ public class Market implements Listener {
 
 
 
+    public static void closePlayerInventories() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            String invName = p.getOpenInventory().getTitle();
+
+            if (invName.equals(format("&eCategory Selector")) ||
+                    invName.equals(format("&eMetals")) ||
+                    invName.equals(format("&eEnergy")) ||
+                    invName.equals(format("&eGemstones")) ||
+                    invName.equals(format("&eOther")) ||
+                    invName.equals(format("&eChange Order Size")) ||
+                    invName.equals(format("&eAdd item")))
+            {
+                p.closeInventory();
+            }
+        }
+    }
+
+
+
     //method to make the main menu for all markets
     private static void initialiseMarketCategoryGuiMenu() {
         marketCategoryGuiMenu = Bukkit.createInventory(null, 27, format("&eCategory Selector"));

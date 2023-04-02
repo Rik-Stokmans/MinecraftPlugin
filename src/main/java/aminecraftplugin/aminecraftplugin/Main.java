@@ -13,6 +13,7 @@ import aminecraftplugin.aminecraftplugin.drill.structures.Structure;
 import aminecraftplugin.aminecraftplugin.drill.structures.StructureEvent;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import aminecraftplugin.aminecraftplugin.sideSkills.adventuring.AdventureSkill;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
@@ -62,6 +63,7 @@ public final class Main extends JavaPlugin {
         //list of events
         events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
         events.add(new PlayerProfile()); events.add(new Drill()); events.add(new StructureEvent()); events.add(new Backpack());
+        events.add(new AdventureSkill());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);
@@ -136,6 +138,7 @@ public final class Main extends JavaPlugin {
 
         //market save
         Market.saveMarketsToFile();
+        Market.closePlayerInventories();
 
 
     }

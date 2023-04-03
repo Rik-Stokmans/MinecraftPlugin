@@ -1,6 +1,8 @@
 package aminecraftplugin.aminecraftplugin;
 
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -9,7 +11,11 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 import java.util.Locale;
 
@@ -37,11 +43,43 @@ public class events implements Listener {
     }
 
     @EventHandler
+    private void breakEvent(PlayerInteractEvent e){
+        Player p = e.getPlayer();
+        if (!p.getGameMode().equals(GameMode.CREATIVE)){
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
     private void placeEvent(BlockPlaceEvent e){
         Player p = e.getPlayer();
         if (!p.getGameMode().equals(GameMode.CREATIVE)){
             e.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    private void damageEvent(EntityDamageByEntityEvent e){
+        if (e.getDamager() instanceof Player) {
+            Player p = (Player) e.getDamager();
+            if (!p.getGameMode().equals(GameMode.CREATIVE)) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    private void rightClickArmorStand(PlayerArmorStandManipulateEvent e){
+        Player p = e.getPlayer();
+        if (!p.getGameMode().equals(GameMode.CREATIVE)) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    private void onDeath(PlayerRespawnEvent e){
+        Location spawnLocation = new Location(Bukkit.getWorld("Map"), 468.5, 71, -46.5);
+        e.setRespawnLocation(spawnLocation);
     }
 
 }

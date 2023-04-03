@@ -16,15 +16,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.openResourceGUI;
+import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.resourceComparators;
+import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
+import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
 public class LootTable implements Listener {
@@ -32,7 +32,6 @@ public class LootTable implements Listener {
 
     //resource weight factor
     public static HashMap<Integer, LootTable> lootTableHashMap = new HashMap<>();
-    private static YamlConfiguration loottableFile;
     private static HashMap<Player, LootTable> lootTableBrowsing = new HashMap<>();
     public static HashMap<Player, LootTable> lootTableAdding = new HashMap<>();
 
@@ -64,7 +63,7 @@ public class LootTable implements Listener {
     public LootTable(String name, Location location){
         this.name = name;
         this.location = location;
-        this.ID = findNewID();
+        this.ID = findNewLootTableID();
         lootTableHashMap.put(this.ID, this);
     }
 
@@ -84,6 +83,16 @@ public class LootTable implements Listener {
         }
     }
 
+    public int findNewLootTableID(){
+        int index = 1;
+        while(true){
+            if (!lootTableHashMap.keySet().contains(index)){
+                break;
+            }
+            index++;
+        }
+        return index;
+    }
 
     public int findNewID(){
         int index = 1;
@@ -110,9 +119,19 @@ public class LootTable implements Listener {
             e.setCancelled(true);
             Player p = (Player) e.getWhoClicked();
             int slot = e.getRawSlot();
-            if (lootTableHashMap.containsKey(slot + 1)){
-                LootTable lootTable = lootTableHashMap.get(slot + 1);
-                lootTable.openLoottableMenu(p, 1);
+            ArrayList<Map.Entry<Integer, LootTable>> resourceList = new ArrayList<>(lootTableHashMap.entrySet());
+
+            if (resourceList.get(slot) != null){
+                Map.Entry<Integer, LootTable> entry = resourceList.get(slot);
+                LootTable lootTable = entry.getValue();
+                if (e.getClick().equals(ClickType.DROP)){
+                    if (lootTableAdding.containsKey(p)) lootTableAdding.remove(p);
+                    if (lootTableBrowsing.containsKey(p)) lootTableBrowsing.remove(p);
+                    lootTableHashMap.remove(entry.getKey());
+                    this.openSelectLoottableMenu(p);
+                } else {
+                    lootTable.openLoottableMenu(p, 1);
+                }
             }
         } else if (name.contains("Loot Table Page ")){
             e.setCancelled(true);
@@ -194,7 +213,7 @@ public class LootTable implements Listener {
                 ArrayList<String> lore = new ArrayList<>();
                 lore.add(format("&e-----Table info-----"));
                 lore.add(format("&7ID: &f" + ID));
-                lore.add(format("&7Spawn factor: &f" + factor));
+                lore.add(format("&7Spawn factor: &f" + returnCompressed(Double.valueOf(factor), 1)));
                 lore.add(format("&aLeft click to increase factor"));
                 lore.add(format("&cRight click to decrease factor"));
                 lore.add(format("&e-----Resource info-----"));
@@ -258,7 +277,7 @@ public class LootTable implements Listener {
             for (Integer i2 : lootTable.getIDs()){
                 Resource resource = lootTable.IDinTableToResource(i2);
                 Float f = lootTable.getTable().get(i2);
-                lore.add(format("&f  - &7" + resource.getName() + ": &f" + f + " w"));
+                lore.add(format("&f  - &7" + resource.getName() + ": &f" + returnCompressed(Double.valueOf(f), 1) + " w"));
             }
             listMeta.setLore(lore);
             list.setItemMeta(listMeta);
@@ -307,6 +326,7 @@ public class LootTable implements Listener {
 
     public static void saveLoottables() throws IOException {
 
+        YamlConfiguration loottableFile = new YamlConfiguration();
         for (Map.Entry<Integer, LootTable> set : lootTableHashMap.entrySet()) {
 
             int id = set.getKey();
@@ -336,7 +356,7 @@ public class LootTable implements Listener {
 
     public static HashMap<Integer, LootTable> loadLoottables() throws IOException {
 
-        loottableFile = loadFile("loottables.yml");
+        YamlConfiguration loottableFile = loadFile("loottables.yml");
         if (loottableFile == null) return new HashMap<>();
         if (loottableFile.getConfigurationSection("data") == null) return new HashMap<>();
 

@@ -26,7 +26,7 @@ public class SideSkill {
             level++;
             xp -= xpNeeded;
             xpNeeded = 10 * Math.pow(Math.E, Math.pow(level, 0.4));
-            Bukkit.broadcastMessage("you leveled up");
+            p.sendMessage(format("&8 >> &eyou leveled up"));
             sendMiningActionbar(p, addedAmount);
             return true;
         } else  {

@@ -63,7 +63,7 @@ public final class Main extends JavaPlugin {
         //list of events
         events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
         events.add(new PlayerProfile()); events.add(new Drill()); events.add(new StructureEvent()); events.add(new Backpack());
-        events.add(new MiningSkill());
+        events.add(new MiningSkill()); events.add(new miningResourceMenu());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);
@@ -103,6 +103,7 @@ public final class Main extends JavaPlugin {
         new Command("addmaterial", new addMaterialCommand(), new materialTabCompleter());
         new Command("addmoney", new addMoneyCommand(), new numTabCompleter());
         new Command("backpack", new openBackPackCommand(), new nullTabCompleter());
+        new Command("miningResourceMenu", new miningResourceMenu(), new nullTabCompleter());
 
         //ticker all
         BukkitScheduler scheduler = getServer().getScheduler();

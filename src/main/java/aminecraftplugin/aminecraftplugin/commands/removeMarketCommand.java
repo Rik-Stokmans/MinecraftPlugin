@@ -1,11 +1,14 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
 import aminecraftplugin.aminecraftplugin.market.Market;
+import net.citizensnpcs.api.CitizensAPI;
+import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.npc.CitizensNPC;
 import org.bukkit.Location;
-import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,16 +22,19 @@ public class removeMarketCommand implements CommandExecutor {
         if (commandSender instanceof Player) {
             Player p = (Player) commandSender;
 
-            Block targetBlock = p.getTargetBlock(null, 5);
-            if (targetBlock == null) return false;
+            Entity targetEntity = p.getTargetEntity(5);
+            Location marketLocation = targetEntity.getLocation();
 
-            Location marketLocation = targetBlock.getLocation();
+            if (targetEntity == null || !targetEntity.hasMetadata("NPC")) {
+                p.sendMessage(format("&cNo Npc found"));
+                return true;
+            }
+
             int marketToRemove = -1;
             for (Market m : markets.values()) {
-                if (m.getLocation().equals(targetBlock.getLocation())) {
+                if (m.getLocation().equals(marketLocation)) {
                     marketToRemove = m.getKey();
                     marketLocation = m.getLocation();
-                    m.getHologram().delete();
                 }
             }
             if (marketToRemove != -1) {
@@ -36,6 +42,7 @@ public class removeMarketCommand implements CommandExecutor {
                 p.sendMessage(format(" "));
                 p.sendMessage(format("&8 >> &7Market removed"));
                 p.sendMessage(format(" &8 ( " + marketLocation.getX() + ", " + marketLocation.getY() + ", " + marketLocation.getZ() + " )"));
+                CitizensAPI.getNPCRegistry().getNPC(targetEntity).destroy();
                 return true;
             }
         }

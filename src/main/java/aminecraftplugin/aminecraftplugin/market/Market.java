@@ -36,13 +36,13 @@ import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 public class Market implements Listener {
 
     //ui/ux
-    private static ItemStack backButton;
+    public  static ItemStack backButton;
     private static ItemStack previousPageButton;
     private static ItemStack nextPageButton;
     private static ItemStack addItemButton;
     private static ItemStack removeItemButton;
-    private static ItemStack darkDivider;
-    private static ItemStack lightDivider;
+    public  static ItemStack darkDivider;
+    public  static ItemStack lightDivider;
     private static ItemStack metalsCategoryButton;
     private static ItemStack energyCategoryButton;
     private static ItemStack gemstonesCategoryButton;
@@ -57,6 +57,8 @@ public class Market implements Listener {
     private static ItemStack orderRemoveTen;
     private static ItemStack orderRemoveOne;
     private static ItemStack addItemToMenu;
+    public  static ItemStack addMiningResource;
+    public  static ItemStack removeMiningResource;
 
     public static Inventory marketCategoryGuiMenu;
     public static Inventory marketOrderSizeMenu;
@@ -77,7 +79,6 @@ public class Market implements Listener {
     private Inventory energyGuiMenu;
     private Inventory gemstonesGuiMenu;
     private Inventory otherItemsGuiMenu;
-    private Hologram hologram;
     private int strength = 1000;
     private int key;
 
@@ -108,7 +109,6 @@ public class Market implements Listener {
         strength = _strength;
         trades = new HashMap<>();
         generateMarketMenus();
-        generateHologram();
     }
 
     //when loading from file
@@ -119,14 +119,6 @@ public class Market implements Listener {
         trades = _trades;
         strength = _strength;
         generateMarketMenus();
-        generateHologram();
-    }
-
-
-
-    public void generateHologram() {
-        this.hologram = api.createHologram(this.getLocation().clone().add(0.5, 3.1875, 0.5));
-        hologram.getLines().appendText(format(name));
     }
 
 
@@ -490,6 +482,14 @@ public class Market implements Listener {
         addItemToMenuLore.add(format("&7Add a &eitem &7to this market"));
         addItemToMenu = createGuiItem("&eAdd item", addItemToMenuLore, Material.GREEN_GLAZED_TERRACOTTA);
 
+        ArrayList<String> addMiningResourceLore = new ArrayList<>();
+        addMiningResourceLore.add(format("&7Add a &eminable resource"));
+        addMiningResource = createGuiItem("&eAdd a mining resource", addItemToMenuLore, Material.GREEN_GLAZED_TERRACOTTA);
+
+        ArrayList<String> removeMiningResourceLore = new ArrayList<>();
+        removeMiningResourceLore.add(format("&7Remove a &eminable resource"));
+        removeMiningResource = createGuiItem("&eRemove a mining resource", addItemToMenuLore, Material.RED_GLAZED_TERRACOTTA);
+
         darkDivider = createGuiItem(" ", new ArrayList<>(), Material.BLACK_STAINED_GLASS_PANE);
         lightDivider = createGuiItem(" ", new ArrayList<>(), Material.GRAY_STAINED_GLASS_PANE);
     }
@@ -728,12 +728,6 @@ public class Market implements Listener {
     }
     public void setKey(int key) {
         this.key = key;
-    }
-    public Hologram getHologram() {
-        return hologram;
-    }
-    public void setHologram(Hologram hologram) {
-        this.hologram = hologram;
     }
     public int getStrength() {
         return strength;

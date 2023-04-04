@@ -25,6 +25,8 @@ public class EnergySource implements Structure, Listener {
     private Hologram hologram;
     private org.bukkit.structure.Structure structure;
     private ArrayList<Integer> tasks = new ArrayList<>();
+    private double energyGain;
+    private double energyCap;
 
     @Override
     public void place(Player p) {

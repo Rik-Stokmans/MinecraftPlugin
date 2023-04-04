@@ -1,14 +1,12 @@
 package aminecraftplugin.aminecraftplugin.sideSkills;
 
 import aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.UUID;
 
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
-import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 
 public class SideSkill {
 

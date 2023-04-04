@@ -24,6 +24,9 @@ public class removeMarketCommand implements CommandExecutor {
 
             Entity targetEntity = p.getTargetEntity(5);
             Location marketLocation = targetEntity.getLocation();
+            marketLocation.set(Math.floor(marketLocation.getX()) + 0.5,Math.floor(marketLocation.getY()),Math.floor(marketLocation.getZ()) + 0.5);
+            marketLocation.setPitch(0);
+            marketLocation.setYaw(0);
 
             if (targetEntity == null || !targetEntity.hasMetadata("NPC")) {
                 p.sendMessage(format("&cNo Npc found"));

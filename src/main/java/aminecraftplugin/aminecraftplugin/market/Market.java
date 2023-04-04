@@ -227,20 +227,6 @@ public class Market implements Listener {
     }
 
     @EventHandler
-    public void marketDestroy(BlockBreakEvent e) {
-        Player p = e.getPlayer();
-
-        Location breakLocation = e.getBlock().getLocation();
-
-        for (Market m : markets.values()) {
-            if (m.location.equals(breakLocation)) {
-                e.setCancelled(true);
-                p.sendMessage(format("&cYou can't break a market, remove it with &e/removeMarket"));
-            }
-        }
-    }
-
-    @EventHandler
     public void inventoryClick(InventoryClickEvent e) {
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null) return;

@@ -1,12 +1,10 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
-import aminecraftplugin.aminecraftplugin.market.Market;
-import aminecraftplugin.aminecraftplugin.market.Trade;
-import aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill;
 import aminecraftplugin.aminecraftplugin.sideSkills.mining.Ore;
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,14 +21,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getKeyFromItemstack;
 import static aminecraftplugin.aminecraftplugin.market.Market.*;
-import static aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill.addOre;
-import static aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill.ores;
+import static aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
-import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 
 public class miningResourceMenu implements CommandExecutor, Listener {
+
+    private enum Edit {
+        ORE,
+        ORE_REPLACEMENT,
+        ITEM_REWARD,
+        XP_REWARD
+    }
+
+    private static HashMap<Player, Edit> playerEditInfo = new HashMap<>();
+    private static HashMap<Player, Integer> currentEdit = new HashMap<>();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -88,6 +93,12 @@ public class miningResourceMenu implements CommandExecutor, Listener {
             if (p.getOpenInventory().getTitle().equals(format("&eMining Resource Menu"))) openMiningResourceMenu(p);
         }
     }
+    private void updateAllOpenEditMiningResourceMenus() {
+        for (Player p : currentEdit.keySet()) {
+            int ID = currentEdit.get(p);
+            if (p.getOpenInventory().getTitle().equals(format("&eEdit Mining Resource"))) openAddMiningResourceMenu(p, ID);
+        }
+    }
 
 
 
@@ -102,13 +113,16 @@ public class miningResourceMenu implements CommandExecutor, Listener {
         Player p = (Player) e.getWhoClicked();
 
         if (invName.equals(format("&eMining Resource Menu"))) {
-            if (e.getSlot() <= 35) {
+            if (e.getRawSlot() <= 35) {
                 //getting the ID from the nbt
                 net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(clickedItem);
                 NBTTagCompound nbt = nmsItem.u();
                 int ID = nbt != null ? nbt.h("id") : -1;
                 p.sendMessage(String.valueOf(ID));
-                if (ID != -1 && ores.containsKey(ID)) openAddMiningResourceMenu(p, ID);
+                if (ID != -1 && ores.containsKey(ID)) {
+                    currentEdit.put(p, ID);
+                    openAddMiningResourceMenu(p, ID);
+                }
             }
             else if (clickedItem.isSimilar(addMiningResource)) {
                 Ore ore = new Ore(new ItemStack(Material.COAL), Material.COAL_ORE, Material.STONE, 0);
@@ -117,7 +131,49 @@ public class miningResourceMenu implements CommandExecutor, Listener {
             }
         }
         else if (invName.equals(format("&eEdit Mining Resource"))) {
+            int rawSlot = e.getRawSlot();
             if (clickedItem.isSimilar(backButton)) openMiningResourceMenu(p);
+
+            else if (rawSlot == 10) playerEditInfo.put(p, Edit.ORE);
+            else if (rawSlot == 12) playerEditInfo.put(p, Edit.ORE_REPLACEMENT);
+            else if (rawSlot == 14) playerEditInfo.put(p, Edit.ITEM_REWARD);
+            else if (rawSlot == 16) playerEditInfo.put(p, Edit.XP_REWARD);
+
+            else if (rawSlot >= 27 && rawSlot <= 62) {
+                if (!playerEditInfo.containsKey(p)) return;
+
+                Edit edit = playerEditInfo.get(p);
+
+                if (edit == Edit.ORE) {
+                    if (!currentEdit.containsKey(p)) return;
+                    Ore ore = getOreFromID(currentEdit.get(p));
+                    if (ore == null) return;
+
+                    if (clickedItem.getType().isBlock()) {
+                        ore.setBlockType(clickedItem.getType());
+                    }
+                }
+                else if (edit == Edit.ORE_REPLACEMENT) {
+                    if (!currentEdit.containsKey(p)) return;
+                    Ore ore = getOreFromID(currentEdit.get(p));
+                    if (ore == null) return;
+
+                    if (clickedItem.getType().isBlock()) {
+                        ore.setBlockReplacement(clickedItem.getType());
+                    }
+                }
+                else if (edit == Edit.ITEM_REWARD) {
+                    if (!currentEdit.containsKey(p)) return;
+                    Ore ore = getOreFromID(currentEdit.get(p));
+                    if (ore == null) return;
+
+                    ore.setReward(clickedItem);
+                }
+                else if (edit == Edit.XP_REWARD) {
+
+                }
+                updateAllOpenEditMiningResourceMenus();
+            }
         }
     }
 

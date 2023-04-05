@@ -27,6 +27,7 @@ public class EnergySource implements Structure, Listener {
     private ArrayList<Integer> tasks = new ArrayList<>();
     private double energyGain;
     private double energyCap;
+    private int range;
 
     @Override
     public void place(Player p) {

@@ -15,6 +15,8 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -24,8 +26,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Properties;
 
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
@@ -36,11 +40,19 @@ public final class Main extends JavaPlugin {
     public static boolean useHolographicDisplays;
     public static HolographicDisplaysAPI api;
     public static ProtocolManager protocolManager;
+    public static World mainWorld;
+
 
     @Override
     public void onEnable() {
 
         plugin = this;
+
+        //get main world
+        File f = new File("server.properties");
+        String world = getString("level-name", f);
+        mainWorld = Bukkit.getWorld(world);
+
 
         //holographicdisplays
         useHolographicDisplays = Bukkit.getPluginManager().isPluginEnabled("HolographicDisplays");
@@ -162,4 +174,22 @@ public final class Main extends JavaPlugin {
         YamlConfiguration file = YamlConfiguration.loadConfiguration(new File(path, s));
         return file;
     }
+
+    private static String getString(String s, File f)
+    {
+        Properties pr = new Properties();
+        try
+        {
+            FileInputStream in = new FileInputStream(f);
+            pr.load(in);
+            String string = pr.getProperty(s);
+            return string;
+        }
+        catch (IOException e)
+        {
+
+        }
+        return "";
+    }
+
 }

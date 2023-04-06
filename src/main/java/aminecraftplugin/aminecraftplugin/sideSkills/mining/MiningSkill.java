@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static aminecraftplugin.aminecraftplugin.Main.mainWorld;
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
 
 public class MiningSkill extends SideSkill implements Listener {
@@ -24,9 +25,9 @@ public class MiningSkill extends SideSkill implements Listener {
     public static void init() {
         ores.put(1, new Ore(new ItemStack(Material.DIAMOND), Material.DIAMOND_ORE, Material.STONE, 1, 1)); //TEMP
         ores.put(2, new Ore(new ItemStack(Material.EMERALD), Material.EMERALD_ORE, Material.STONE, 3, 2)); //TEMP
-        Location diamondLocation = new Location(Bukkit.getWorld("World"), 13.0, 135.0, -44.0); //TEMP
+        Location diamondLocation = new Location(mainWorld, 13.0, 135.0, -44.0); //TEMP
         oreLocations.put(diamondLocation, new OrePlacement(diamondLocation, 1, 50)); //TEMP
-        Location emeraldLocation = new Location(Bukkit.getWorld("World"), 13.0, 136.0, -44.0); //TEMP
+        Location emeraldLocation = new Location(mainWorld, 13.0, 136.0, -44.0); //TEMP
         oreLocations.put(emeraldLocation, new OrePlacement(emeraldLocation, 2, 50)); //TEMP
     }
 

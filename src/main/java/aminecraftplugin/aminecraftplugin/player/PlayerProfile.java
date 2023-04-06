@@ -40,7 +40,7 @@ public class PlayerProfile implements Listener {
     private void joinEvent(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         if (!playerProfiles.containsKey(p.getUniqueId())) {
-            Location spawnLocation = new Location(Bukkit.getWorld("Map"), 468.5, 71, -46.5);
+            Location spawnLocation = new Location(mainWorld, 468.5, 71, -46.5);
             spawnLocation.setYaw(-90.0f);
             p.teleport(spawnLocation);
 

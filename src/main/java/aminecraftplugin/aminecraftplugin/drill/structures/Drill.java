@@ -436,16 +436,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         packetContainer.getIntegers().write(1, -1);
         protocolManager.broadcastServerPacket(packetContainer);
 
-        ItemStack drill = new ItemStack(Material.HOPPER);
-        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
-        NBTTagCompound nbt = nmsItem.u();
-        if (nbt == null) nbt = new NBTTagCompound();
-        nbt.a("drilltier", this.getDrillTier());
-        nbt.a("drilltype", this.getDrillType().getNameFromDrillType());
-        nmsItem.c(nbt);
         structures.get(uuid).remove(this);
-        return CraftItemStack.asBukkitCopy(nmsItem);
 
+        return getDrill(this.getDrillTier(), this.getDrillType().getNameFromDrillType());
     }
 
 

@@ -17,6 +17,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
 
+import static aminecraftplugin.aminecraftplugin.Main.mainWorld;
 import static aminecraftplugin.aminecraftplugin.commands.addSpawnCommand.spawnLocations;
 
 public class events implements Listener {
@@ -86,7 +87,7 @@ public class events implements Listener {
 
     public Location getSpawnLocation(Location deathLoc){
         double shortestDistance = Double.MAX_VALUE;
-        Location spawnLoc = new Location(Bukkit.getWorld("Map"), 468.5, 71, -46.5);
+        Location spawnLoc = new Location(mainWorld, 468.5, 71, -46.5);
         spawnLoc.setYaw(-90.0f);
         for (Location loc : spawnLocations.values()){
             double distance = loc.distance(deathLoc);

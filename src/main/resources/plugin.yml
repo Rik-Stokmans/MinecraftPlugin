@@ -49,6 +49,12 @@ commands:
   miningResourceMenu:
     description: open the menu where you can add/remove mining resources
     usage: /miningResourceMenu
+  setspawn:
+    description: set spawn with a name
+    usage: /setspawn <name>
+  removespawn:
+    description: remove a spawn with name
+    usage: /removespawn <name>
 
 permissions:
   drilz.operator:

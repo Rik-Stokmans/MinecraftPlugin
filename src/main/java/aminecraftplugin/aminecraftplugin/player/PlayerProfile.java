@@ -3,6 +3,8 @@ package aminecraftplugin.aminecraftplugin.player;
 import aminecraftplugin.aminecraftplugin.drill.Backpack;
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -38,6 +40,10 @@ public class PlayerProfile implements Listener {
     private void joinEvent(PlayerJoinEvent e) {
         Player p = e.getPlayer();
         if (!playerProfiles.containsKey(p.getUniqueId())) {
+            Location spawnLocation = new Location(Bukkit.getWorld("Map"), 468.5, 71, -46.5);
+            spawnLocation.setYaw(-90.0f);
+            p.teleport(spawnLocation);
+
             PlayerProfile playerProfile = new PlayerProfile(p);
             playerProfiles.put(p.getUniqueId(), playerProfile);
         }

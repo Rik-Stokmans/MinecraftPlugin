@@ -1,10 +1,7 @@
 package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.commands.*;
-import aminecraftplugin.aminecraftplugin.commands.tabcompleters.getDrillTabCompleter;
-import aminecraftplugin.aminecraftplugin.commands.tabcompleters.materialTabCompleter;
-import aminecraftplugin.aminecraftplugin.commands.tabcompleters.nullTabCompleter;
-import aminecraftplugin.aminecraftplugin.commands.tabcompleters.numTabCompleter;
+import aminecraftplugin.aminecraftplugin.commands.tabcompleters.*;
 import aminecraftplugin.aminecraftplugin.drill.Backpack;
 import aminecraftplugin.aminecraftplugin.drill.structures.Drill;
 import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
@@ -84,6 +81,9 @@ public final class Main extends JavaPlugin {
         //skills things
         MiningSkill.init();
 
+        //load spawn locations
+        addSpawnCommand.init();
+
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -104,6 +104,8 @@ public final class Main extends JavaPlugin {
         new Command("addmoney", new addMoneyCommand(), new numTabCompleter());
         new Command("backpack", new openBackPackCommand(), new nullTabCompleter());
         new Command("miningResourceMenu", new miningResourceMenu(), new nullTabCompleter());
+        new Command("setspawn", new addSpawnCommand(), new spawnTabCompleter());
+        new Command("removespawn", new removeSpawnCommand(), new spawnTabCompleter());
 
         //ticker all
         BukkitScheduler scheduler = getServer().getScheduler();
@@ -144,6 +146,8 @@ public final class Main extends JavaPlugin {
         Market.saveMarketsToFile();
         Market.closePlayerInventories();
 
+        //spawn locations save
+        addSpawnCommand.save();
 
     }
 

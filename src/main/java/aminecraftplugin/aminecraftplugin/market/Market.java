@@ -2,7 +2,6 @@ package aminecraftplugin.aminecraftplugin.market;
 
 import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
 import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
-import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -11,16 +10,12 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +23,6 @@ import java.util.Map;
 
 import static aminecraftplugin.aminecraftplugin.Main.*;
 import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
-import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
-import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 
@@ -81,6 +74,7 @@ public class Market implements Listener {
     private Inventory otherItemsGuiMenu;
     private int strength = 1000;
     private int key;
+    private Hologram hologram;
 
 
     //market init
@@ -109,6 +103,7 @@ public class Market implements Listener {
         strength = _strength;
         trades = new HashMap<>();
         generateMarketMenus();
+        generateHologram();
     }
 
     //when loading from file
@@ -119,9 +114,13 @@ public class Market implements Listener {
         trades = _trades;
         strength = _strength;
         generateMarketMenus();
+        generateHologram();
     }
 
-
+    public void generateHologram() {
+        this.hologram = api.createHologram(this.getLocation().clone().add(0.5, 3.1875, 0.5));
+        hologram.getLines().appendText(format(name));
+    }
 
     //method to generate the inventory of the market
     private void generateMarketMenus() {

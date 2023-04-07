@@ -138,6 +138,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         if (!drill.isMuted()) {
             this.getLocation().getWorld().playSound(this.getLocation(), Sound.BLOCK_STONE_BREAK, 1, 1);
         }
+
+        //set to stone
+        this.getLocation().add(0,-1,0).getBlock().setType(Material.STONE);
+
         final int[] stage = {0};
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
@@ -253,6 +257,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         packetContainer.getBlockPositionModifier().write(0, new BlockPosition((int) this.getLocation().getX(), (int) (this.getLocation().getY() - 1), (int) this.getLocation().getZ()));
         packetContainer.getIntegers().write(0, this.getPacketKey());
         long totalDelay = 0;
+        int totalSize = resources.keySet().size();
+        final int[] countingSize = {0};
         for (Map.Entry<Resource, Double> entry : resources.entrySet()){
             Resource resource = entry.getKey();
             final double[] kgLeft = {entry.getValue()};
@@ -319,9 +325,11 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
                         bukkitTasks[0] = new ArrayList<>();
                         packetContainer.getIntegers().write(1, -1);
                         protocolManager.broadcastServerPacket(packetContainer);
-                        drill.scheduleLootFinding(p);
-                        drill.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
                         drill.getTasks().remove(Integer.valueOf(this.getTaskId()));
+                        countingSize[0]++;
+                        if (countingSize[0] >= totalSize) {
+                            drill.scheduleLootFinding(p);
+                        }
                         this.cancel();
                     }
                     packetContainer.getIntegers().write(1, stage[0]);

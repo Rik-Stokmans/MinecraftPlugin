@@ -1,16 +1,15 @@
 package aminecraftplugin.aminecraftplugin.commands;
 
-import net.minecraft.nbt.NBTTagCompound;
-import org.bukkit.Material;
+import aminecraftplugin.aminecraftplugin.drilling.drill.DrillType;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import static aminecraftplugin.aminecraftplugin.drill.structures.Drill.getDrill;
+import static aminecraftplugin.aminecraftplugin.drilling.drill.Drill.getDrill;
+import static aminecraftplugin.aminecraftplugin.drilling.drill.DrillType.getDrillTypeFromName;
 
 public class getDrillCommand implements CommandExecutor {
     @Override
@@ -21,7 +20,7 @@ public class getDrillCommand implements CommandExecutor {
             for (int i = 1; i < strings.length; i++){
                 name += strings[i];
             }
-            ItemStack drill = getDrill(Integer.parseInt(strings[0]), name);
+            ItemStack drill = getDrill(Integer.parseInt(strings[0]), getDrillTypeFromName(name));
             p.getInventory().addItem(drill);
             return true;
         }

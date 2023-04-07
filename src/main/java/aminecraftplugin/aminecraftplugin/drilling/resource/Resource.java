@@ -1,5 +1,6 @@
-package aminecraftplugin.aminecraftplugin.drill.loot;
+package aminecraftplugin.aminecraftplugin.drilling.resource;
 
+import aminecraftplugin.aminecraftplugin.drilling.loot.LootTable;
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -20,8 +21,8 @@ import java.util.*;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
-import static aminecraftplugin.aminecraftplugin.drill.loot.LootTable.lootTableAdding;
-import static aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory.getCategory;
+import static aminecraftplugin.aminecraftplugin.drilling.loot.LootTable.lootTableAdding;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory.getCategory;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
@@ -341,7 +342,7 @@ public class Resource implements Listener {
             String materialName = resourceFile.getString("data." + key + ".material");
             if (materialName != null) {
                 resourceHashMap.put(Integer.valueOf(key), new Resource(item, name, value, ID, Material.getMaterial(materialName)));
-                categories.get(resourceCategory.ALL).add(ID);
+                if (!categories.get(resourceCategory.ALL).contains(ID)) categories.get(resourceCategory.ALL).add(ID);
             }
         });
         return resourceHashMap;

@@ -1,8 +1,8 @@
-package aminecraftplugin.aminecraftplugin.drill.structures;
+package aminecraftplugin.aminecraftplugin.drilling.drill;
 
-import aminecraftplugin.aminecraftplugin.drill.loot.LootFinder;
-import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
-import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import aminecraftplugin.aminecraftplugin.drilling.loot.LootFinder;
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
+import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
@@ -37,19 +37,20 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static aminecraftplugin.aminecraftplugin.Main.*;
-import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.*;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.categories;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
-import static aminecraftplugin.aminecraftplugin.drill.structures.DrillType.getDrillTypeFromName;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.ResourceSorters.*;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.categories;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.getResourceFromKey;
+import static aminecraftplugin.aminecraftplugin.drilling.drill.DrillType.getDrillTypeFromName;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getCardinalDirection;
 import static aminecraftplugin.aminecraftplugin.utils.Direction.getXandZ;
+import static aminecraftplugin.aminecraftplugin.utils.IntegerToRoman.integerToRoman;
 import static aminecraftplugin.aminecraftplugin.utils.RemoveHandItem.removeHandItem;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
-public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.structures.Structure {
+public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilling.structures.Structure {
 
     public static HashMap<Player, Drill> openedDrillInventory = new HashMap<>();
 
@@ -69,20 +70,19 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
     private ArrayList<Integer> tasks = new ArrayList<>();
 
 
-    public static ItemStack getDrill(int tier, String structureName){
+    public static ItemStack getDrill(int tier, DrillType drillType){
         ItemStack drill = new ItemStack(Material.HOPPER);
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
         NBTTagCompound nbt = nmsItem.u();
         if (nbt == null) nbt = new NBTTagCompound();
         nbt.a("drilltier", tier);
-        nbt.a("drilltype", structureName);
+        nbt.a("drilltype", drillType.getNameFromDrillType());
         nmsItem.c(nbt);
         drill = CraftItemStack.asBukkitCopy(nmsItem);
         ItemMeta drillMeta = drill.getItemMeta();
-        DrillType drillType = getDrillTypeFromName(structureName);
         drillMeta.setDisplayName(format("&7" + drillType.getDisplayName()));
         ArrayList<String> lore = new ArrayList<>();
-        lore.add(format("&7Tier&f: " + tier));
+        lore.add(format("&7Tier&f: " + integerToRoman(tier)));
         drillMeta.setLore(lore);
         drill.setItemMeta(drillMeta);
         return drill;
@@ -105,10 +105,10 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         this.drillType = getDrillTypeFromName(drillType);
         this.drillTier = drillTier;
 
-        aminecraftplugin.aminecraftplugin.drill.structures.Structure.addStructure(owner.getUniqueId(), this);
+        aminecraftplugin.aminecraftplugin.drilling.structures.Structure.addStructure(owner.getUniqueId(), this);
 
         //loot
-        this.structure = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(this.getDrillType().getNameFromDrillType());
+        this.structure = aminecraftplugin.aminecraftplugin.drilling.structures.Structure.getStructure(this.getDrillType().getNameFromDrillType());
         this.hologram = api.createHologram(this.getLocation().clone().add(0.5, this.getThisStructure().getSize().getY() + 0.5, 0.5));
         this.correctHologramPosition();
         this.lootFinder = new LootFinder(this.getLocation());
@@ -140,7 +140,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         }
 
         //set to stone
-        this.getLocation().add(0,-1,0).getBlock().setType(Material.STONE);
+        this.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
 
         final int[] stage = {0};
         PacketContainer packetContainer = protocolManager.createPacket(PacketType.Play.Server.BLOCK_BREAK_ANIMATION);
@@ -358,7 +358,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
         int width = (int) this.getThisStructure().getSize().getX();
 
         //get all blocks to be destroyed
-        ArrayList<Location> locations = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructureSpace(drillLoc, this.getThisStructure(), pair);
+        ArrayList<Location> locations = aminecraftplugin.aminecraftplugin.drilling.structures.Structure.getStructureSpace(drillLoc, this.getThisStructure(), pair);
 
 
         for (Location loc : locations){
@@ -446,7 +446,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
 
         structures.get(uuid).remove(this);
 
-        return getDrill(this.getDrillTier(), this.getDrillType().getNameFromDrillType());
+        return getDrill(this.getDrillTier(), this.getDrillType());
     }
 
 
@@ -469,7 +469,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drill.
             String drillType = nbt.l("drilltype");
 
             //check if near structures have enough distance
-            if (!aminecraftplugin.aminecraftplugin.drill.structures.Structure.canBePlaced(drillType, placedLoc, p)) return;
+            if (!aminecraftplugin.aminecraftplugin.drilling.structures.Structure.canBePlaced(drillType, placedLoc, p)) return;
 
             //remove drill from hand
             removeHandItem(p, e.getHand());

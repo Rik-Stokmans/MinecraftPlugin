@@ -1,4 +1,4 @@
-package aminecraftplugin.aminecraftplugin.drill.structures;
+package aminecraftplugin.aminecraftplugin.drilling.drill;
 
 public enum DrillType {
 

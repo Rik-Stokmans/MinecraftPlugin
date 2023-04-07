@@ -1,9 +1,7 @@
 package aminecraftplugin.aminecraftplugin.player;
 
-import aminecraftplugin.aminecraftplugin.drill.Backpack;
-import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
-import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
-import org.bukkit.Bukkit;
+import aminecraftplugin.aminecraftplugin.drilling.Backpack;
+import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -228,7 +226,7 @@ public class PlayerProfile implements Listener {
                 });
             }
             int sortingIndex = playerFile.getInt("sortingindex");
-            resourceCategory filterCategory = aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory.getCategory("filtercategory");
+            resourceCategory filterCategory = resourceCategory.getCategory("filtercategory");
 
             HashMap<Integer, Double> backpack = new HashMap<>();
             Backpack backpack1 = null;

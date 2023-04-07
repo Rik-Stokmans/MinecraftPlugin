@@ -1,5 +1,6 @@
-package aminecraftplugin.aminecraftplugin.drill.loot;
+package aminecraftplugin.aminecraftplugin.drilling.loot;
 
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -8,8 +9,8 @@ import org.bukkit.entity.Player;
 
 import java.util.*;
 
-import static aminecraftplugin.aminecraftplugin.drill.loot.LootTable.lootTableHashMap;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
+import static aminecraftplugin.aminecraftplugin.drilling.loot.LootTable.lootTableHashMap;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.getResourceFromKey;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.log.logBase;
 

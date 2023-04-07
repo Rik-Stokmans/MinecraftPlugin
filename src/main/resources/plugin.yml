@@ -55,6 +55,12 @@ commands:
   removespawn:
     description: remove a spawn with name
     usage: /removespawn <name>
+  createshop:
+    description: create a shop
+    usage: /createshop <name>
+  removeshop:
+    description: remove a shop
+    usage: /removeshop [<name>]
 
 permissions:
   drilz.operator:

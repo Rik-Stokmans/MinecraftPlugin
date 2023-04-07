@@ -1,6 +1,6 @@
 package aminecraftplugin.aminecraftplugin.market;
 
-import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -10,7 +10,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.Random;
 
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.resources;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.resources;
 import static aminecraftplugin.aminecraftplugin.market.Market.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;

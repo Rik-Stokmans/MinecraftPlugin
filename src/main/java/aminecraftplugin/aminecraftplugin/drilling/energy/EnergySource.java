@@ -1,20 +1,18 @@
-package aminecraftplugin.aminecraftplugin.drill.structures;
+package aminecraftplugin.aminecraftplugin.drilling.energy;
 
-import aminecraftplugin.aminecraftplugin.drill.loot.LootFinder;
+import aminecraftplugin.aminecraftplugin.drilling.structures.Structure;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.UUID;
 
 public class EnergySource implements Structure, Listener {
@@ -28,6 +26,10 @@ public class EnergySource implements Structure, Listener {
     private double energyGain;
     private double energyCap;
     private int range;
+
+    public ItemStack getEnergySource(int tier, EnergySourceType energySourceType){
+        return new ItemStack(Material.AIR);
+    }
 
     @Override
     public void place(Player p) {

@@ -1,7 +1,7 @@
 package aminecraftplugin.aminecraftplugin.market;
 
-import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
-import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
+import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static aminecraftplugin.aminecraftplugin.Main.*;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 
@@ -213,8 +213,6 @@ public class Market implements Listener {
 
     @EventHandler
     public void click(net.citizensnpcs.api.event.NPCRightClickEvent e){
-        //Handle a click on a NPC. The event has a getNPC() method.
-        //Be sure to check event.getNPC() == this.getNPC() so you only handle clicks on this NPC!
         Player p = e.getClicker();
         Location location = e.getNPC().getStoredLocation();
         for (Market m : markets.values()) {

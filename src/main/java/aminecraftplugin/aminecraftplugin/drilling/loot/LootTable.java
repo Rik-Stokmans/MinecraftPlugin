@@ -1,6 +1,7 @@
-package aminecraftplugin.aminecraftplugin.drill.loot;
+package aminecraftplugin.aminecraftplugin.drilling.loot;
 
 
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -17,12 +18,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static aminecraftplugin.aminecraftplugin.Main.loadFile;
 import static aminecraftplugin.aminecraftplugin.Main.saveFile;
-import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.resourceComparators;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.*;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;

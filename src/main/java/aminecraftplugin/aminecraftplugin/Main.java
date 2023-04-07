@@ -2,20 +2,20 @@ package aminecraftplugin.aminecraftplugin;
 
 import aminecraftplugin.aminecraftplugin.commands.*;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.*;
-import aminecraftplugin.aminecraftplugin.drill.Backpack;
-import aminecraftplugin.aminecraftplugin.drill.structures.Drill;
-import aminecraftplugin.aminecraftplugin.drill.loot.LootTable;
-import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
-import aminecraftplugin.aminecraftplugin.drill.structures.Structure;
-import aminecraftplugin.aminecraftplugin.drill.structures.StructureEvent;
+import aminecraftplugin.aminecraftplugin.drilling.Backpack;
+import aminecraftplugin.aminecraftplugin.drilling.drill.Drill;
+import aminecraftplugin.aminecraftplugin.drilling.loot.LootTable;
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
+import aminecraftplugin.aminecraftplugin.drilling.structures.Structure;
+import aminecraftplugin.aminecraftplugin.drilling.structures.StructureEvent;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import aminecraftplugin.aminecraftplugin.shop.Shop;
 import aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import me.filoghost.holographicdisplays.api.HolographicDisplaysAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -72,7 +72,7 @@ public final class Main extends JavaPlugin {
         //list of events
         events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
         events.add(new PlayerProfile()); events.add(new Drill()); events.add(new StructureEvent()); events.add(new Backpack());
-        events.add(new MiningSkill()); events.add(new miningResourceMenu());
+        events.add(new MiningSkill()); events.add(new miningResourceMenu()); events.add(new Shop());
 
         for (Listener l : events) {
             getServer().getPluginManager().registerEvents(l, this);
@@ -96,6 +96,9 @@ public final class Main extends JavaPlugin {
         //load spawn locations
         addSpawnCommand.init();
 
+        //load shops
+        Shop.init();
+
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -118,6 +121,8 @@ public final class Main extends JavaPlugin {
         new Command("miningResourceMenu", new miningResourceMenu(), new nullTabCompleter());
         new Command("setspawn", new addSpawnCommand(), new spawnTabCompleter());
         new Command("removespawn", new removeSpawnCommand(), new spawnTabCompleter());
+        new Command("createshop", new createShopCommand(), new shopTabCompleter());
+        new Command("removeshop", new removeShopCommand(), new shopTabCompleter());
 
         //ticker all
         BukkitScheduler scheduler = getServer().getScheduler();
@@ -160,6 +165,9 @@ public final class Main extends JavaPlugin {
 
         //spawn locations save
         addSpawnCommand.save();
+
+        //save shops
+        Shop.save();
 
     }
 

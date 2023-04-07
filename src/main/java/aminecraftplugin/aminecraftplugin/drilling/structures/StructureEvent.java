@@ -1,8 +1,7 @@
-package aminecraftplugin.aminecraftplugin.drill.structures;
+package aminecraftplugin.aminecraftplugin.drilling.structures;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,10 +17,9 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
-import static aminecraftplugin.aminecraftplugin.drill.structures.Structure.scheduleRemoveStructures;
-import static aminecraftplugin.aminecraftplugin.drill.structures.Structure.structures;
+import static aminecraftplugin.aminecraftplugin.drilling.structures.Structure.scheduleRemoveStructures;
+import static aminecraftplugin.aminecraftplugin.drilling.structures.Structure.structures;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
-import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class StructureEvent implements Listener {
 
@@ -67,7 +65,7 @@ public class StructureEvent implements Listener {
             Player p = e.getPlayer();
             Location loc = e.getClickedBlock().getLocation();
             if (structures.containsKey(p.getUniqueId())) {
-                for (aminecraftplugin.aminecraftplugin.drill.structures.Structure structure : structures.get(p.getUniqueId())) {
+                for (aminecraftplugin.aminecraftplugin.drilling.structures.Structure structure : structures.get(p.getUniqueId())) {
                     for (Location loc1 : structure.getLocations()) {
                         if (loc.equals(loc1)) {
                             e.setCancelled(true);

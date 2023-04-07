@@ -1,13 +1,13 @@
-package aminecraftplugin.aminecraftplugin.drill;
+package aminecraftplugin.aminecraftplugin.drilling.resource;
 
-import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.getResourceFromKey;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
 public class ResourceSorters {

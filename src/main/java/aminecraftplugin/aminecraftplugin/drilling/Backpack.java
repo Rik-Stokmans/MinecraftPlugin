@@ -1,7 +1,7 @@
-package aminecraftplugin.aminecraftplugin.drill;
+package aminecraftplugin.aminecraftplugin.drilling;
 
-import aminecraftplugin.aminecraftplugin.drill.loot.Resource;
-import aminecraftplugin.aminecraftplugin.drill.loot.resourceCategory;
+import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
+import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
 import net.minecraft.nbt.NBTTagCompound;
 import org.bukkit.Bukkit;
@@ -15,7 +15,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -25,10 +24,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.*;
-import static aminecraftplugin.aminecraftplugin.drill.ResourceSorters.getFilterItem;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.categories;
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.getResourceFromKey;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.ResourceSorters.*;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.ResourceSorters.getFilterItem;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.categories;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.getResourceFromKey;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.getPlayerProfile;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;

@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-import static aminecraftplugin.aminecraftplugin.drill.loot.Resource.openResourceGUI;
+import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.openResourceGUI;
 
 public class addResourceCommand implements CommandExecutor {
     @Override

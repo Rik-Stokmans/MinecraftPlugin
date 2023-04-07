@@ -1,4 +1,4 @@
-package aminecraftplugin.aminecraftplugin.drill.structures;
+package aminecraftplugin.aminecraftplugin.drilling.structures;
 
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -7,15 +7,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 
 import org.bukkit.NamespacedKey;
-import org.bukkit.block.BlockState;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.structure.StructureManager;
 import org.bukkit.util.BlockVector;
@@ -176,10 +173,10 @@ public interface Structure {
             p.sendMessage(format("&cCan not place while entities are nearby"));
             return false;
         }
-        for (ArrayList<aminecraftplugin.aminecraftplugin.drill.structures.Structure> structures : structures.values()){
-            for (aminecraftplugin.aminecraftplugin.drill.structures.Structure structure : structures) {
-                org.bukkit.structure.Structure structureComparing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structure.getStructureName());
-                org.bukkit.structure.Structure structurePlacing = aminecraftplugin.aminecraftplugin.drill.structures.Structure.getStructure(structureName);
+        for (ArrayList<aminecraftplugin.aminecraftplugin.drilling.structures.Structure> structures : structures.values()){
+            for (aminecraftplugin.aminecraftplugin.drilling.structures.Structure structure : structures) {
+                org.bukkit.structure.Structure structureComparing = aminecraftplugin.aminecraftplugin.drilling.structures.Structure.getStructure(structure.getStructureName());
+                org.bukkit.structure.Structure structurePlacing = aminecraftplugin.aminecraftplugin.drilling.structures.Structure.getStructure(structureName);
 
                 double biggest1 = biggestFromVector(structureComparing.getSize());
                 double biggest2 = biggestFromVector(structurePlacing.getSize());

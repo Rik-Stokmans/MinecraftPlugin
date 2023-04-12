@@ -8,6 +8,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static aminecraftplugin.aminecraftplugin.drilling.loot.LootTable.lootTableHashMap;
 import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.getResourceFromKey;
@@ -23,7 +24,7 @@ public class LootFinder {
         this.lootTables = calculateLootTable(location);
     }
 
-    public HashMap<Resource, Double> findLoot(OfflinePlayer p){
+    public HashMap<Resource, Double> findLoot(int veinTier, OfflinePlayer p){
 
         HashMap<Resource, Double> foundResources = new HashMap<>();
 
@@ -32,7 +33,7 @@ public class LootFinder {
         int prospectingSkill = playerProfile.getProspectingSkill();
 
         //exponent (higher prospecting skill -> lower exponent -> more rare resources)
-        double exponent = 5 - logBase(prospectingSkill, 6);
+        double exponent = 5 - logBase(prospectingSkill + veinTier, 6);
 
         double totalWeight = 0.0;
         for (Map.Entry<LootTable, Double> entry : this.getLootTables().entrySet()) {
@@ -63,7 +64,7 @@ public class LootFinder {
                 double percentage = ((weight * 100) / totalWeight);
                 double rollChance = new Random().nextDouble() * 100;
                 if (rollChance <= percentage){
-                    double amountOfKG = 0.1715 * Math.log(miningSkill) + 0.1475;
+                    double amountOfKG = (0.1715 * Math.log(miningSkill) + 0.1475) * veinTier;
                     //random multiplier of 0.5 to 1.5
                     amountOfKG *= 0.5 + new Random().nextDouble();
                     foundResources.put(resource, amountOfKG);
@@ -97,11 +98,8 @@ public class LootFinder {
             closestLootTables.add(entry.getValue());
         }
 
-        closestLootTables.stream().sorted(Comparator.comparingDouble(lootTable -> lootTable.getLocation().distance(location))).limit(amount);
+        closestLootTables = (ArrayList<LootTable>) closestLootTables.stream().sorted(Comparator.comparingDouble(lootTable -> lootTable.getLocation().distance(location))).limit(amount).collect(Collectors.toList());
 
-        for (Player p : Bukkit.getOnlinePlayers()){
-            p.sendMessage(closestLootTables.toString());
-        }
         return closestLootTables;
     }
 

@@ -10,6 +10,8 @@ public enum ShopCategory {
 
     DRILL,
     ENERGY,
+    WEAPONS,
+    ARMOR,
     NULL;
 
 
@@ -19,6 +21,10 @@ public enum ShopCategory {
                 return ShopCategory.DRILL;
             case "ENERGY":
                 return ShopCategory.ENERGY;
+            case "WEAPONS":
+                return ShopCategory.WEAPONS;
+            case "ARMOR":
+                return ShopCategory.ARMOR;
         }
         return ShopCategory.NULL;
     }
@@ -43,6 +49,18 @@ public enum ShopCategory {
                 iconMeta.setDisplayName(format("&7Energy"));
                 icon.setItemMeta(iconMeta);
                 return icon;
+            case WEAPONS:
+                icon = new ItemStack(Material.GOLDEN_SWORD);
+                iconMeta = icon.getItemMeta();
+                iconMeta.setDisplayName(format("&7Weapons"));
+                icon.setItemMeta(iconMeta);
+                break;
+            case ARMOR:
+                icon = new ItemStack(Material.IRON_HELMET);
+                iconMeta = icon.getItemMeta();
+                iconMeta.setDisplayName(format("&7Armor"));
+                icon.setItemMeta(iconMeta);
+                break;
         }
         icon = new ItemStack(Material.BARRIER);
         iconMeta = icon.getItemMeta();

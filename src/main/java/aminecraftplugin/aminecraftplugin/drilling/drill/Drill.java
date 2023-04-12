@@ -247,12 +247,12 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
                     } else {
                         PlayerProfile playerProfile = getPlayerProfile(p.getUniqueId());
                         int veinTier = 1;
-                        double currentChance = 0.2 * Math.log(veinTier) + (0.25 * logBase(playerProfile.getMiningSkill() + 1, 101));
+                        double currentChance = 0.2 * Math.log(veinTier) * logBase(playerProfile.getMiningSkill() + 19, 20) + (0.2);
                         while (true){
                             double random = ThreadLocalRandom.current().nextDouble(0, 1);
                             if (random <= currentChance){
                                 veinTier++;
-                                currentChance = 0.2 * Math.log(veinTier) + (0.25 * logBase(playerProfile.getMiningSkill() + 1, 101));
+                                currentChance = 0.2 * Math.log(veinTier) * logBase(playerProfile.getMiningSkill() + 19, 20) + (0.2);
                             } else {
                                 break;
                             }

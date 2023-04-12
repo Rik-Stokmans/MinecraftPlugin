@@ -304,7 +304,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
         for (Map.Entry<Resource, Double> entry : mined.entrySet()){
             Resource resource = entry.getKey();
             Double kgMined = entry.getValue();
-            this.getHologram().getLines().appendText(format(resource.getName() + " &f" + returnCompressed(kgMined, 2, RoundingMode.CEILING) + "&7/&f" + returnCompressed(resources.get(resource), 2, RoundingMode.FLOOR) + " Kg"));
+            this.getHologram().getLines().appendText(format(resource.getName() + " &f" + returnCompressed(kgMined, 2, RoundingMode.HALF_UP) + "&7/&f" + returnCompressed(resources.get(resource), 2, RoundingMode.HALF_DOWN) + " Kg"));
         }
         this.getHologram().getLines().appendText(format("&7&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-"));
         this.correctHologramPosition();
@@ -369,7 +369,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
                             if (hologramLine instanceof TextHologramLine) {
                                 TextHologramLine textHologramLine = (TextHologramLine) hologramLine;
                                 if (textHologramLine.getText().contains(resource2.getName())) {
-                                    textHologramLine.setText(format(resource2.getName() + " &f" + returnCompressed(kgMined2, 2, RoundingMode.CEILING) + "&7/&f" + returnCompressed(resources.get(resource2), 2, RoundingMode.FLOOR) + " Kg"));
+                                    textHologramLine.setText(format(resource2.getName() + " &f" + returnCompressed(kgMined2, 2, RoundingMode.HALF_UP) + "&7/&f" + returnCompressed(resources.get(resource2), 2, RoundingMode.HALF_DOWN) + " Kg"));
                                 }
                             }
                         }

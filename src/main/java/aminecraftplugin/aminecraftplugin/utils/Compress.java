@@ -39,6 +39,29 @@ public class Compress {
         return df3.format(number);
     }
 
+
+    public static String returnCompressed(Double number, int decimals, RoundingMode roundingMode){
+        ArrayList<String> symbols = new ArrayList<>();
+        Integer element = -1;
+        symbols.add("K"); symbols.add("M");  symbols.add("B"); symbols.add("T"); symbols.add("Qa"); symbols.add("Qi");  symbols.add("Sx");  symbols.add("Sp");  symbols.add("Oc");  symbols.add("No");  symbols.add("Dc");
+        while (number >= 1000) {
+            number = number / 1000;
+            element++;
+        }
+        String pattern = "#.";
+        for (int i = 0; i < decimals; i++){
+            pattern += "#";
+        }
+        if (element >= 0){
+            DecimalFormat df2 = new DecimalFormat(pattern);
+            df2.setRoundingMode(roundingMode);
+            return df2.format(number) + symbols.get(element);
+        }
+        DecimalFormat df3 = new DecimalFormat(pattern);
+        df3.setRoundingMode(roundingMode);
+        return df3.format(number);
+    }
+
     public static Double returnDecompressed(String s){
 
         ArrayList<String> symbols = new ArrayList<>();

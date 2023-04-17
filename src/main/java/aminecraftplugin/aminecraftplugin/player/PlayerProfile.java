@@ -2,6 +2,8 @@ package aminecraftplugin.aminecraftplugin.player;
 
 import aminecraftplugin.aminecraftplugin.drilling.Backpack;
 import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
+import aminecraftplugin.aminecraftplugin.sideSkills.Skill;
+import aminecraftplugin.aminecraftplugin.sideSkills.SkillType;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -24,12 +26,11 @@ public class PlayerProfile {
     public static HashMap<UUID, PlayerProfile> playerProfiles = new HashMap<>();
 
     //mining
-    private int miningSkill;
-    private int prospectingSkill;
     private Backpack backPack;
     private ArrayList<ItemStack> offlineItems = new ArrayList<>();
     private int sortingIndex;
     private resourceCategory filterCategory;
+    private HashMap<SkillType, Skill> skills = new HashMap<>();
 
     //money
     private double money;
@@ -50,8 +51,9 @@ public class PlayerProfile {
 
 
     public PlayerProfile(Player p) {
-        this.miningSkill = 1;
-        this.prospectingSkill = 1;
+        for (SkillType skillType : SkillType.values()){
+            this.skills.put(skillType, new Skill(skillType, 0, 0));
+        }
         this.backPack = new Backpack();
         this.money = 0;
         this.filterCategory = resourceCategory.ALL;
@@ -60,9 +62,8 @@ public class PlayerProfile {
         this.backPack.updateAllPlages(p.getUniqueId());
     }
 
-    public PlayerProfile(UUID uuid, int miningSkill, int prospectingSkill, Backpack backpack, double money, ArrayList<ItemStack> offlineItems, int sortingIndex, resourceCategory filterCategory) {
-        this.miningSkill = miningSkill;
-        this.prospectingSkill = prospectingSkill;
+    public PlayerProfile(UUID uuid, Backpack backpack, double money, ArrayList<ItemStack> offlineItems, int sortingIndex, resourceCategory filterCategory, HashMap<SkillType, Skill> skills) {
+        this.skills = skills;
         this.backPack = backpack;
         this.money = money;
         this.offlineItems = offlineItems;
@@ -91,22 +92,6 @@ public class PlayerProfile {
 
     public void setOfflineItems(ArrayList<ItemStack> offlineItems) {
         this.offlineItems = offlineItems;
-    }
-
-    public int getMiningSkill() {
-        return miningSkill;
-    }
-
-    public void setMiningSkill(int miningSkill) {
-        this.miningSkill = miningSkill;
-    }
-
-    public int getProspectingSkill() {
-        return prospectingSkill;
-    }
-
-    public void setProspectingSkill(int prospectingSkill) {
-        this.prospectingSkill = prospectingSkill;
     }
 
     public Backpack getBackPack() {
@@ -148,6 +133,14 @@ public class PlayerProfile {
         this.filterCategory = filterCategory;
     }
 
+    public HashMap<SkillType, Skill> getSkills() {
+        return skills;
+    }
+
+    public void setSkills(HashMap<SkillType, Skill> skills) {
+        this.skills = skills;
+    }
+
     public static void init() {
         try {
             playerProfiles = loadPlayerprofiles();
@@ -171,8 +164,10 @@ public class PlayerProfile {
             UUID uuid = entry.getKey();
             PlayerProfile playerProfile = entry.getValue();
 
-            playerFile.set("skills.mining", playerProfile.getMiningSkill());
-            playerFile.set("skills.prospecting", playerProfile.getProspectingSkill());
+            for (Skill skill : playerProfile.getSkills().values()){
+                playerFile.set("skills." + skill.getSkillType().toString() + ".tier", skill.getTier());
+                playerFile.set("skills." + skill.getSkillType().toString() + ".xp", skill.getXp());
+            }
             playerFile.set("money", playerProfile.getMoney());
 
             int index = 1;
@@ -210,8 +205,23 @@ public class PlayerProfile {
             String uuidName = file.getName().substring(0, file.getName().length() - 4);
             UUID uuid = UUID.fromString(uuidName);
 
-            int miningSkill = playerFile.getInt("skills.mining");
-            int prospectingSkill = playerFile.getInt("skills.prospecting");
+            HashMap<SkillType, Skill> skills = new HashMap<>();
+            if (playerFile.contains("skills")){
+                playerFile.getConfigurationSection("skills").getKeys(false).forEach(skillName -> {
+                    SkillType skillType = SkillType.valueOf(skillName);
+                    int tier = playerFile.getInt("skills." + skillName + ".tier");
+                    double xp = playerFile.getDouble("skills." + skillName + ".xp");
+                    skills.put(skillType, new Skill(skillType, tier, xp));
+                });
+            }
+            if (skills.size() != SkillType.values().length){
+                for (SkillType skillType : SkillType.values()){
+                    if (!skills.containsKey(skillType)){
+                        skills.put(skillType, new Skill(skillType, 0, 0));
+                    }
+                }
+            }
+
             double money = playerFile.getDouble("money");
 
             ArrayList<ItemStack> offlineItems = new ArrayList<>();
@@ -243,7 +253,7 @@ public class PlayerProfile {
                 backpack1 = new Backpack(backpack, space, uuid);
 
             }
-            PlayerProfile playerProfile = new PlayerProfile(uuid, miningSkill, prospectingSkill, backpack1, money, offlineItems, sortingIndex, filterCategory);
+            PlayerProfile playerProfile = new PlayerProfile(uuid, backpack1, money, offlineItems, sortingIndex, filterCategory, skills);
             playerProfiles.put(uuid, playerProfile);
         }
         return playerProfiles;

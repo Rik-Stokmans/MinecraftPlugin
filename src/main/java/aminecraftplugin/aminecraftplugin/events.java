@@ -29,10 +29,10 @@ import static aminecraftplugin.aminecraftplugin.commands.addSpawnCommand.spawnLo
 import static aminecraftplugin.aminecraftplugin.commands.miningResourceMenu.miningResourceMenuInventoryClickEvent;
 import static aminecraftplugin.aminecraftplugin.drilling.Backpack.backPackInventoryClickEvent;
 import static aminecraftplugin.aminecraftplugin.drilling.Backpack.backPackPlayerInteractEvent;
+import static aminecraftplugin.aminecraftplugin.drilling.drill.Drill.drillInventoryClickEvent;
 import static aminecraftplugin.aminecraftplugin.drilling.loot.LootTable.lootTableInventoryClickEvent;
 import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.resourceInventoryClickEvent;
-import static aminecraftplugin.aminecraftplugin.drilling.structures.StructureEvent.structurePlayerJoinEvent;
-import static aminecraftplugin.aminecraftplugin.drilling.structures.StructureEvent.structurePlayerQuitEvent;
+import static aminecraftplugin.aminecraftplugin.drilling.structures.StructureEvent.*;
 import static aminecraftplugin.aminecraftplugin.market.Market.marketInventoryClickEvent;
 import static aminecraftplugin.aminecraftplugin.market.Market.rightClickMarketEvent;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfileJoinEvent;
@@ -71,6 +71,7 @@ public class events implements Listener {
         backPackInventoryClickEvent(e);
         miningResourceMenuInventoryClickEvent(e);
         shopCategoryInventoryClickEvent(e);
+        drillInventoryClickEvent(e);
     }
 
     @EventHandler
@@ -103,7 +104,7 @@ public class events implements Listener {
     private void playerInteractEvent(PlayerInteractEvent e){
         backPackPlayerInteractEvent(e);
         miningSkillPlayerInteractEvent(e);
-
+        structureRightClick(e);
     }
 
 

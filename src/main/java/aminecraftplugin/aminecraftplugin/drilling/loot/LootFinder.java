@@ -2,6 +2,8 @@ package aminecraftplugin.aminecraftplugin.drilling.loot;
 
 import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import aminecraftplugin.aminecraftplugin.sideSkills.Skill;
+import aminecraftplugin.aminecraftplugin.sideSkills.SkillType;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -24,16 +26,15 @@ public class LootFinder {
         this.lootTables = calculateLootTable(location);
     }
 
-    public HashMap<Resource, Double> findLoot(int veinTier, OfflinePlayer p){
+    public HashMap<Resource, Double> findLoot(int veinTier, OfflinePlayer p, long drillDepth){
 
         HashMap<Resource, Double> foundResources = new HashMap<>();
 
         PlayerProfile playerProfile = playerProfiles.get(p.getUniqueId());
-        int miningSkill = playerProfile.getMiningSkill();
-        int prospectingSkill = playerProfile.getProspectingSkill();
+        Skill miningSkill = playerProfile.getSkills().get(SkillType.miningskill);
 
         //exponent (higher prospecting skill -> lower exponent -> more rare resources)
-        double exponent = 5 - logBase(prospectingSkill + veinTier, 6);
+        double exponent = 6 - logBase(1 + (drillDepth / 50) + veinTier, 6);
 
         double totalWeight = 0.0;
         for (Map.Entry<LootTable, Double> entry : this.getLootTables().entrySet()) {
@@ -64,7 +65,7 @@ public class LootFinder {
                 double percentage = ((weight * 100) / totalWeight);
                 double rollChance = new Random().nextDouble() * 100;
                 if (rollChance <= percentage){
-                    double amountOfKG = (0.1715 * Math.log(miningSkill) + 0.1475) * veinTier;
+                    double amountOfKG = (0.1715 * Math.log(miningSkill.getTier() + 1) + 0.1475) * veinTier;
                     //random multiplier of 0.5 to 1.5
                     amountOfKG *= 0.5 + new Random().nextDouble();
                     foundResources.put(resource, amountOfKG);

@@ -14,9 +14,12 @@ public class getDrillTabCompleter implements TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] strings) {
         ArrayList<String> tabComplete = new ArrayList<>();
         if (strings.length == 1){
-            tabComplete.add("1");
+            tabComplete.add("speedtier");
         }
         else if (strings.length == 2){
+            tabComplete.add("depthtier");
+        }
+        else if (strings.length == 3){
             tabComplete.add("starterdrill");
         }
         return tabComplete;

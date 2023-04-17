@@ -4,12 +4,13 @@ import aminecraftplugin.aminecraftplugin.drilling.loot.LootFinder;
 import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import aminecraftplugin.aminecraftplugin.player.PlayerProfile;
+import aminecraftplugin.aminecraftplugin.sideSkills.Skill;
+import aminecraftplugin.aminecraftplugin.sideSkills.SkillType;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.BlockPosition;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
 import me.filoghost.holographicdisplays.api.hologram.line.HologramLine;
-import me.filoghost.holographicdisplays.api.hologram.line.HologramLineClickEvent;
 import me.filoghost.holographicdisplays.api.hologram.line.TextHologramLine;
 import net.minecraft.nbt.NBTTagCompound;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -21,10 +22,6 @@ import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -55,7 +52,7 @@ import static aminecraftplugin.aminecraftplugin.utils.RemoveHandItem.removeHandI
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 import static aminecraftplugin.aminecraftplugin.utils.log.logBase;
 
-public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilling.structures.Structure {
+public class Drill implements aminecraftplugin.aminecraftplugin.drilling.structures.Structure {
 
     public static HashMap<Player, Drill> openedDrillInventory = new HashMap<>();
     private final static String[] veinTierList = {"Minimal", "Tiny", "Very Poor", "Poor", "Ample", "Small", "Modest", "Average", "Medium", "Considerable",
@@ -68,7 +65,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
     private LootFinder lootFinder;
     private DrillType drillType;
     private ArrayList<Inventory> pages = new ArrayList<>();
-    private int drillTier;
+    private int speedTier;
+    private int depthTier;
     private Hologram hologram;
     private Structure structure;
     private HashMap<Integer, Double> resources = new HashMap<>();
@@ -77,21 +75,25 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
     private boolean muted;
     private ArrayList<Integer> tasks = new ArrayList<>();
     private double hp;
+    private double energyReceiving;
 
 
-    public static ItemStack getDrill(int tier, DrillType drillType){
+    public static ItemStack getDrill(int speedTier, int depthTier, DrillType drillType){
         ItemStack drill = new ItemStack(Material.HOPPER);
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
         NBTTagCompound nbt = nmsItem.u();
         if (nbt == null) nbt = new NBTTagCompound();
-        nbt.a("drilltier", tier);
+        nbt.a("drilldepth", depthTier);
+        nbt.a("drillspeed", speedTier);
         nbt.a("drilltype", drillType.getNameFromDrillType());
         nmsItem.c(nbt);
         drill = CraftItemStack.asBukkitCopy(nmsItem);
         ItemMeta drillMeta = drill.getItemMeta();
         drillMeta.setDisplayName(format("&7" + drillType.getDisplayName()));
         ArrayList<String> lore = new ArrayList<>();
-        lore.add(format("&7Tier&f: " + integerToRoman(tier)));
+        lore.add(format("&7Speed&f: " + integerToRoman(speedTier)));
+        lore.add(format("&7Depth&f: " + integerToRoman(depthTier)));
+        lore.add(format("&7Stat multi&f: " + returnCompressed(drillType.getStatMulti(), 2)));
         drillMeta.setLore(lore);
         drill.setItemMeta(drillMeta);
         return drill;
@@ -109,10 +111,12 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
         net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(drill);
         NBTTagCompound nbt = nmsItem.u();
         String drillType = nbt.l("drilltype");
-        int drillTier = nbt.h("drilltier");
+        int drillDepthTier = nbt.h("drilldepth");
+        int drillSpeedTier = nbt.h("drillspeed");
 
         this.drillType = getDrillTypeFromName(drillType);
-        this.drillTier = drillTier;
+        this.depthTier = drillDepthTier;
+        this.speedTier = drillSpeedTier;
         this.hp = this.getDrillType().getMaxHP();
 
         aminecraftplugin.aminecraftplugin.drilling.structures.Structure.addStructure(owner.getUniqueId(), this);
@@ -122,17 +126,34 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
         this.hologram = initHologram();
         this.correctHologramPosition();
         this.lootFinder = new LootFinder(this.getLocation());
-        this.scheduleLootFinding(this.getOwner());
         this.initStructureInventories();
     }
 
     public Hologram initHologram(){
         Hologram hologram = api.createHologram(this.getLocation().clone().add(0.5, this.getThisStructure().getSize().getY() + 0.5, 0.5));
-        hologram.getLines().appendText(format("&b" + this.getDrillType().getDisplayName() + " &e" + integerToRoman(this.getDrillTier())));
+        hologram.getLines().appendText(format("&b" + this.getDrillType().getDisplayName()));
         hologram.getLines().appendText(this.getHealthBar());
         hologram.getLines().appendText(format("&eEnergy&7: " + "&e10 J&7/&eS"));
         hologram.getLines().appendText(format("&7&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-&m-"));
         return hologram;
+    }
+
+    public double getDrillSpeed(){
+        double baseSpeed = 0.005;
+        baseSpeed *= Math.pow(Math.log((Math.E - 1) + this.getSpeedTier()), 0.5);
+        baseSpeed *= this.getDrillType().getStatMulti();
+        return baseSpeed;
+    }
+
+    public double getDepthFormulaNumber(){
+        double baseDepth = this.getDepthTier();
+        baseDepth *= this.getDrillType().getStatMulti();
+        return baseDepth;
+    }
+
+    public long getDepth(){
+        double depthTier = getDepthFormulaNumber();
+        return 500 + (long) Math.ceil(depthTier * 50);
     }
 
     public String getHealthBar(){
@@ -163,7 +184,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
     private void scheduleLootFinding(OfflinePlayer p){
 
         int totalDuration = 25;
-        double oneStoneDuration = (totalDuration / (3 * Math.pow(Math.log(Math.E + this.getDrillTier()), 0.5)));
+        double oneStoneDuration = (totalDuration / (300 * getDrillSpeed()));
 
         this.clearHologram(5);
         if (this.getHologram().getLines().size() == 5){
@@ -243,19 +264,24 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
                         Bukkit.getScheduler().cancelTask(bukkitTask.getTaskId());
                     }
                     bukkitTasks[0] = new ArrayList<>();
-                    //30% chance to find resource
-                    if (ThreadLocalRandom.current().nextDouble(100.0) <= 70) {
-                        scheduleLootFinding(p);
-                        this.cancel();
-                    } else {
-                        PlayerProfile playerProfile = getPlayerProfile(p.getUniqueId());
+
+                    PlayerProfile playerProfile = getPlayerProfile(p.getUniqueId());
+                    Skill prospectingSkill = playerProfile.getSkills().get(SkillType.prospectingskill);
+                    double treasureFindingChance = 25 * prospectingSkill.getMultiplier();
+
+                    //debug
+                    for (Player p : Bukkit.getOnlinePlayers()){
+                        p.sendMessage(String.valueOf(prospectingSkill.getMultiplier()));
+                    }
+                    if (ThreadLocalRandom.current().nextDouble(100.0) <= treasureFindingChance) {
                         int veinTier = 1;
-                        double currentChance = 0.2 * Math.log(veinTier) * logBase(playerProfile.getMiningSkill() + 19, 20) + (0.2);
+                        Skill miningSkill = playerProfile.getSkills().get(SkillType.miningskill);
+                        double currentChance = 0.2 * Math.log(veinTier) * logBase(miningSkill.getTier() + 19, 20) + (0.2);
                         while (true){
                             double random = ThreadLocalRandom.current().nextDouble(0, 1);
                             if (random <= currentChance){
                                 veinTier++;
-                                currentChance = 0.2 * Math.log(veinTier) * logBase(playerProfile.getMiningSkill() + 19, 20) + (0.2);
+                                currentChance = 0.2 * Math.log(veinTier) * logBase(miningSkill.getTier() + 19, 20) + (0.2);
                             } else {
                                 break;
                             }
@@ -264,9 +290,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
                             }
                         }
                         int safeIndex = 0;
-                        HashMap<Resource, Double> foundResources = lootFinder.findLoot(veinTier, p);
+                        HashMap<Resource, Double> foundResources = lootFinder.findLoot(veinTier, p, drill.getDepth());
                         while (foundResources.isEmpty()) {
-                            foundResources = lootFinder.findLoot(veinTier, p);
+                            foundResources = lootFinder.findLoot(veinTier, p, drill.getDepth());
                             safeIndex++;
                             if (safeIndex > 5000) {
                                 System.out.println("ERROR NO LOOT FOUND IN 5000 TRIES");
@@ -279,6 +305,9 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
                             drill.scheduleLootMining(veinTier, foundResources, p);
                         }
                         drill.getTasks().remove(Integer.valueOf(this.getTaskId()));
+                        this.cancel();
+                    } else {
+                        scheduleLootFinding(p);
                         this.cancel();
                     }
                 }
@@ -294,7 +323,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
     private void scheduleLootMining(int veinTier, HashMap<Resource, Double> resources, OfflinePlayer p){
         Drill drill = this;
 
-        Double miningPerSecond = 0.01 * Math.pow(Math.log(Math.E + drill.getDrillTier()), 0.5);
+        Double miningPerSecond = drill.getDrillSpeed();
 
         HashMap<Resource, Double> mined = new HashMap<>();
         for (Resource resource : resources.keySet()){
@@ -429,8 +458,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
             block.setType(Material.AIR);
         }
 
-        this.getLocation().clone().add(0,-1,0).getBlock().setType(Material.STONE);
-
 
         //placing structure with correct rotation
         StructureRotation structureRotation = StructureRotation.NONE;
@@ -449,6 +476,8 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
                         0,
                         -pair.getKey() * Math.ceil(width / 2) + pair.getValue() * Math.floor(length / 2)),
                 true, structureRotation, Mirror.NONE, 0, 1, new Random());
+
+        this.scheduleLootFinding(this.getOwner());
     }
 
 
@@ -505,7 +534,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
 
         structures.get(uuid).remove(this);
 
-        return getDrill(this.getDrillTier(), this.getDrillType());
+        return getDrill(this.getSpeedTier(), this.getDepthTier(), this.getDrillType());
     }
 
 
@@ -589,7 +618,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
 
     public Inventory createNewInventory(int page, int maxPages){
         PlayerProfile owner = getPlayerProfile(this.getOwner().getUniqueId());
-        String inventoryName = this.getDrillType().getDisplayName() + " tier " + this.getDrillTier() + " page " + page + "/" + maxPages;
+        String inventoryName = this.getDrillType().getDisplayName() + " page " + page + "/" + maxPages;
         Inventory inventory = getDefaultScrollableInventory(inventoryName, false);
         inventory.setItem(51, getSortItem(owner.getSortingIndex()));
         inventory.setItem(52, getFilterItem(owner.getFilterCategory()));
@@ -713,8 +742,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
         this.updateInventories();
     }
 
-    @EventHandler
-    private void drillClick(InventoryClickEvent e){
+    public static void drillInventoryClickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
         if (name.contains("drill")) {
@@ -724,7 +752,7 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
             Drill drill = openedDrillInventory.get(p);
             int sortingIndex = playerProfile.getSortingIndex();
             resourceCategory filterCategory = playerProfile.getFilterCategory();
-            int maxAmountOfPages = getMaxAmountOfPages(filterCategory);
+            int maxAmountOfPages = drill.getMaxAmountOfPages(filterCategory);
             int currentPage = Integer.parseInt(name.split("page ")[1].split("/")[0]);
             if (e.getRawSlot() < 36 && e.getRawSlot() >= 0){
                 List<Map.Entry<Integer, Double>> resourceList = drill.getResources().entrySet().stream().filter(entry -> categories.get(filterCategory).contains(entry.getKey())).collect(Collectors.toList());
@@ -858,10 +886,6 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
         return drillType;
     }
 
-    public int getDrillTier() {
-        return drillTier;
-    }
-
     public ArrayList<BlockState> getDestroyedBlocks() {
         return destroyedBlocks;
     }
@@ -914,5 +938,13 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
     public boolean hasMaxHP(){
         if (this.getHP() == this.getHP()) return true;
         return false;
+    }
+
+    public int getSpeedTier() {
+        return speedTier;
+    }
+
+    public int getDepthTier() {
+        return this.depthTier;
     }
 }

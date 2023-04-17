@@ -17,10 +17,10 @@ public class getDrillCommand implements CommandExecutor {
         if (commandSender instanceof Player){
             Player p = (Player) commandSender;
             String name = "";
-            for (int i = 1; i < strings.length; i++){
+            for (int i = 2; i < strings.length; i++){
                 name += strings[i];
             }
-            ItemStack drill = getDrill(Integer.parseInt(strings[0]), getDrillTypeFromName(name));
+            ItemStack drill = getDrill(Integer.parseInt(strings[0]), Integer.parseInt(strings[1]), getDrillTypeFromName(name));
             p.getInventory().addItem(drill);
             return true;
         }

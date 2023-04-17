@@ -3,16 +3,18 @@ package aminecraftplugin.aminecraftplugin.drilling.drill;
 public enum DrillType {
 
 
-    starterDrill(10.0, 5.0),
-    NULL(0, 0);
+    starterDrill(10.0, 5.0, 1.0),
+    NULL(0, 0, 0);
 
-    DrillType(double maxHP, double minRadius) {
+    DrillType(double maxHP, double minRadius, double statMulti) {
         this.maxHP = maxHP;
         this.minRadius = minRadius;
+        this.statMulti = statMulti;
     }
 
     private double maxHP;
     private double minRadius;
+    private double statMulti;
 
     public String getDisplayName(){
         switch (this){
@@ -44,5 +46,11 @@ public enum DrillType {
 
     public double getMinRadius() {
         return minRadius;
+    }
+
+
+
+    public double getStatMulti() {
+        return statMulti;
     }
 }

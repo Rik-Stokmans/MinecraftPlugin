@@ -8,8 +8,6 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -26,7 +24,7 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
-public class LootTable implements Listener {
+public class LootTable {
 
 
     //resource weight factor
@@ -36,7 +34,7 @@ public class LootTable implements Listener {
 
 
     //keys of resources sorted by key ascending
-    private HashMap<Integer, Integer> resources = new HashMap<>();
+    private static HashMap<Integer, Integer> resources = new HashMap<>();
 
     //float is factor
     private HashMap<Integer, Float> table = new HashMap<>();
@@ -110,8 +108,7 @@ public class LootTable implements Listener {
         return resource;
     }
 
-    @EventHandler
-    private void clickEvent(InventoryClickEvent e){
+    public static void lootTableInventoryClickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
         if (name.contains("Select Loot Table")) {
@@ -127,7 +124,7 @@ public class LootTable implements Listener {
                     if (lootTableAdding.containsKey(p)) lootTableAdding.remove(p);
                     if (lootTableBrowsing.containsKey(p)) lootTableBrowsing.remove(p);
                     lootTableHashMap.remove(entry.getKey());
-                    this.openSelectLoottableMenu(p);
+                    openSelectLoottableMenu(p);
                 } else {
                     lootTable.openLoottableMenu(p, 1);
                 }

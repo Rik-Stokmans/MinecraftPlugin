@@ -19,7 +19,7 @@ import java.util.UUID;
 
 import static aminecraftplugin.aminecraftplugin.Main.*;
 
-public class PlayerProfile implements Listener {
+public class PlayerProfile {
 
     public static HashMap<UUID, PlayerProfile> playerProfiles = new HashMap<>();
 
@@ -34,8 +34,7 @@ public class PlayerProfile implements Listener {
     //money
     private double money;
 
-    @EventHandler
-    private void joinEvent(PlayerJoinEvent e) {
+    public static void playerProfileJoinEvent(PlayerJoinEvent e){
         Player p = e.getPlayer();
         if (!playerProfiles.containsKey(p.getUniqueId())) {
             Location spawnLocation = new Location(mainWorld, 468.5, 71, -46.5);
@@ -49,9 +48,6 @@ public class PlayerProfile implements Listener {
         playerProfile.getBackPack().updateBackpackInPlayerInventory();
     }
 
-    public PlayerProfile() {
-
-    }
 
     public PlayerProfile(Player p) {
         this.miningSkill = 1;

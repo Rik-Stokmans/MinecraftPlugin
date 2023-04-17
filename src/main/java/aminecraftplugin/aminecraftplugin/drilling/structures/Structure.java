@@ -11,7 +11,6 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.structure.StructureManager;
@@ -24,8 +23,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static aminecraftplugin.aminecraftplugin.Main.loadFile;
-import static aminecraftplugin.aminecraftplugin.Main.saveFile;
+import static aminecraftplugin.aminecraftplugin.Main.*;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
@@ -39,7 +37,7 @@ public interface Structure {
     public ArrayList<Location> getLocations();
     public void openStructureMenu(Player p, int page);
 
-    @EventHandler public void structurePlace(BlockPlaceEvent e);
+    public void placeEvent(BlockPlaceEvent e);
 
     public static final String[] destroyableMaterials = {"BANNER", "BUTTON", "SIGN", "DRIPLEAF", "CACTUS", "BAMBOO", "VINES", "LICHEN", "LILY_PAD",
     "REDSTONE", "RAIL", "STRING", "LANTERN", "DRIPSTONE", "FROGSPAWN", "AMETHYST", "TRIPWIRE_HOOK", "LEVER", "SPORE_BLOSSOM", "NETHER_SPROUTS", "CRIMSON_ROOTS",
@@ -142,12 +140,12 @@ public interface Structure {
 
     static org.bukkit.structure.Structure getStructure(String s){
         StructureManager structureManager = Bukkit.getStructureManager();
-        Map<NamespacedKey, org.bukkit.structure.Structure> structureMap = structureManager.getStructures();
-        org.bukkit.structure.Structure structure = null;
-        for (NamespacedKey namespacedKey : structureMap.keySet()){
-            if (namespacedKey.asString().equals("minecraft:" + s)){
-                structure = structureMap.get(namespacedKey);
-            }
+        NamespacedKey namedspacedKey = new NamespacedKey("minecraft", s);
+        org.bukkit.structure.Structure structure;
+        if (structureManager.getStructures().containsKey(namedspacedKey)){
+            structure = structureManager.getStructures().get(namedspacedKey);
+        } else {
+            structure = structureManager.loadStructure(new NamespacedKey("minecraft", s));
         }
         return structure;
 

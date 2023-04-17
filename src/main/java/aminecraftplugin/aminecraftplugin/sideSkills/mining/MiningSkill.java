@@ -6,8 +6,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,7 +18,7 @@ import java.util.HashMap;
 import static aminecraftplugin.aminecraftplugin.Main.mainWorld;
 import static aminecraftplugin.aminecraftplugin.Main.plugin;
 
-public class MiningSkill extends SideSkill implements Listener {
+public class MiningSkill extends SideSkill {
 
     public static void init() {
         ores.put(1, new Ore(new ItemStack(Material.DIAMOND), Material.DIAMOND_ORE, Material.STONE, 1, 1)); //TEMP
@@ -38,8 +36,8 @@ public class MiningSkill extends SideSkill implements Listener {
     //global variables
     private static final int miningDelay = 20;
 
-    @EventHandler //called when an ore is broken
-    public void onMine(PlayerInteractEvent e) {
+
+    public static void miningSkillPlayerInteractEvent(PlayerInteractEvent e) {
         if (!(e.getAction().isLeftClick() && e.getClickedBlock() != null)) return;
         if (!oreLocations.containsKey(e.getClickedBlock().getLocation())) return;
         if (playerCantMine.contains(e.getPlayer())) return;

@@ -7,8 +7,6 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -26,7 +24,7 @@ import static aminecraftplugin.aminecraftplugin.drilling.resource.resourceCatego
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
-public class Resource implements Listener {
+public class Resource {
 
     public static HashMap<Integer, Resource> resources = new HashMap<>();
 
@@ -44,11 +42,6 @@ public class Resource implements Listener {
     private int key;
     private Material block;
 
-
-
-    public Resource(){
-
-    }
 
     public Resource(ItemStack item, String name, Double value, int key, Material block){
         this.itemStack = item;
@@ -84,8 +77,7 @@ public class Resource implements Listener {
         }
     }
 
-    @EventHandler
-    private void clickEvent(InventoryClickEvent e){
+    public static void resourceInventoryClickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
         if (name.contains("Choose category")){
@@ -181,6 +173,7 @@ public class Resource implements Listener {
             }
         }
     }
+
 
 
     public static void openResourceGUI(Player p) {

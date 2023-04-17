@@ -4,7 +4,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -21,10 +20,11 @@ import static aminecraftplugin.aminecraftplugin.drilling.structures.Structure.sc
 import static aminecraftplugin.aminecraftplugin.drilling.structures.Structure.structures;
 import static aminecraftplugin.aminecraftplugin.player.PlayerProfile.playerProfiles;
 
-public class StructureEvent implements Listener {
+public class StructureEvent {
 
-    @EventHandler
-    private void quitEvent(PlayerQuitEvent e){
+
+
+    public static void structurePlayerQuitEvent(PlayerQuitEvent e){
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
         BukkitTask removeStructure = new BukkitRunnable() {
@@ -41,8 +41,7 @@ public class StructureEvent implements Listener {
 
     }
 
-    @EventHandler
-    private void joinEvent(PlayerJoinEvent e){
+    public static void structurePlayerJoinEvent(PlayerJoinEvent e){
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
         if (scheduleRemoveStructures.containsKey(uuid)){

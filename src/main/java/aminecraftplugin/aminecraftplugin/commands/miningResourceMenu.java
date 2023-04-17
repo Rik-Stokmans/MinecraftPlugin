@@ -25,7 +25,7 @@ import static aminecraftplugin.aminecraftplugin.market.Market.*;
 import static aminecraftplugin.aminecraftplugin.sideSkills.mining.MiningSkill.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
-public class miningResourceMenu implements CommandExecutor, Listener {
+public class miningResourceMenu implements CommandExecutor {
 
     private enum Edit {
         ORE,
@@ -46,7 +46,7 @@ public class miningResourceMenu implements CommandExecutor, Listener {
         return true;
     }
     
-    private void openMiningResourceMenu(Player p) {
+    private static void openMiningResourceMenu(Player p) {
         Inventory miningResourceMenu = Bukkit.createInventory(null, 54, format("&eMining Resource Menu"));
 
         if (!ores.isEmpty()) for (Ore ore : ores.values()) {
@@ -63,7 +63,7 @@ public class miningResourceMenu implements CommandExecutor, Listener {
         p.openInventory(miningResourceMenu);
     }
 
-    private void openAddMiningResourceMenu(Player p, int ID) {
+    private static void openAddMiningResourceMenu(Player p, int ID) {
         if (!ores.containsKey(ID)) return;
         Inventory miningResourceMenu = Bukkit.createInventory(null, 27, format("&eEdit Mining Resource"));
 
@@ -88,12 +88,12 @@ public class miningResourceMenu implements CommandExecutor, Listener {
         p.openInventory(miningResourceMenu);
     }
 
-    private void updateAllOpenMiningResourceMenus() {
+    private static void updateAllOpenMiningResourceMenus() {
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (p.getOpenInventory().getTitle().equals(format("&eMining Resource Menu"))) openMiningResourceMenu(p);
         }
     }
-    private void updateAllOpenEditMiningResourceMenus() {
+    private static void updateAllOpenEditMiningResourceMenus() {
         for (Player p : currentEdit.keySet()) {
             int ID = currentEdit.get(p);
             if (p.getOpenInventory().getTitle().equals(format("&eEdit Mining Resource"))) openAddMiningResourceMenu(p, ID);
@@ -102,8 +102,7 @@ public class miningResourceMenu implements CommandExecutor, Listener {
 
 
 
-    @EventHandler
-    public void inventoryClick(InventoryClickEvent e) {
+    public static void miningResourceMenuInventoryClickEvent(InventoryClickEvent e) {
         String invName = e.getView().getTitle();
         if (!invName.equals(format("&eMining Resource Menu")) && !invName.equals(format("&eEdit Mining Resource"))) return;
 
@@ -179,7 +178,7 @@ public class miningResourceMenu implements CommandExecutor, Listener {
 
 
 
-    private ItemStack generateOreGuiItem(Ore ore) {
+    private static ItemStack generateOreGuiItem(Ore ore) {
         ItemStack item = new ItemStack(ore.getBlockType());
         ItemMeta iMeta = item.getItemMeta();
 

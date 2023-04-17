@@ -3,12 +3,12 @@ package aminecraftplugin.aminecraftplugin.market;
 import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import aminecraftplugin.aminecraftplugin.drilling.resource.resourceCategory;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
@@ -26,7 +26,7 @@ import static aminecraftplugin.aminecraftplugin.drilling.resource.Resource.*;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.roundAvoid;
 
-public class Market implements Listener {
+public class Market {
 
     //ui/ux
     public  static ItemStack backButton;
@@ -206,13 +206,12 @@ public class Market implements Listener {
     }
 
     //gui methods
-    private void openMarket(Player p) {
+    private static void openMarket(Player p) {
         p.openInventory(marketCategoryGuiMenu);
         if (!playerOrderSize.containsKey(p)) playerOrderSize.put(p, 1.0);
     }
 
-    @EventHandler
-    public void click(net.citizensnpcs.api.event.NPCRightClickEvent e){
+    public static void rightClickMarketEvent(NPCRightClickEvent e){
         Player p = e.getClicker();
         Location location = e.getNPC().getStoredLocation();
         for (Market m : markets.values()) {
@@ -223,8 +222,7 @@ public class Market implements Listener {
         }
     }
 
-    @EventHandler
-    public void inventoryClick(InventoryClickEvent e) {
+    public static void marketInventoryClickEvent(InventoryClickEvent e){
         ItemStack clickedItem = e.getCurrentItem();
         if (clickedItem == null) return;
         Player p = (Player) e.getWhoClicked();
@@ -312,7 +310,8 @@ public class Market implements Listener {
         else if (invName.equals(format("&eAdd item"))) {
             e.setCancelled(true);
             if (getKeyFromItemstack(clickedItem) == -1) return;
-            latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), strength));
+
+            latestMarketOpen.get(p).trades.put(getKeyFromItemstack(clickedItem), new Trade(getKeyFromItemstack(clickedItem), latestMarketOpen.get(p).getStrength()));
             p.openInventory(marketCategoryGuiMenu);
             latestMarketOpen.get(p).updateTrades();
         }
@@ -341,7 +340,6 @@ public class Market implements Listener {
             }
         }
     }
-
 
 
     //methods to load and save the markets
@@ -480,7 +478,7 @@ public class Market implements Listener {
 
 
     //method to make the order size editor
-    private void openOrderSizeEditorGui(Player p) {
+    private static void openOrderSizeEditorGui(Player p) {
         double orderSize = playerOrderSize.get(p);
         marketOrderSizeMenu = Bukkit.createInventory(null, 27, format("&eChange Order Size"));
 
@@ -498,13 +496,13 @@ public class Market implements Listener {
         p.openInventory(marketOrderSizeMenu);
     }
 
-    private ItemStack generateOrderInfoItem(double orderSize) {
+    private static ItemStack generateOrderInfoItem(double orderSize) {
         ArrayList<String> orderInfoItemLore = new ArrayList<>();
         orderInfoItemLore.add(format("&b" + orderSize + "&7Kg"));
         return createGuiItem("&eOrder Size", orderInfoItemLore, Material.BOOK);
     }
 
-    private void openAddItemMenu(Player p) {
+    private static void openAddItemMenu(Player p) {
         Inventory addItemInventory = Bukkit.createInventory(null, 54, format("&eAdd item"));
 
         for (Resource r : resources.values()) {

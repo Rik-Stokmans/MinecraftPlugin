@@ -3,12 +3,12 @@ package aminecraftplugin.aminecraftplugin.shop;
 import aminecraftplugin.aminecraftplugin.market.Market;
 import com.comphenix.protocol.events.PacketContainer;
 import me.filoghost.holographicdisplays.api.hologram.Hologram;
+import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -23,7 +23,7 @@ import static aminecraftplugin.aminecraftplugin.Main.*;
 import static aminecraftplugin.aminecraftplugin.shop.ShopCategory.getShopCategoryFromString;
 import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 
-public class Shop implements Listener {
+public class Shop {
 
     public static ArrayList<Shop> shops = new ArrayList<>();
     private Location location;
@@ -31,6 +31,7 @@ public class Shop implements Listener {
     private HashMap<ShopCategory, ArrayList<Integer>> categories = new HashMap<>();
     private HashMap<Integer, ShopItem> shopItems = new HashMap<>();
     private Hologram hologram;
+    private static HashMap<Player, Shop> lastOpenedShop = new HashMap<>();
 
     public Shop(){
 
@@ -57,8 +58,7 @@ public class Shop implements Listener {
         hologram.getLines().appendText(format(name + " shop"));
     }
 
-    @EventHandler
-    public void click(net.citizensnpcs.api.event.NPCRightClickEvent e){
+    public static void rightClickShopEvent(NPCRightClickEvent e) {
         Player p = e.getClicker();
         Location location = e.getNPC().getStoredLocation();
         for (Shop shop : shops) {
@@ -70,6 +70,7 @@ public class Shop implements Listener {
 
     public void openShop(Player p){
         p.openInventory(getCategorySelectingInventory());
+        lastOpenedShop.put(p, this);
     }
 
     public void openShop(Player p, ShopCategory shopCategory){
@@ -96,16 +97,16 @@ public class Shop implements Listener {
         return inventory;
     }
 
-    @EventHandler
-    private void categoryClick(InventoryClickEvent e){
+    public static void shopCategoryInventoryClickEvent(InventoryClickEvent e){
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
-        if (name.contains("shop")) {
-            Player p = (Player) e.getWhoClicked();
+        Player p = (Player) e.getWhoClicked();
+        if (name.contains("shop") && lastOpenedShop.containsKey(p)) {
+            Shop shop = lastOpenedShop.get(p);
             ShopCategory selectedCategory = ShopCategory.NULL;
             int slot = e.getRawSlot();
             int index = 10;
-            for (ShopCategory shopCategory : this.getCategories().keySet()){
+            for (ShopCategory shopCategory : shop.getCategories().keySet()){
                 if (slot == index){
                     selectedCategory = shopCategory;
                     break;
@@ -116,7 +117,7 @@ public class Shop implements Listener {
                     if (index > 44) break;
                 }
             }
-            openShop(p, selectedCategory);
+            shop.openShop(p, selectedCategory);
         }
     }
 

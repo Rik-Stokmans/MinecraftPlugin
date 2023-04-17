@@ -33,12 +33,12 @@ import static aminecraftplugin.aminecraftplugin.utils.ChatUtils.format;
 import static aminecraftplugin.aminecraftplugin.utils.Compress.returnCompressed;
 import static aminecraftplugin.aminecraftplugin.utils.defaultPageInventory.getDefaultScrollableInventory;
 
-public class Backpack implements Listener {
+public class Backpack {
 
 
     //key int is item key/ID
     //value is the amount of the item the player has in Kg
-    private final String bundleName = format("&fBackpack");
+    private static final String bundleName = format("&fBackpack");
     private double space;
     private HashMap<Integer, Double> backpack;
     private UUID owner;
@@ -225,8 +225,7 @@ public class Backpack implements Listener {
         inventory.setItem(8, bundle);
     }
 
-    @EventHandler
-    private void inventoryClickEvent(InventoryClickEvent e){
+    public static void backPackInventoryClickEvent(InventoryClickEvent e){
         if (e.getClickedInventory() == null) return;
         if (e.getView() == null) return;
         String name = e.getView().getTitle();
@@ -311,8 +310,7 @@ public class Backpack implements Listener {
         }
     }
 
-    @EventHandler
-    private void rightClick(PlayerInteractEvent e){
+    public static void backPackPlayerInteractEvent(PlayerInteractEvent e){
         Player p = e.getPlayer();
         if (p.getInventory().getItemInMainHand().getType().equals(Material.BUNDLE)){
             ItemStack item = p.getInventory().getItemInMainHand();

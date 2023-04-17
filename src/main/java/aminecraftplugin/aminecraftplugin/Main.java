@@ -4,6 +4,7 @@ import aminecraftplugin.aminecraftplugin.commands.*;
 import aminecraftplugin.aminecraftplugin.commands.tabcompleters.*;
 import aminecraftplugin.aminecraftplugin.drilling.Backpack;
 import aminecraftplugin.aminecraftplugin.drilling.drill.Drill;
+import aminecraftplugin.aminecraftplugin.drilling.energy.EnergySource;
 import aminecraftplugin.aminecraftplugin.drilling.loot.LootTable;
 import aminecraftplugin.aminecraftplugin.drilling.resource.Resource;
 import aminecraftplugin.aminecraftplugin.drilling.structures.Structure;
@@ -66,17 +67,8 @@ public final class Main extends JavaPlugin {
         //file path
         path = getDataFolder().getAbsoluteFile().toString();
 
-        // Plugin startup logic. test
-
-        ArrayList<Listener> events = new ArrayList<>();
-        //list of events
-        events.add(new Market()); events.add(new Resource()); events.add(new events()); events.add(new LootTable());
-        events.add(new PlayerProfile()); events.add(new Drill()); events.add(new StructureEvent()); events.add(new Backpack());
-        events.add(new MiningSkill()); events.add(new miningResourceMenu()); events.add(new Shop());
-
-        for (Listener l : events) {
-            getServer().getPluginManager().registerEvents(l, this);
-        }
+        //events
+        getServer().getPluginManager().registerEvents(new events(new Drill(), new EnergySource()), this);
 
         //resource loading data
         Resource.init();

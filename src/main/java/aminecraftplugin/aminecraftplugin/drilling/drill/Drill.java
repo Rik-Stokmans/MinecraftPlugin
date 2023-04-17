@@ -21,7 +21,9 @@ import org.bukkit.block.structure.Mirror;
 import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.craftbukkit.v1_19_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.ClickType;
@@ -507,40 +509,38 @@ public class Drill implements Listener, aminecraftplugin.aminecraftplugin.drilli
     }
 
 
-    //drill place
-    @EventHandler
-    public void structurePlace(BlockPlaceEvent e){
-        if (e.getBlock().getType().equals(Material.HOPPER)) {
-            Player p = e.getPlayer();
-            e.setCancelled(true);
-            if (!e.getBlockReplacedState().getType().equals(Material.AIR)){
-                p.sendMessage(format("&cYou can't place that here"));
-                return;
-            }
-            ItemStack itemPlaced = e.getItemInHand();
-            if (CraftItemStack.asNMSCopy(itemPlaced).u() == null) return;
-            Location placedLoc = e.getBlock().getLocation();
-
-            net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemPlaced);
-            NBTTagCompound nbt = nmsItem.u();
-            String drillType = nbt.l("drilltype");
-
-            //check if near structures have enough distance
-            if (!aminecraftplugin.aminecraftplugin.drilling.structures.Structure.canBePlaced(drillType, placedLoc, p)) return;
-
-            //remove drill from hand
-            removeHandItem(p, e.getHand());
-
-            //create drill and place
-            Drill drill = new Drill(placedLoc, p, itemPlaced);
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    drill.place(p);
-                }
-            }.runTaskLater(plugin, 1l);
+    public void placeEvent(BlockPlaceEvent e) {
+        Player p = e.getPlayer();
+        e.setCancelled(true);
+        if (!e.getBlockReplacedState().getType().equals(Material.AIR)) {
+            p.sendMessage(format("&cYou can't place that here"));
+            return;
         }
+        ItemStack itemPlaced = e.getItemInHand();
+        if (CraftItemStack.asNMSCopy(itemPlaced).u() == null) return;
+        Location placedLoc = e.getBlock().getLocation();
+
+        net.minecraft.world.item.ItemStack nmsItem = CraftItemStack.asNMSCopy(itemPlaced);
+        NBTTagCompound nbt = nmsItem.u();
+        String drillType = nbt.l("drilltype");
+
+        //check if near structures have enough distance
+        if (!aminecraftplugin.aminecraftplugin.drilling.structures.Structure.canBePlaced(drillType, placedLoc, p))
+            return;
+
+        //remove drill from hand
+        removeHandItem(p, e.getHand());
+
+        //create drill and place
+        Drill drill = new Drill(placedLoc, p, itemPlaced);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                drill.place(p);
+            }
+        }.runTaskLater(plugin, 1l);
     }
+
 
     public void addResource(Integer key, Double kg){
         if (!this.getResources().containsKey(key)){
